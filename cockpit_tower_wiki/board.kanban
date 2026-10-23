@@ -1,0 +1,165 @@
+---
+title: Cockpit Tower — tarefas
+columns: [Leia primeiro, Backlog, Pronta p/ plano, Esperando, Em curso, Done]
+labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, decisão: yellow, docs: gray, risk-high: red, alta: red, média: orange, baixa: gray, P: green, M: yellow, G: red, gateway: teal, viewer: teal, bin: teal, cockpit-fork: teal, dono: pink, externo: yellow}
+---
+
+## Leia primeiro
+
+- [ ] Como usar este quadro <!-- id: k0 labels: docs -->
+      **Colunas:** o cartão fica na coluna do que trava o **próximo passo**.
+      - *Backlog*: ideia futura, ou depende de outro cartão (`blockedBy`).
+      - *Pronta p/ plano*: dá para começar a tarefa e o plano já. Uma sessão nova começa por aqui.
+      - *Esperando*: depende do dono, do mantenedor do Cockpit ou de uma data.
+      - *Em curso*: trio `in_progress` em execução.
+      - *Done*: concluídas recentes.
+
+      **Etiquetas:**
+      - tipo: `feature`, `bug`, `ui`, `test`, `upstream` (contribuição ao `remote_pi`), `decisão` (precisa do dono antes de código), `docs`;
+      - risco: `risk-high` (entra em "Always high risk" do `REVIEW.md`: tudo que envia entrada ou resize a um terminal);
+      - prioridade: `alta`, `média`, `baixa`. Tamanho: `P` (uma sessão), `M` (duas ou três), `G` (várias etapas);
+      - onde: `gateway` (`src/`), `viewer` (`web/`), `bin` (`bin/tower`), `cockpit-fork` (código no fork `~/app/remote_pi`);
+      - quem trava: `dono`, `externo` (o mantenedor do Cockpit).
+
+      **Dependências:** `blockedBy: kN` no comentário do cartão. Hoje: os dois acompanhamentos do soft wrap (k11, k12) esperam o PR dele (k10).
+
+      **Para um agente numa sessão nova:**
+      - Leia o `CLAUDE.md` e siga a skill `work-cycle` (tarefa → plano aprovado → execução → `/wiki-sync`). Nada de código sem plano `status: approved`.
+      - Até 2026-11-01 o CI do GitHub não roda (cobrança). Antes de cada PR, rode à mão: `python3 scripts/ci/check_commit_trailers.py origin/<base>`, `python3 .claude/skills/wiki-lint/lint.py --root .` e `npm test`.
+      - Trabalho `cockpit-fork`: o código fica em `~/app/remote_pi` (origin = fork `tganzerli/remote_pi`, upstream = `jacobaraujo7/remote_pi`). Usa Flutter via `fvm` (`3.50.0-0.1.pre`, a versão do CI), e o build precisa do Zig 0.16 e do Rust (keg-only, só no PATH do comando). PR upstream em inglês.
+      - **Nunca abra o Cockpit pelo Bash do Claude.** O app herda as variáveis `CLAUDE_*`, e os `claude` dos terminais param de salvar o histórico. Para trocar entre o oficial e o fork, use `~/app/remote_pi/.fork-tools/cockpit-switch.sh` no Terminal.app. Fechar o Cockpit encerra os terminais dele.
+      - Cada cartão cita o trio e as fontes. Leia as fontes antes de propor o plano.
+
+      **Como o quadro se mantém:**
+      - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
+      - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k22).
+
+## Backlog
+
+- [ ] Upstream: fechar uma aba deixa o shell vivo <!-- id: k21 labels: bug, upstream, baixa, P, externo -->
+      **O quê:** ao fechar uma aba no Cockpit, a sessão sai do `pty.list`, mas o shell continua vivo (`Ss+`, filho do `cockpit-server`) até receber SIGHUP.
+
+      **Contexto:** visto duas vezes em 2026-10-23, nas abas de teste da fase 2 (pids 52694 e 43991); morreram só com `kill -HUP`. Evidência em `cockpit_tower_wiki/work/executions/2026-10-23_phone-pty-resize.md` e no plano (§4.0 C); o contrato já registra o comportamento.
+
+      **Para começar:** reproduzir numa aba descartável (`cockpit new-tab`, `cockpit close-tab`, `ps -o pid,ppid,stat`), achar no `remote_pi` o caminho do fechamento da aba até o `pty.kill`, e abrir issue no `remote_pi` (modelo: k10, issue antes do PR).
+
+- [ ] Pedir ao mantenedor do Cockpit o id da aba no `pty.sessions` <!-- id: k5 labels: upstream, baixa, P, gateway, externo -->
+      **O quê:** o tower saber com certeza qual sessão é qual aba, sem o casamento por ordem e pasta.
+
+      **Contexto:**
+      - O app passa `COCKPIT_TAB_ID` no ambiente do `pty.open`, mas o servidor não o lista, e o macOS não deixa outro processo ler o ambiente.
+      - Contorno atual: `matchTabs` em `src/session-info.ts` (só pela ordem de criação, quando estável). Efeito colateral: os títulos aparecem ~5 s depois de abrir a página.
+      - Ver "Lacuna" em `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md`.
+
+      **Para começar:** abrir issue ou PR no `remote_pi` (github.com/jacobaraujo7/remote_pi) propondo o campo; quando existir, simplificar o casamento. O caminho do soft wrap (k10: fork, issue antes do PR) serve de modelo.
+
+- [ ] Acompanhamento upstream: hover e busca desalinham 0,5 px por caractere sem quebra <!-- id: k11 labels: bug, upstream, baixa, P, cockpit-fork, externo blockedBy: k10 -->
+      **O quê:** sem soft wrap, o hover de "ir para definição" e a rolagem horizontal da busca convertem x↔coluna com um `TextPainter` no estilo de código puro. O campo desenha com o `letterSpacing: 0.5` do tema, então a coluna escorrega ~40 px na coluna 80.
+
+      **Contexto:** bug do upstream, achado durante o soft wrap e deixado fora daquele PR (seção "Notes" do texto do PR; "Notas em aberto" em `cockpit_tower_wiki/work/executions/2026-10-23_cockpit-editor-soft-wrap.md`). A correção é a mesma do soft wrap: medir com o estilo efetivo do `EditableText`.
+
+      **Para começar:** depois do PR do soft wrap, perguntar ao mantenedor se quer o conserto; se sim, novo trio e PR separado.
+
+- [ ] Acompanhamento upstream: adiar a remedição do soft wrap enquanto arrasta a divisória <!-- id: k12 labels: upstream, baixa, P, cockpit-fork blockedBy: k10 -->
+      **O quê:** com quebra ligada, cada largura nova durante o arrasto remede as linhas mais largas que a pane (~25 ms num changelog de 2 mil linhas).
+
+      **Contexto:** "Possible follow-up" no texto do PR do soft wrap. Só vale a pena se o teste de usabilidade (k10) mostrar travadas ao arrastar.
+
+## Pronta p/ plano
+
+- [ ] Comandos pelo celular — fase 3: rolar o histórico dos agentes em tela cheia <!-- id: k3 labels: feature, média, M, gateway, viewer -->
+      **O quê:** ver o que já saiu da tela quando a CLI usa tela cheia (o Claude com `"tui": "fullscreen"`, e provavelmente Antigravity e Codex).
+
+      **Contexto:**
+      - Em tela cheia o histórico não está no terminal: no Mac, a rolagem é o mouse enviado à CLI, que se redesenha. Ver a execução `cockpit_tower_wiki/work/executions/2026-10-22_terminal-text-cockpit-style.md` (achado do passo 6 e decisão do humano).
+      - O dono não quer resolver mudando a configuração das CLIs.
+      - Caminho genérico: repassar só a rolagem (sequências de mouse/wheel) para a PTY. A aba no Mac rola junto, porque é o mesmo terminal.
+      - Alternativas descartadas ou adiadas na época: montar histórico por heurística comparando telas (frágil); ler o transcript `.jsonl` do Claude (só serve para o Claude).
+
+- [ ] Teste automatizado da visão do terminal <!-- id: k6 labels: test, média, M, viewer -->
+      **O quê:** levar para o repositório o teste de consistência da visão HTML, que hoje só existe como roteiro fora do repo.
+
+      **Contexto:**
+      - O roteiro usado: WebSocket falso na página + xterm de referência em Node, 12 000 linhas numeradas com IL/DL numa região de rolagem, comparando o texto da visão com o buffer. Ele pegou o bug do marker. Descrito em `cockpit_tower_wiki/work/executions/2026-10-22_terminal-text-cockpit-style.md` (Validations).
+      - Rodou em Chrome headless guiado por CDP; o repositório não tem navegador nos testes.
+      - `npm test` hoje cobre só o gateway (`test/*.test.ts`, `node --test`).
+
+      **Para começar:** decidir entre extrair a lógica da visão de `web/app.js` para um módulo testável em Node (com um DOM mínimo) ou adicionar um teste com navegador headless. Vale antes da fase 1 (k1), que mexe no viewer.
+
+- [ ] Worktrees sem terminal aberto na gaveta <!-- id: k7 labels: ui, baixa, P, gateway, viewer -->
+      **O quê:** mostrar na gaveta todos os worktrees de um workspace, como a lateral do Cockpit, e não só os que têm terminal.
+
+      **Contexto:**
+      - Hoje a gaveta é montada a partir das sessões; um worktree sem terminal (ex.: `project-a/wt-feature`) não aparece, e a contagem da seta só conta os que têm sessão.
+      - `cockpit list-workspaces --json` já lista todos (inclusive com `tabs: 0`), e o gateway já chama esse verbo em `src/session-info.ts`.
+
+      **Para começar:** mandar a lista de workspaces junto da mensagem `sessions` e desenhar os worktrees vazios como linhas desabilitadas.
+
+- [ ] Avatar do workspace: imagem escolhida no Cockpit e ícone do "Cockpit" <!-- id: k8 labels: ui, baixa, M, gateway, viewer -->
+      **O quê:** avatares iguais aos da lateral do Cockpit.
+
+      **Contexto:**
+      - O Cockpit permite uma imagem por workspace (`image` em `~/Documents/cockpit/state/projects.json`); o viewer usa só a cor. Servir a imagem exige rota nova em `src/server.ts` (lista fixa de arquivos), lendo um caminho vindo de um arquivo de estado. Cuidado com o que essa rota pode expor.
+      - O workspace especial "Cockpit" (`__cockpit__`) não está no `projects.json`; no Cockpit ele é um ícone de terminal com borda, no viewer fica com cor derivada do nome.
+      - Widget de referência: `remote_pi` `cockpit/lib/app/cockpit/ui/widgets/workspace_avatar.dart`.
+
+- [ ] Contraste no tema escuro com CLIs em tema claro <!-- id: k9 labels: ui, baixa, P, viewer -->
+      **O quê:** evitar texto quase invisível quando o viewer está escuro e a CLI emite cores fixas pensadas para fundo claro.
+
+      **Contexto:**
+      - O Claude do dono usa `theme: light` em `~/.claude/settings.json`; no escuro, cores como o `●` preto quase somem. O mesmo acontece no próprio Cockpit escuro.
+      - As cores truecolor viram estilo inline em `web/app.js` (`cellStyle`).
+
+      **Para começar:** avaliar um ajuste de contraste mínimo só para cores RGB muito próximas do fundo, como o `minimumContrastRatio` do xterm.
+
+## Esperando
+
+- [ ] Soft wrap no editor do Cockpit (issue #261 + PR no remote_pi) <!-- id: k10 labels: feature, upstream, ui, média, M, cockpit-fork, dono -->
+      **O quê:** editar `.md` no Cockpit sem rolagem horizontal (View → Toggle Word Wrap, ⌥Z; ligado por padrão em Markdown e texto) e contribuir a solução upstream.
+
+      **Estado:** esperando o **teste de usabilidade do dono** (alguns dias, a partir de 2026-10-23), usando a build release do fork no lugar do Cockpit oficial.
+      - Trio `2026-10-23_cockpit-editor-soft-wrap` (execução `in_progress`, passos 1–11 feitos). Issue #261 aberta; revisão em 2 rodadas, sem achado `Important` aberto.
+      - Código: branch `feat/cockpit-editor-soft-wrap` no fork, já enviada (sem PR), 4 commits sobre `7d923ab`.
+      - Build: `~/app/remote_pi/cockpit/build/macos/Build/Products/Release/Cockpit.app` (assinatura ad-hoc, mesmos dados do oficial). Troca com `~/app/remote_pi/.fork-tools/cockpit-switch.sh`, rodado no Terminal.app.
+      - Texto do PR pronto (inglês, `Closes #261`). Abrir só com o OK do dono.
+
+      **Se o teste achar problema:** corrigir na mesma branch, rodar os testes na cópia `~/cpt` e recompilar a release. A troca para a build nova espera os agentes abertos terminarem.
+
+      **Depois do OK:** abrir o PR; fechar a execução; `/wiki-sync` (fonte externa do `CodeEditor` e página de contribuições upstream) num PR `docs/2026-10-23_cockpit-editor-soft-wrap__wiki` para a `dev` (o trio e este quadro já estão na `dev` pelo #13); mover este cartão para *Done*; apagar `~/cpt` e `~/cpb`.
+
+## Em curso
+
+## Done
+
+- [x] Comandos pelo celular — fase 2: a PTY no tamanho do celular <!-- id: k2 labels: feature, risk-high, gateway, viewer -->
+      Trio `2026-10-23_phone-pty-resize`, ADR `decisions/2026-10-23_phone-pty-resize`. Em modo de comando a sessão assume o tamanho do celular; o tower devolve o do Mac ao sair.
+
+- [x] Comandos pelo celular — fase 1: digitar na sessão aberta <!-- id: k1 labels: feature, risk-high, gateway, viewer -->
+      Trio `2026-10-23_phone-terminal-input`, ADR `decisions/2026-10-23_phone-input-client` (substitui o somente leitura). Botão Command no iPhone; só `pty.input`, com `Origin`, dono do Tailscale e registro local.
+
+- [x] Crédito de fluxo e `pty.ack` quando o tower deixa de ser só espectador <!-- id: k4 labels: risk-high, decisão, gateway -->
+      Decidido na ADR `decisions/2026-10-23_phone-input-client`: o tower nunca envia `pty.ack`. Pelo `cockpit-server` o crédito não é aplicado (o `flow` do `pty.open` não é repassado), então o risco de travar o shell não se sustenta; se um dia for ligado, acks do tower anulariam o controle de fluxo do app.
+
+- [x] Ícone do Cockpit no formato padrão do macOS (issue #262, PR #263 no remote_pi) <!-- id: k20 labels: ui, upstream, cockpit-fork -->
+      Trio `2026-10-23_cockpit-macos-icon-shape`. Esperando o merge do mantenedor.
+
+- [x] Viewer somente leitura e `bin/tower` (PR #1, #2) <!-- id: k13 labels: feature, gateway, viewer, bin -->
+      Trio `2026-10-22_read-only-viewer`.
+
+- [x] Painel do Cockpit para ligar e desligar o tower (PR #3, #4) <!-- id: k14 labels: feature, bin -->
+      Trio `2026-10-22_tower-cockpit-panel`.
+
+- [x] Tela do iPhone, parte 1: texto do terminal no estilo do Cockpit (PR #5) <!-- id: k15 labels: ui, viewer -->
+      Trio `2026-10-22_terminal-text-cockpit-style`.
+
+- [x] Tela do iPhone, parte 2: identificar as sessões e navegação do Cockpit (PR #6) <!-- id: k16 labels: ui, gateway, viewer -->
+      Trio `2026-10-22_session-identity-cockpit-look`.
+
+- [x] Tela do iPhone, parte 3: ordem, cores, worktrees e tema do Cockpit (PR #7) <!-- id: k17 labels: ui, gateway, viewer -->
+      Trio `2026-10-22_cockpit-state-theme`.
+
+- [x] Release v0.1.0 na `main` (PR #8) <!-- id: k18 -->
+
+- [x] Quadro de próximas tarefas no wiki (PR #9) <!-- id: k19 labels: docs -->
+      Trio `2026-10-22_backlog-board`.

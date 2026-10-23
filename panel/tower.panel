@@ -1,0 +1,176 @@
+---
+title: Tower
+reload: true
+cwd: ..
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tower</title>
+  <link rel="stylesheet" href="/__cockpit__/cockpit.css">
+  <script src="/__cockpit__/petite-vue.js"></script>
+  <style>
+    .qr { width: 180px; padding: 8px; background: var(--ckp-bg); border: 1px solid var(--ckp-border); border-radius: 6px; }
+    .qr svg { display: block; width: 100%; height: auto; }
+    .url { width: 100%; }
+    /* --ckp-accent-text is an accent-colored text in some themes, unreadable on the accent background. */
+    button.primary { color: var(--ckp-bg); }
+  </style>
+</head>
+<body>
+  <!-- Controls bin/tower from inside Cockpit. All logic stays in bin/tower; this page only runs it. -->
+  <div class="page" v-scope="App()" @vue:mounted="init" v-cloak>
+    <div class="toolbar">
+      <h1>Tower</h1>
+      <span class="badge" :class="badge.cls">{{ badge.text }}</span>
+      <span class="status">{{ status }}</span>
+      <button @click="refresh" :disabled="busy">Refresh</button>
+      <button class="primary" @click="run('on')" :disabled="busy || (s && s.on)">{{ busy === 'on' ? 'Turning on…' : 'Turn on' }}</button>
+      <button class="danger" @click="run('off')" :disabled="busy">{{ busy === 'off' ? 'Turning off…' : 'Turn off' }}</button>
+    </div>
+
+    <div v-if="!s && !error" class="col"><div class="skeleton"></div><div class="skeleton"></div></div>
+
+    <div v-if="s" class="kpis">
+      <div class="card stat"><span class="value"><span class="status-dot" :class="s.gateway.running ? 'ok' : ''"></span> {{ s.gateway.running ? 'on' : 'off' }}</span><span class="label">gateway <code v-if="s.gateway.pid">pid {{ s.gateway.pid }}</code></span></div>
+      <div class="card stat"><span class="value"><span class="status-dot" :class="s.awake.running ? 'ok' : ''"></span> {{ s.awake.running ? 'yes' : 'no' }}</span><span class="label">Mac kept awake</span></div>
+      <div class="card stat"><span class="value"><span class="status-dot" :class="s.tailnet.published ? 'ok' : ''"></span> {{ s.tailnet.published ? 'published' : 'no' }}</span><span class="label">tailnet port {{ s.tailnet.port }}</span></div>
+      <div class="card stat"><span class="value"><span class="status-dot" :class="s.cockpit.socket ? 'ok' : 'warn'"></span> {{ s.cockpit.socket ? 'ok' : 'missing' }}</span><span class="label">Cockpit socket</span></div>
+    </div>
+
+    <div v-if="s" class="card">
+      <h3>Viewer URL</h3>
+      <p v-if="s.on && !s.tailnet.url" class="empty">Tower is on, but the tailnet name is unavailable right now. Run <code>bin/tower status</code> in a terminal to check Tailscale.</p>
+      <div v-else-if="s.on" class="row wrap" style="gap: 12px; align-items: flex-start">
+        <div class="col grow" style="gap: 8px">
+          <input class="url mono" readonly :value="s.tailnet.url" ref="url" @focus="$event.target.select()">
+          <div class="row" style="gap: 8px">
+            <button @click="copy">{{ copied ? 'Copied' : 'Copy' }}</button>
+            <span class="muted">Open it on the iPhone, or scan the code with the camera.</span>
+          </div>
+        </div>
+        <div v-if="qr" class="qr" v-html="qr"></div>
+        <div v-else class="qr"><div class="skeleton"></div></div>
+      </div>
+      <p v-else class="empty">Tower is off. Turn it on to publish the viewer on the tailnet; the Mac stays awake until you turn it off.</p>
+    </div>
+
+    <p v-if="s && !s.cockpit.socket" class="muted">Cockpit's terminal server socket is missing (<code>{{ s.cockpit.path }}</code>). The viewer retries until it appears.</p>
+    <p v-if="s && partial" class="muted">Tower is partly on. Turn it off and on again to recover.</p>
+
+    <pre v-if="output" class="mono">{{ output }}</pre>
+    <pre v-if="error" class="error">{{ error }}</pre>
+  </div>
+
+  <script>
+    const POLL_MS = 5000;
+
+    function App() {
+      return {
+        s: null, busy: '', status: '', output: '', qr: '', qrFor: '', copied: false,
+        // One error slot per source, so each clears itself when its own source recovers.
+        actionError: '', statusError: '', qrError: '',
+
+        get error() { return [this.actionError, this.statusError, this.qrError].filter(Boolean).join('\n\n'); },
+        get anyRunning() { return this.s && (this.s.gateway.running || this.s.awake.running || this.s.tailnet.published); },
+        get partial() { return this.s && !this.s.on && this.anyRunning; },
+        get badge() {
+          if (!this.s) return { cls: '', text: '…' };
+          if (this.s.on) return { cls: 'ok', text: 'on' };
+          return this.partial ? { cls: 'warn', text: 'partial' } : { cls: '', text: 'off' };
+        },
+
+        init() {
+          this.refresh();
+          setInterval(() => { if (document.visibilityState === 'visible' && !this.busy) this.refresh(); }, POLL_MS);
+          document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !this.busy) this.refresh(); });
+        },
+
+        // Never overlaps: a call made while a poll is in flight waits for it and then polls once more,
+        // so the state shown after an action is always read after the action finished.
+        async refresh() {
+          if (this._inflight) { this._again = true; return this._inflight; }
+          this._inflight = (async () => {
+            do { this._again = false; await this.poll(); } while (this._again);
+          })();
+          try { await this._inflight; } finally { this._inflight = null; }
+        },
+
+        async poll() {
+          let r;
+          try {
+            r = await cockpit('exec -- ./bin/tower status --json');
+          } catch {
+            this.statusError = 'Could not run bin/tower status through Cockpit.';
+            return;
+          }
+          if (!r.ok) { this.statusError = r.stderr || r.error || `tower status failed (exit ${r.code})`; return; }
+          let s;
+          try {
+            s = r.json ?? JSON.parse(r.stdout);
+          } catch {
+            // Fixed text: the raw output holds the URL and its token.
+            this.statusError = 'bin/tower status --json returned unreadable output.';
+            return;
+          }
+          if (!s || !s.gateway || !s.awake || !s.tailnet || !s.cockpit) {
+            this.statusError = 'bin/tower status --json returned an unexpected shape; is bin/tower up to date?';
+            return;
+          }
+          this.s = s;
+          this.statusError = '';
+          this.status = 'updated ' + new Date().toLocaleTimeString();
+          if (s.on && s.tailnet.url && s.tailnet.url !== this.qrFor) await this.loadQr(s.tailnet.url);
+          if (!s.on || !s.tailnet.url) { this.qr = ''; this.qrFor = ''; this.qrError = ''; }
+        },
+
+        async loadQr(url) {
+          let r;
+          try {
+            r = await cockpit('exec -- ./bin/tower qr');
+          } catch {
+            r = { ok: false, error: 'Could not run bin/tower qr through Cockpit.' };
+          }
+          if (!r.ok) { this.qrError = r.stderr || r.error || `tower qr failed (exit ${r.code})`; return; }
+          this.qr = r.stdout;
+          this.qrFor = url;
+          this.qrError = '';
+        },
+
+        async run(action) {
+          this.busy = action; this.actionError = ''; this.output = '';
+          try {
+            // tower on waits up to ~25 s for the gateway and tailscale serve; never let exec cut it short.
+            const r = await cockpit(`exec --timeout 60 -- ./bin/tower ${action}`);
+            // The URL is shown in its own field; keep the token out of any echoed output.
+            const noUrl = (text) => (text || '').split('\n').filter((l) => !l.includes('https://')).join('\n').trim();
+            if (r.ok) {
+              this.output = noUrl(r.stdout);
+            } else {
+              this.actionError = noUrl([r.stdout, r.stderr].filter(Boolean).join('\n')) || r.error || `tower ${action} failed (exit ${r.code})`;
+            }
+          } catch {
+            this.actionError = `Could not run bin/tower ${action} through Cockpit.`;
+          } finally {
+            this.busy = '';
+          }
+          await this.refresh();
+        },
+
+        async copy() {
+          try {
+            await navigator.clipboard.writeText(this.s.tailnet.url);
+          } catch {
+            this.$refs.url.select();
+            document.execCommand('copy');
+          }
+          this.copied = true;
+          setTimeout(() => { this.copied = false; }, 1500);
+        },
+      };
+    }
+    PetiteVue.createApp({ App }).mount();
+  </script>
+</body>
+</html>

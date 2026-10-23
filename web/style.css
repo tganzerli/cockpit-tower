@@ -1,0 +1,432 @@
+/*
+ * Cockpit's colors, from its source (remote_pi cockpit/lib/app/core/ui/themes/app_colors.dart and
+ * terminal_theme.dart). app.js sets <html data-theme> to "light" or "dark" from Cockpit's themeMode,
+ * resolving "system" with the phone's own setting.
+ */
+:root {
+  color-scheme: light;
+  --chrome: #f5f5f7;
+  --tabstrip: #f5f5f7;
+  --surface: #ffffff;
+  --row-active: #f0f0f3;
+  --border: #e2e2e7;
+  --text: #1a1a1f;
+  --text-2: #5b5b66;
+  --muted: #8a8a94;
+  --accent: #2f6ff0;
+  --ok: #2e9e54;
+  --warn: #b7791f;
+  --bad: #d32f2f;
+  --bad-bg: #fdecec;
+  --chip-bg: #fbf1dc;
+  --chip-text: #b7791f;
+  --scrim: rgba(0, 0, 0, 0.4);
+  --term-bg: #ffffff;
+  --term-fg: #1a1a1f;
+  --term-rule: #d1d1d8;
+  --ansi-0: #1a1a1f; --ansi-1: #cf222e; --ansi-2: #1a7f37; --ansi-3: #9a6700;
+  --ansi-4: #0969da; --ansi-5: #8250df; --ansi-6: #1b7c83; --ansi-7: #6e7781;
+  --ansi-8: #57606a; --ansi-9: #a40e26; --ansi-10: #116329; --ansi-11: #7d4e00;
+  --ansi-12: #0550ae; --ansi-13: #6639ba; --ansi-14: #3192aa; --ansi-15: #24292f;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --chrome: #0d0d0f;
+  --tabstrip: #0d0d0f;
+  --surface: #18181b;
+  --row-active: #1f1f23;
+  --border: #26262a;
+  --text: #ececef;
+  --text-2: #9b9ba4;
+  --muted: #6a6a73;
+  --accent: #2f6ff0;
+  --ok: #3fb868;
+  --warn: #e0a33a;
+  --bad: #e5484d;
+  --bad-bg: #2a1214;
+  --chip-bg: #2a210f;
+  --chip-text: #c98a2b;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --term-bg: #18181b;
+  --term-fg: #ececef;
+  --term-rule: #323238;
+  --ansi-0: #26262a; --ansi-1: #e5484d; --ansi-2: #3fb868; --ansi-3: #e0a33a;
+  --ansi-4: #2f6ff0; --ansi-5: #c792ea; --ansi-6: #1aa5a0; --ansi-7: #c9c9cf;
+  --ansi-8: #6a6a73; --ansi-9: #ff6b6f; --ansi-10: #82e0a5; --ansi-11: #ffcb6b;
+  --ansi-12: #82aaff; --ansi-13: #d6a0ff; --ansi-14: #89ddff; --ansi-15: #ececef;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--chrome);
+  color: var(--text);
+  font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+button { font: inherit; color: inherit; }
+
+/* Command mode: app.js pins the page to the visible part of the screen (iOS keyboard). */
+body.fitted { position: fixed; left: 0; right: 0; }
+body.keyboard { padding-bottom: 0; }
+/* With the keyboard up, keep only what typing needs: the session title, the keys and the text box. */
+body.keyboard #tabs, body.keyboard .current-sub { display: none; }
+body.keyboard .topbar { min-height: 40px; padding-top: 2px; padding-bottom: 2px; }
+body.keyboard .composer { gap: 4px; padding: 4px 6px; }
+body.keyboard .keys button, body.keyboard #send { min-height: 38px; }
+body.keyboard #compose { min-height: 38px; padding: 7px 10px; }
+
+.icon-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linecap: round; }
+
+/* ---- top bar ---- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 4px 10px 4px 4px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--border);
+}
+
+.current {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+}
+.current-text { min-width: 0; display: flex; flex-direction: column; }
+.current-title, .current-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.current-title { font-weight: 600; font-size: 15px; }
+.current-sub { color: var(--muted); font-size: 12px; }
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--muted);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.command-btn {
+  flex: none;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+.command-btn.on { border-color: var(--warn); background: var(--chip-bg); color: var(--chip-text); }
+
+.status-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.status-dot.ok { background: var(--ok); }
+.status-dot.warn { background: var(--warn); }
+.status-dot.bad { background: var(--bad); }
+
+.banner {
+  padding: 6px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--warn);
+  font-size: 12px;
+  text-align: left;
+}
+.banner.bad { background: var(--bad-bg); color: var(--bad); }
+
+/* ---- tab strip: the sessions of the current workspace ---- */
+
+.tabs {
+  display: flex;
+  overflow-x: auto;
+  background: var(--tabstrip);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs:empty { display: none; }
+
+.tab {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  padding: 9px 12px 7px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+}
+.tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab.active { background: var(--surface); color: var(--text); border-bottom-color: var(--accent); }
+
+/* Agent working (Cockpit reports it) or fresh output (the session's byte count grew). */
+.working {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--accent);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+.activity { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .working { animation: none; } }
+
+/* ---- terminal ---- */
+
+main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--term-bg);
+}
+
+/* Terminal text in Cockpit's light terminal style; lines wrap to the phone's width. */
+.view {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 8px;
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-text-size-adjust: 100%;
+}
+
+.view .rule {
+  display: inline-block;
+  width: 100%;
+  height: 0;
+  vertical-align: middle;
+  border-top: 1px solid var(--term-rule);
+}
+
+#to-end {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* ---- composer: text and special keys, only in command mode ---- */
+
+.composer {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--chrome);
+  border-top: 2px solid var(--warn);
+}
+.composer[hidden] { display: none; }
+.keys { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.keys button, #send {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 15px;
+  touch-action: manipulation;
+}
+#send { font-weight: 600; color: var(--accent); }
+.compose-row { display: flex; gap: 6px; align-items: flex-end; }
+#compose {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 30vh;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: 16px ui-monospace, "SF Mono", Menlo, monospace; /* 16px: iOS does not zoom into the field */
+  resize: none;
+}
+.compose-note { color: var(--muted); font-size: 12px; }
+.compose-note:empty { display: none; }
+.compose-note.bad { color: var(--bad); }
+.compose-note.warn { color: var(--warn); }
+
+/* ---- drawer: Cockpit's workspace rail as a sheet ---- */
+
+.drawer { position: fixed; inset: 0; z-index: 10; }
+.drawer[hidden] { display: none; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+
+.drawer-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(86vw, 360px);
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--chrome);
+  border-right: 1px solid var(--border);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
+}
+
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 6px 4px 16px; }
+.drawer-title { font-weight: 600; font-size: 15px; }
+
+.groups { flex: 1; overflow-y: auto; padding: 4px 8px 12px; -webkit-overflow-scrolling: touch; }
+
+.section-label {
+  padding: 14px 8px 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ws { margin-top: 4px; }
+.ws-head { display: flex; align-items: center; gap: 10px; padding: 8px; }
+.ws-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+
+.chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip svg { flex: none; width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+.row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px 9px 50px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+}
+.row.nested { padding-left: 66px; }
+.row.flat { padding-left: 10px; }
+.row.active { background: var(--row-active); }
+.row-text { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.row-title, .row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { color: var(--muted); font-size: 12px; }
+
+.wt-toggle {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px; /* a comfortable touch target */
+  padding: 0 4px 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+.wt-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wt-toggle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.15s; }
+.wt-toggle.expanded svg { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .wt-toggle svg { transition: none; } }
+
+.wt-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px 2px 50px; color: var(--text-2); font-size: 13px; }
+.wt-head svg { flex: none; width: 13px; height: 13px; fill: none; stroke: var(--muted); stroke-width: 2; }
+.wt-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.empty { padding: 16px 8px; color: var(--muted); }
+
+.drawer-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+.status { flex: 1; min-width: 0; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+.status.bad { color: var(--bad); }
+
+.font-controls { display: flex; gap: 4px; }
+.font-controls button {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.badge {
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.badge.on { border-color: var(--warn); color: var(--warn); }

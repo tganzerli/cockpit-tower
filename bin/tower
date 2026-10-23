@@ -1,0 +1,219 @@
+#!/usr/bin/env bash
+# tower on|off|status [--json]|qr — expose the Cockpit viewer on the tailnet, on demand (typing only in command mode).
+#   on:     start the gateway (loopback, secret path), keep the Mac awake while it lives, publish with tailscale serve
+#   off:    unpublish, stop the gateway and caffeinate, and wait until they are gone
+#   status: show what is running (--json: machine-readable, for the Cockpit panel in panel/tower.panel)
+#   qr:     print the tailnet URL as an SVG QR code
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STATE="${TOWER_STATE:-$HOME/.cockpit-tower}"
+PORT="${TOWER_PORT:-7681}"
+HTTPS_PORT="${TOWER_HTTPS_PORT:-8443}"
+SOCKET="${TOWER_SOCKET:-$HOME/.cockpit/cockpit-server.sock}"
+PIDFILE="$STATE/gateway.pid"
+CAFFEINATE_PIDFILE="$STATE/caffeinate.pid"
+TOKENFILE="$STATE/token"
+LOG="$STATE/tower.log"
+CONFIGFILE="$STATE/gateway.config"
+MAIN="$ROOT/src/main.ts"
+
+die() { echo "tower: $*" >&2; exit 1; }
+need() { command -v "$1" >/dev/null 2>&1 || die "'$1' not found in PATH"; }
+
+# Run a command in its own session and process group, keeping the pid (exec). Started from a Cockpit
+# panel, children otherwise join the Cockpit app's own process group. macOS has no setsid(1).
+DETACH=(perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!\n"')
+
+# A pid file is trusted only if that pid is still OUR process (pids get reused after a crash).
+pid_is() {
+  local pid="$1" pattern="$2" cmd
+  [[ -n "$pid" ]] || return 1
+  # Capture first: `ps | grep -q` under pipefail can fail with SIGPIPE when grep exits early.
+  cmd="$(ps -p "$pid" -o command= 2>/dev/null)" || return 1
+  [[ "$cmd" == *"$pattern"* ]]
+}
+gateway_pid() { [[ -f "$PIDFILE" ]] && pid_is "$(cat "$PIDFILE")" "$MAIN" && cat "$PIDFILE"; }
+caffeinate_pid() { [[ -f "$CAFFEINATE_PIDFILE" ]] && pid_is "$(cat "$CAFFEINATE_PIDFILE")" "caffeinate -is -w" && cat "$CAFFEINATE_PIDFILE"; }
+
+port_answers() { curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$PORT/" 2>/dev/null; }
+port_is_tower() { [[ "$(curl -s --max-time 1 "http://127.0.0.1:$PORT/healthz" 2>/dev/null)" == "cockpit-tower" ]]; }
+
+# True only if the tailnet port is published AND proxies to this gateway (works for 443 too, whose URL omits the port).
+serve_published() {
+  local json
+  json="$(tailscale serve status --json 2>/dev/null)" || return 1
+  node "$ROOT/src/serve-status.ts" "$HTTPS_PORT" "http://127.0.0.1:$PORT" <<<"$json"
+}
+
+# The token is appended by the shell (echo is a builtin), so it never lands in a process's argv.
+tailnet_url() {
+  local base
+  base="$(tailscale status --json | node -e '
+    let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+      const name = (JSON.parse(s).Self?.DNSName ?? "").replace(/\.$/, "");
+      if (name) console.log(`https://${name}:${process.argv[1]}/`);
+    });' "$HTTPS_PORT")" || base=""
+  if [[ -n "$base" ]]; then echo "${base}$1/"; else echo "(tailscale name unavailable)"; fi
+}
+
+check_node() {
+  need node
+  node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 23 || (a === 23 && b >= 6) ? 0 : 1)' \
+    || die "Node >= 23.6 is required (runs TypeScript without a build); found $(node --version)"
+}
+
+wait_gone() {
+  local pid="$1"
+  for _ in $(seq 1 50); do
+    kill -0 "$pid" 2>/dev/null || return 0
+    sleep 0.1
+  done
+  kill -9 "$pid" 2>/dev/null || true
+}
+
+cmd_on() {
+  check_node
+  need tailscale
+  need caffeinate
+  need curl
+  [[ -d "$ROOT/node_modules/ws" ]] || die "dependencies missing; run 'npm install' in $ROOT"
+  mkdir -p "$STATE"
+  chmod 700 "$STATE"
+
+  if [[ ! -s "$TOKENFILE" ]]; then
+    (umask 077 && node -e 'console.log(require("node:crypto").randomBytes(18).toString("base64url"))' >"$TOKENFILE")
+  fi
+  local token
+  token="$(cat "$TOKENFILE")"
+
+  # Page origin and the tailnet login allowed to type. TOWER_OWNER overrides the login, as a fallback
+  # if the Tailscale-User-Login header turns out to differ from LoginName. Both reach node by env, never argv.
+  local identity origin owner config
+  identity="$(tailscale status --json 2>/dev/null | node "$ROOT/src/tailnet-identity.ts" "$HTTPS_PORT")" || identity=""
+  origin="$(sed -n 1p <<<"$identity")"
+  owner="${TOWER_OWNER:-$(sed -n 2p <<<"$identity")}"
+  [[ -n "$origin" && -n "$owner" ]] || echo "tower: warning: Tailscale identity unavailable; the page stays read-only"
+  config="$(printf '%s\n%s\n%s' "$token" "$origin" "$owner")"
+
+  local pid
+  if pid="$(gateway_pid)" && [[ "$(cat "$CONFIGFILE" 2>/dev/null)" != "$config" ]]; then
+    echo "tower: configuration changed; restarting the gateway"
+    cmd_off >/dev/null
+  fi
+  if pid="$(gateway_pid)"; then
+    echo "tower: gateway already running (pid $pid)"
+  else
+    rm -f "$PIDFILE"
+    if port_answers; then
+      die "port $PORT is already in use by another process; set TOWER_PORT to a free port"
+    fi
+    [[ -S "$SOCKET" ]] || echo "tower: warning: Cockpit socket not found at $SOCKET — open Cockpit; the page retries until it appears"
+    TOWER_PORT="$PORT" TOWER_SOCKET="$SOCKET" TOWER_TOKEN="$token" TOWER_ORIGIN="$origin" TOWER_OWNER="$owner" \
+      TOWER_INPUT_LOG="$STATE/input.log" nohup "${DETACH[@]}" node "$MAIN" >>"$LOG" 2>&1 &
+    pid=$!
+    echo "$pid" >"$PIDFILE"
+    (umask 077 && echo "$config" >"$CONFIGFILE")
+    for _ in $(seq 1 50); do
+      port_is_tower && break
+      kill -0 "$pid" 2>/dev/null || die "gateway exited at startup; see $LOG"
+      sleep 0.1
+    done
+    port_is_tower || { kill "$pid" 2>/dev/null || true; die "gateway did not come up on port $PORT; see $LOG"; }
+  fi
+
+  if ! caffeinate_pid >/dev/null; then
+    # -i: no idle sleep, -s: no system sleep on AC; -w: only while the gateway process lives.
+    "${DETACH[@]}" caffeinate -is -w "$pid" >/dev/null 2>&1 &
+    echo $! >"$CAFFEINATE_PIDFILE"
+  fi
+
+  # The CLI is often a wrapper script around the app binary, so wait on a file, not on a pipe.
+  # On a tailnet where Serve was never enabled it prints a consent link and waits forever.
+  local out="$STATE/serve.out" serve_pid serve_status=0
+  tailscale serve --bg --https="$HTTPS_PORT" "http://127.0.0.1:$PORT" >"$out" 2>&1 &
+  serve_pid=$!
+  for _ in $(seq 1 200); do
+    kill -0 "$serve_pid" 2>/dev/null || break
+    sleep 0.1
+  done
+  if kill -0 "$serve_pid" 2>/dev/null; then
+    pkill -f -- "[Tt]ailscale serve --bg --https=${HTTPS_PORT} " 2>/dev/null || true
+    serve_status=124
+  else
+    wait "$serve_pid" || serve_status=$?
+  fi
+  if [[ "$serve_status" -ne 0 ]] || grep -qi "not enabled" "$out" || ! serve_published; then
+    cat "$out" >&2
+    echo "tower: could not publish on the tailnet; turning everything off" >&2
+    cmd_off >/dev/null
+    exit 1
+  fi
+
+  echo "tower: on — $(tailnet_url "$token")"
+  echo "tower: the Mac stays awake until 'tower off' (a closed MacBook lid without an external display still sleeps)"
+}
+
+cmd_off() {
+  # Always try: it is idempotent, and skipping it on an uncertain check could leave a stale publication.
+  if command -v tailscale >/dev/null 2>&1; then
+    tailscale serve --https="$HTTPS_PORT" off >/dev/null 2>&1 || true
+  fi
+  local pid
+  if pid="$(gateway_pid)"; then
+    kill "$pid" 2>/dev/null || true
+    wait_gone "$pid"
+    echo "tower: gateway stopped"
+  fi
+  if pid="$(caffeinate_pid)"; then
+    kill "$pid" 2>/dev/null || true
+    wait_gone "$pid"
+  fi
+  # gateway.token is the pre-2026-10-23 name of gateway.config.
+  rm -f "$PIDFILE" "$CAFFEINATE_PIDFILE" "$CONFIGFILE" "$STATE/gateway.token"
+  echo "tower: off — tailnet port $HTTPS_PORT unpublished; the Mac can sleep again"
+}
+
+cmd_status() {
+  [[ "${1:-}" == "--json" ]] && { status_json; return; }
+  local pid
+  if pid="$(gateway_pid)"; then echo "gateway:   on (pid $pid, http://127.0.0.1:$PORT)"; else echo "gateway:   off"; fi
+  if pid="$(caffeinate_pid)"; then echo "awake:     yes (caffeinate pid $pid)"; else echo "awake:     no"; fi
+  if command -v tailscale >/dev/null 2>&1 && serve_published; then
+    echo "tailnet:   published on port $HTTPS_PORT (URL printed by 'tower on'; token in $TOKENFILE)"
+  else
+    echo "tailnet:   not published"
+  fi
+  if [[ -S "$SOCKET" ]]; then echo "cockpit:   socket present ($SOCKET)"; else echo "cockpit:   not running (no socket at $SOCKET)"; fi
+}
+
+current_url() {
+  command -v tailscale >/dev/null 2>&1 && serve_published && [[ -s "$TOKENFILE" ]] && tailnet_url "$(cat "$TOKENFILE")"
+}
+
+# The URL carries the token: it goes to node on stdin, never in argv.
+status_json() {
+  local gw aw pub=0 sock=0 url=""
+  gw="$(gateway_pid)" || gw=""
+  aw="$(caffeinate_pid)" || aw=""
+  # Same test as the text status; the URL is extra and may be missing (no token file, tailscale hiccup).
+  command -v tailscale >/dev/null 2>&1 && serve_published && pub=1
+  [[ "$pub" == 1 && -s "$TOKENFILE" ]] && url="$(tailnet_url "$(cat "$TOKENFILE")")"
+  [[ -S "$SOCKET" ]] && sock=1
+  node "$ROOT/src/status-json.ts" "$gw" "$aw" "$pub" "$PORT" "$HTTPS_PORT" "$sock" "$SOCKET" <<<"$url"
+}
+
+cmd_qr() {
+  local url
+  url="$(current_url)" || die "not published on the tailnet; run 'tower on' first"
+  [[ "$url" == https://* ]] || die "tailnet URL unavailable: $url"
+  node "$ROOT/src/qr.ts" <<<"$url"
+}
+
+case "${1:-}" in
+  on) cmd_on ;;
+  off) cmd_off ;;
+  status) cmd_status "${2:-}" ;;
+  qr) cmd_qr ;;
+  *) echo "usage: tower on|off|status [--json]|qr" >&2; exit 2 ;;
+esac

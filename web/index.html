@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#f5f5f7" />
+    <title>Cockpit Tower</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <button id="menu" class="icon-btn" type="button" aria-label="Workspaces and sessions">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+      </button>
+      <button id="current" class="current" type="button" aria-label="Choose session">
+        <span id="cur-avatar" class="avatar"></span>
+        <span class="current-text">
+          <span id="cur-title" class="current-title">Cockpit Tower</span>
+          <span id="cur-sub" class="current-sub"></span>
+        </span>
+      </button>
+      <button id="command" class="command-btn" type="button" aria-pressed="false" hidden>Command</button>
+      <span id="dot" class="status-dot" role="img" aria-label="connecting"></span>
+    </header>
+    <button id="banner" class="banner" type="button" hidden></button>
+    <nav id="tabs" class="tabs" aria-label="Sessions in this workspace"></nav>
+    <main id="terminal">
+      <div id="view" class="view"></div>
+      <button id="to-end" type="button" hidden>↓ end</button>
+    </main>
+    <footer id="composer" class="composer" hidden>
+      <div class="keys" role="toolbar" aria-label="Special keys">
+        <button type="button" data-key="enter" aria-label="Enter">⏎</button>
+        <button type="button" data-key="esc">Esc</button>
+        <button type="button" data-key="ctrl-c" aria-label="Control C">^C</button>
+        <button type="button" data-key="tab">Tab</button>
+        <button type="button" data-key="shift-tab" aria-label="Shift Tab">⇧Tab</button>
+        <button type="button" data-key="left" aria-label="Left">←</button>
+        <button type="button" data-key="up" aria-label="Up">↑</button>
+        <button type="button" data-key="down" aria-label="Down">↓</button>
+        <button type="button" data-key="right" aria-label="Right">→</button>
+      </div>
+      <div class="compose-row">
+        <textarea id="compose" rows="1" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"
+          enterkeyhint="enter" placeholder="Type for the session…" aria-label="Text to send"></textarea>
+        <button id="send" type="button">Send</button>
+      </div>
+      <div id="compose-note" class="compose-note" aria-live="polite"></div>
+    </footer>
+
+    <div id="drawer" class="drawer" hidden>
+      <div class="scrim" id="scrim"></div>
+      <aside class="drawer-panel" aria-label="Workspaces">
+        <div class="drawer-head">
+          <span class="drawer-title">Workspaces</span>
+          <button id="close" class="icon-btn" type="button" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        <div id="groups" class="groups"></div>
+        <div class="drawer-foot">
+          <span id="status" class="status">connecting…</span>
+          <span class="font-controls" aria-label="Text size">
+            <button id="font-down" type="button" aria-label="Smaller text">A−</button>
+            <button id="font-up" type="button" aria-label="Larger text">A+</button>
+          </span>
+          <span id="mode" class="badge">read-only</span>
+        </div>
+      </aside>
+    </div>
+
+    <script src="vendor/xterm.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (work-index / work-find scripts)
+__pycache__/
+*.pyc
+
+# Obsidian per-user state (the vault skeleton ships shared config only)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Plan-gate local marker files and per-user agent settings (never versioned)
+.claude/active_work.json
+.gemini/active_work.json
+.claude/settings.local.json
+node_modules/

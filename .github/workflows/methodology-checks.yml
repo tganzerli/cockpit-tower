@@ -1,0 +1,81 @@
+# Optional CI template (GitHub Actions). Installs as .github/workflows/methodology-checks.yml.
+# Other hosts: keep the two commands and the full-depth checkout; translate the rest.
+#
+# Why it exists: a checker nobody invokes does not warn that anything is wrong. The
+# wiki lint and the commit-trailer check both answered correctly when run, and nothing
+# ran them. A local run also lints the WORKING TREE (untracked files included), not the
+# commit; checkout materializes the commit, so this is what actually lands.
+# See METHODOLOGY §6.7.
+
+name: methodology-checks
+
+on:
+  pull_request:
+  push:
+    # Every permanent line: commits can reach dev/dev_*/staging_* without a PR (a CI or
+    # manual broadcast, a direct-commit exception), and a later release PR excludes them
+    # as "already on a permanent branch" — so they are checked here, on arrival.
+    branches: [main, dev, 'dev_*', 'staging_*']
+
+concurrency:
+  group: methodology-checks-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  commit-trailers:
+    # PRs, plus every push to a permanent line. No skip for merge commits: a message is
+    # not proof of a PR, and re-checking a real PR merge passes (its commits were checked).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # a shallow clone silently drops commits from the range
+      # Only the commits being added. History already on a permanent branch (`main`,
+      # `dev`, `dev_*`, `staging_*`) is excluded: it cannot be rewritten without human
+      # approval, and a release/integration PR (`dev` -> `main`, `staging_<app>` ->
+      # `main`) brings exactly that history, old trailers included. The explicit fetch
+      # guarantees those refs exist locally. On a push, the pushed branch itself is
+      # not excluded (it already contains the new commits).
+      - name: check commit trailers
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+          PUSHED: ${{ github.ref_name }}
+          DEFAULT: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch --no-tags --quiet origin \
+            '+refs/heads/main:refs/remotes/origin/main' \
+            '+refs/heads/dev*:refs/remotes/origin/dev*' \
+            '+refs/heads/staging_*:refs/remotes/origin/staging_*' || true
+          excludes=""
+          for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/main \
+                         refs/remotes/origin/dev 'refs/remotes/origin/dev_*' 'refs/remotes/origin/staging_*'); do
+            [ "$EVENT" != pull_request ] && [ "$ref" = "origin/$PUSHED" ] && continue
+            excludes="$excludes --exclude=$ref"
+          done
+          if [ "$EVENT" = pull_request ]; then
+            python3 scripts/ci/check_commit_trailers.py "origin/$BASE_REF" $excludes
+          elif [ -n "$(printf '%s' "$BEFORE" | tr -d 0)" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            # HEAD is the pushed sha; the range is merge-base(before, HEAD)..sha — before..sha
+            # on a fast-forward, only the new commits after a force-push, empty on a rewind.
+            python3 scripts/ci/check_commit_trailers.py "$BEFORE" $excludes --allow-empty
+          else
+            # New branch (`before` all zeros) or a `before` no longer fetchable: every commit
+            # not yet on the default branch nor on another permanent line.
+            python3 scripts/ci/check_commit_trailers.py "origin/$DEFAULT" $excludes --allow-empty
+          fi
+
+  wiki-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the `stale` warning reads git log of each code_ref
+      # Standard library only — no pip install. Exit 1 = a gate rose above its
+      # baseline (<vault>/_meta/lint-baseline.json). Lowering a baseline is a
+      # deliberate edit; raising one is a conversation, not a commit.
+      - run: python3 .claude/skills/wiki-lint/lint.py --root .

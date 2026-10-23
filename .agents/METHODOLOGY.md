@@ -1,0 +1,338 @@
+# Development Methodology — Cockpit Tower
+
+> Canonical, **LLM-agnostic** document. Any agent (Claude, Codex, Gemini/Antigravity, Cursor, etc.) operating in this repository must follow it. Per-agent specifics live in `.agents/llm/`.
+>
+> **Language note.** This methodology document is written in English. The **knowledge content** it governs — plans, wiki pages, tasks, executions — is authored in **Portuguese (pt-BR)**, the language chosen for this project at install time. Code and identifiers are always in English. If no knowledge language was chosen at install (the value above is still a template placeholder), the agent MUST ask the human which language the wiki/plans should be written in before generating any content.
+>
+> **Language split (human decision at install, 2026-10-22).** **Portuguese (pt-BR):** wiki, plans, tasks, executions, and conversation with the human. **English:** code, identifiers, code comments, commit messages, PR titles and PR bodies.
+
+## 1. Objective
+
+Ensure every piece of work over this repository produces three bound artifacts — **task → plan → execution** — and that the knowledge generated **composes over time** in the **wiki**, instead of being lost to chat history or scattered files.
+
+## 2. Principles
+
+1. **Everything is markdown.** Tasks, plans, executions, wiki — all `.md`. Any LLM can read and write them.
+2. **Paths relative to repo root.** No `$HOME` or user-absolute paths.
+3. **Human gate at every transition.** A plan does not run without approval. An execution does not close without review. The wiki does not update without an explicit `/wiki-sync`.
+4. 🔒 **Source-of-truth discipline.** Every technical claim in the wiki, in a plan, **and in the rules** carries a `file:line` citation. A claim without a citation is marked `⚠ unverified` until someone anchors it.
+   **In the rules this is what makes them verifiable.** A rule that describes code behaviour without pointing at the code **cannot be checked against reality** — it drifts silently and nobody notices, because there is nothing to notice with. Applies to claims that are **new or edited**; it does not demand a backfill of existing text.
+   **A citation is point-in-time:** in a closed trio, annotate a moved source — never "fix" the `file:line` against today's file (conventions §2).
+5. **Scope attribution.** Every wiki page, plan, and execution declares what it affects. In a single-repo project this is the module/area; in a monorepo it is which `apps/*` and/or `packages/*` (see the optional monorepo module).
+6. **The methodology lives in exactly one place.** This file is the source. Per-LLM entry-point stubs (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, …) only point here.
+
+## 3. Repository structure (work layer)
+
+```
+cockpit-tower/
+├── .agents/                    ← meta (consumed by LLMs, outside the Obsidian vault)
+│   ├── METHODOLOGY.md          ← this file (canonical source)
+│   ├── rules/                  ← atomic rules (e.g. mandatory_planning_rule.md)
+│   ├── llm/                    ← per-LLM specifics (claude.md, gemini.md, …)
+│   └── mcp.md                  ← MCP server catalog (if any)
+├── cockpit_tower_wiki/           ← Obsidian vault — knowledge + work
+│   ├── _meta/                  ← conventions, index, log
+│   ├── overview.md             ← map of the product
+│   ├── <knowledge dirs>/       ← domain/entities/services/flows/contracts/decisions/sources…
+│   └── work/                   ← task/plan/execution cycle (versioned, navigable)
+│       ├── tasks/              ← human requests (input)
+│       ├── plans/              ← analysis + plan (generated, human-gated)
+│       └── executions/         ← live log of what was done (written during exec)
+├── .claude/skills/             ← Agent Skills (see §8)
+└── <your code>/                ← application/library source
+```
+
+**Why `work/` lives inside `cockpit_tower_wiki/`:** the Obsidian vault points at `cockpit_tower_wiki/`. Bringing tasks/plans/executions into the vault makes the **Obsidian graph** link work ↔ knowledge — a domain page gains natural backlinks to every plan/execution that touched it. Meanwhile `.agents/` keeps only meta (methodology, rules, per-LLM specifics) — consumed by LLMs but outside the human vault.
+
+> This work-inside-the-vault layout is **load-bearing** and part of the irreducible seed of the methodology. Do not flatten it. See `docs/design-rationale.md` in the kit.
+
+## 4. The work cycle
+
+Every piece of work follows 5 steps. **Do not skip steps.**
+
+> **Optional pre-flight (cold session):** before starting new work, consider `/sync-context` to make sure local code and wiki reflect the latest remote state. Not an inviolable rule — it is context hygiene. Skip in solo sessions on the same machine nobody else touched. See `.claude/skills/sync-context/SKILL.md`.
+
+### 4.1. Unique identifier
+Each piece of work gets an ID: `YYYY-MM-DD_short-slug-in-kebab-case` (e.g. `2026-05-14_diary-schedule-service`). This ID binds the three artifacts (`cockpit_tower_wiki/work/tasks/{ID}.md`, `.../plans/{ID}.md`, `.../executions/{ID}.md`).
+
+### 4.2. Task (human-authored, optional collaboration)
+File: `cockpit_tower_wiki/work/tasks/{ID}.md`. Template: `cockpit_tower_wiki/work/tasks/_template.md`. Contains:
+- Frontmatter: `type: task` (fixed), `work_id`, `scope`, `status` (`open|in_progress|done|cancelled|aborted`), `updated`, `related[]`.
+- The request in natural language.
+- Declared scope: what areas/apps/packages it touches.
+- Acceptance criteria.
+- Links to relevant external sources (e.g. partner-team specs in `cockpit_tower_wiki/sources/external/`).
+- **Optionally, stages** when the task is large or spans more than one action. Each stage can have its own plan/execution and be marked done individually.
+
+**Authorship and collaboration:**
+- The task is, by default, **filled in and edited by the human**. LLM edits fall in **three tiers**:
+  - **Substantive** — creating the task, extending its scope, adding a stage, changing its request or criteria — **only when the human explicitly asks** (e.g. "create a task covering…", "add a stage with these steps…").
+  - **`status`, `updated`, ticking a stage done** — ungated: they report reality, and stale values make the generated catalog lie.
+  - **Non-substantive fixes** (typo, broken link, formatting, frontmatter normalization) — allowed, **announced in the same turn**.
+- Even after such a request, the LLM **proposes** the change (describes what it intends) and only **applies** it after explicit human approval. The gate here mirrors the plan gate (§4.3).
+- `related[]` is a soft exception: the LLM may populate it when it spots pertinent wikilinks, but should still flag the change.
+- **Additional stages may be proposed by the LLM during execution of a prior stage**, when that better serves the demand. Inclusion follows the same gate: LLM proposes, human approves, then the task is updated.
+
+**Model per role — move the work between contexts, not the session between models.** Each phase runs on the model that fits it, but **the session itself does not switch models**. On most agent runtimes the prompt cache is keyed by model: switching mid-session discards the cached prefix and the next request re-reads the whole history uncached, at full price and full latency. Extra capability is therefore bought **per unit of work**, by dispatching a sub-agent — which has its own context and its own cache, and so never touches the session's prefix.
+
+The mapping from phase to role is: authoring the task (§4.2), each pre-plan analysis and broad sweep (§4.2.5), writing the plan (§4.3), reviewing the execution's diff (§4.4.1), and drafting wiki pages (§4.5). **The execution (§4.4) stays on the main thread** — its log is live and its gates are interactive, and an isolated sub-agent can do neither. From it you delegate individual **steps**, in both directions: *up* when a step is harder than the average, and *down* when a step is mechanical. That second direction is real saving, not just avoided loss — without a cheaper destination, mechanical work burns the session's model.
+
+The role's model is a **floor, not a ceiling**. The choice stays **contextual**: it depends on the specific content of the work (reasoning depth, breadth, mechanical vs. exploratory nature, cost/latency, risk), **not** a fixed role→model table. Model line-ups change often — pin **tiers**, never version names, and treat any concrete list as a dated hint. The recommendation to the human is **advisory** (one justification line per point); the human may override.
+
+### 4.2.5. Triage and pre-plan analyses (LLM, with parallel agents)
+
+Before writing the plan, the LLM runs a **triage session**: decide whether **prior analyses** would materially improve the plan (the *what*) or how to conduct it (the *how*).
+
+- **When worthwhile** (≥1 trigger): current architecture/behavior is uncertain and determines the plan's shape; more than one viable approach depends on investigation; cross-boundary or external-contract impact; risky/irreversible change or an area unknown to the agent.
+- **When to skip:** small, mechanical, or already well-understood task — record `analyses: not needed` + one justification line and go straight to §4.3.
+- **If needed:** decompose into **discrete, independent questions** (independence enables parallelism; chain only when genuinely sequential), **dispatch agents in parallel** (one per question), collect findings with `file:line` citations, **synthesize and validate the citations on the main thread** (sub-agents do not share context; a finding without a verifiable citation → `⚠ unverified`).
+
+**Only after analyses close** does the LLM write the plan. The synthesis enters the plan as a dedicated **`Pre-plan analyses`** section (before §4.1 — see `.agents/rules/mandatory_planning_rule.md`). Triage/analysis does **not** replace or pre-empt the plan-approval gate (§4.3).
+
+### 4.3. Plan (LLM, with human gate)
+File: `cockpit_tower_wiki/work/plans/{ID}.md`. Mandatory structure in `.agents/rules/mandatory_planning_rule.md`. Must contain:
+- `Pre-plan analyses` section (synthesis of §4.2.5 with `file:line` citations, or `analyses: not needed`)
+- §4.1 Summary and understanding
+- §4.2 Affected files
+- §4.3 Changes and rationale
+- §4.4 Risks and impact — including the **risk tier**, the **verification** (the command that proves the change works) and **how to revert** (see §4.4.1)
+- §4.5 Execution steps
+- §4.6 **Scope** (areas / `apps/*` / `packages/*`)
+- §4.7 **Wiki impact** (pages to create/update after execution)
+
+**Gate:** the LLM does **not execute code** until the human approves the plan.
+
+Plan frontmatter must include `type: plan`, `work_id`, `scope`, `status` (`draft|approved|executed|cancelled|aborted`), `risk` (`low|medium|high`), `related[]` linking the knowledge pages the plan touches.
+
+### 4.3.5. Branch (after approval, before execution)
+If the project installs a git branching rule (`.agents/rules/git_branching_rule.md` — the core single-repo rule, or the monorepo module's variant at the same path), the branch for the work is created **after** the plan is `approved` and **before** any code runs. The branch name embeds the `work_id` (`<type>/<work_id>__<scope>`), binding the trio to its branch. The creation gate is the rule's own: no branch without an approved plan; never invent a branch name. In a project with no branching rule installed, skip this sub-step and follow the project's normal flow.
+
+### 4.4. Execution (live log)
+File: `cockpit_tower_wiki/work/executions/{ID}.md`. The LLM writes this **during** execution, not at the end. Update after each completed step. Template: `cockpit_tower_wiki/work/executions/_template.md`. Contains:
+- Current status (`in_progress | done | aborted`).
+- The plan's checklist with items marked as they advance.
+- Commits involved (`git log` by hash).
+- **Divergences from the plan, with justification** — if anything changed vs. the plan, record it here.
+- Validations run (tests, lint, build) **with evidence**: the command and the tail of its output.
+- The agent review rounds and the outcome of each finding (§4.4.1).
+- List of wiki pages affected (input for `/wiki-sync`).
+
+🔒 **A validation is its command and its output, not a claim.** "Tests pass" without the command run and the tail of what it printed is `⚠ unverified` — the same rule as a wiki claim without `file:line`. Paste only the tail that proves the result (a few lines), not the whole log. *Why:* verification is the single highest-leverage practice in agent-written code — the Claude Code team estimates it makes results 2–3× better ([Solving code review at Anthropic](https://claude.dev/blog/solving-code-review-at-anthropic/), 2026-10-15).
+
+**Gate:** the human reviews the execution before calling `/wiki-sync` — at the depth the risk tier sets (§4.4.1).
+
+### 4.4.1. Agent review (clean context) and the risk tier
+Before the human gate, a **`reviewer` sub-agent** reviews the execution's diff with a **clean context**: it receives the diff, the plan's §4.1 (intent) and §4.4 (risk, verification, revert), the task's acceptance criteria and `REVIEW.md` — **never** the execution's activity log or the reasoning that produced the code. The author's reasoning contaminates a review; the reviewer must judge the change, not the story of it. Findings come back tagged `Important` / `Nit` / `Pre-existing`, each with `file:line` and the literal excerpt; the main thread fixes or answers each one and records its **outcome** in the execution (`fixed · wrong · intentional · nit-ignored`).
+
+**The change sets the tier, not the author.** The planner proposes `risk` in the plan; the human confirms it with the plan approval — no separate classifier. If the execution drifts into a riskier path, the tier goes **up** (never down) and the change is recorded as a divergence.
+
+| Tier | Typical change | Agent review | Human gate |
+|---|---|---|---|
+| `low` | Docs, wiki, copy, tests-only, additive change behind a disabled flag | Optional — skipping is recorded (`skipped — low`) | Read the execution log: validations and divergences |
+| `medium` | Ordinary product change | One pass, plus fix rounds up to the cap | Read the log and the reviewer's findings; open the diff where a finding points |
+| `high` | Auth, payments, data migrations, destructive operations, CI/release workflows, public contracts, anything listed in `REVIEW.md` "Always high risk" | One pass in **deep** mode (the reviewer explores callers and non-local effects; a higher model tier is allowed) | Read the **full diff** |
+
+🔒 **The agent review never replaces the human gate.** It reduces how much the human has to read, it does not remove the human. Every tier still ends in the human gate; only its depth changes.
+
+🔒 **At most three review rounds.** A round is one reviewer pass plus the fixes it causes. Round 1 reviews the whole work diff; rounds 2–3 review **only the diff since the last reviewed commit**, with the previous findings passed in so nothing is reported twice. Nits never open a round on their own. If round 3 still reports `Important` findings, **stop**: record a divergence and return to the human with them — accept the fixes under human review, or rethink the approach. *Why:* with an agent as author every nit becomes a commit and every commit a new review (one PR at Anthropic ran 50+ rounds overnight); the cap plus diff-only re-review cut mean rounds from 2.08 to 1.32 (same source).
+
+### 4.4.2. The reviewer is tested too
+A postmortem (§5.6) whose bug was visible in a diff records a **reviewer replay case** (template: `cockpit_tower_wiki/postmortems/_template.md`). When the `reviewer` role, `REVIEW.md`'s failure section or the reviewer's model tier change, replay those cases; a change that makes the reviewer miss a case it used to catch is reworked. Replay only on reviewer change, never on a schedule.
+
+### 4.5. Wiki sync (manual)
+Command: `/wiki-sync {ID}`. The LLM:
+1. Reads `cockpit_tower_wiki/work/executions/{ID}.md`.
+2. Updates or creates the knowledge pages listed under "affected wiki pages" (in `cockpit_tower_wiki/<knowledge dirs>/` — **not** in `cockpit_tower_wiki/work/`).
+3. Updates `related[]` of the execution with wikilinks to every page it created/touched.
+4. Updates `cockpit_tower_wiki/_meta/index.md` (knowledge catalog), regenerates the generated sub-indexes it touched (`/wiki-index`) and `cockpit_tower_wiki/work/_index.md` (work catalog; see §5.5).
+5. Appends an entry to `cockpit_tower_wiki/_meta/log.md`:
+   `## [YYYY-MM-DD] wiki-sync | {ID} | N pages touched`
+
+**Gate:** the human reviews the diff before commit.
+
+### 4.6. Directory-scoped overrides
+The full cycle is calibrated for changes to **product code**. A subtree whose work has a different shape — long-form writing, a data corpus, generated assets — MAY declare a **lighter local cycle** through a directory-scoped entry-point (e.g. a nested `CLAUDE.md`/`AGENTS.md` in that subtree). The override replaces the heavy trio/branch flow with one that fits the material (for prose: outline → draft → review → deliver) while **keeping the safeguards that still apply**: the knowledge language, the `file:line` citation discipline, the human gates, and any always-on rule (a performance claim still needs its evidence page). The override is **explicit and local** — it never silently loosens the cycle for product code, and the default everywhere else stays the full cycle. Record the override in the subtree's entry-point so every agent discovers it. For prose specifically, the **writing module** (§11) ships the worked instance: a `content/` entry-point, the writing cycle, and the seal that keeps a citation from being invented.
+
+## 5. The wiki
+
+### 5.1. Purpose
+The wiki is a **composable artifact**. Each ingest (external sources, internal executions, exploratory questions) **adds** to the wiki instead of re-deriving knowledge from scratch. Cross-references already exist. Contradictions were already flagged. The synthesis already reflects everything ingested.
+
+### 5.2. Structure
+```
+cockpit_tower_wiki/                  ← Obsidian vault
+├── _meta/
+│   ├── conventions.md          ← page format, frontmatter, citations
+│   ├── index.md                ← navigable catalog of every knowledge page
+│   └── log.md                  ← chronological, append-only
+├── overview.md                 ← high-level product map
+├── <knowledge dirs>/           ← domains/ entities/ services/ flows/ pages/ contracts/
+├── cross-cutting/              ← subjects that cross boundaries
+├── decisions/                  ← local ADRs
+├── postmortems/                ← lessons from costly bugs + reviewer replay cases (§5.6, §4.4.2)
+├── sources/
+│   ├── external/               ← summaries of external sources (e.g. partner-team specs)
+│   └── internal/               ← summaries of relevant executions
+└── work/                       ← versioned work cycle
+    ├── _index.md               ← generated work catalog (see §5.5)
+    ├── tasks/                  ← human requests (type: task)
+    ├── plans/                  ← analyses + plans (type: plan)
+    └── executions/             ← live logs (type: execution)
+```
+
+> **Monorepo projects** additionally organize knowledge under `apps/<app>/` and `packages/<pkg>/`. That layout and its rules live in the optional **monorepo module** — install it only if the project has multiple apps/packages. See `modules/monorepo/` in the kit.
+
+### 5.3. Page conventions
+See `cockpit_tower_wiki/_meta/conventions.md`. Summary:
+- Mandatory YAML frontmatter (`title`, `type`, `scope`, `status`, `updated`, `sources`, `code_refs`, `related`).
+- `file:line` citation for every technical claim.
+- Wikilinks `[[path/to/page]]` for cross-reference.
+- Status (knowledge): `stub | draft | stable | stale`.
+- Status (work — task): `open | in_progress | done | cancelled | aborted`.
+- Status (work — plan): `draft | approved | executed | cancelled | aborted`.
+- Status (work — execution): `in_progress | done | aborted`.
+
+### 5.4. Two catalogs, distinct semantics
+- `cockpit_tower_wiki/_meta/index.md` catalogs **knowledge** (entities, services, domains, contracts, ADRs). Lint treats `stale` as "code changed since the docs".
+- `cockpit_tower_wiki/work/_index.md` catalogs **work** (tasks/plans/executions). Lint **ignores** `stale` here — a finished execution is not outdated, it is historical.
+
+### 5.5. The work index is generated, not hand-edited
+`cockpit_tower_wiki/work/_index.md` (and `work/archive/YYYY-Qn.md`) are the **deterministic output** of `/work-index`, which reads trio frontmatter. Rules:
+- **Catalog ≠ digest.** Each entry is **one line** (`emoji [[task]] · status · scope · [topic] — summary` + compact links to plan/execution). Long narrative lives in the execution, not the index.
+- **One file per quarter.** `_index.md` keeps only `open`/`in_progress` trios (any date) + those closed in the **current quarter**. Older closed trios go to `work/archive/YYYY-Qn.md`.
+- **Never edit `_index.md`/`archive/*` by hand.** Adjust trio frontmatter and run `/work-index`. On a merge conflict, **regenerate** instead of hand-merging.
+
+Requires `summary` and `topic` frontmatter on every trio. See conventions §"work frontmatter".
+
+> **Corollary — a derivable knowledge catalog is generated too.** `decisions/`, `cross-cutting/`, `sources/external/`, `postmortems/` get their `_index.md` from page `summary` (`/wiki-index`); `_meta/index.md` points at them. Hand-kept sub-indexes drift by omission, silently (`docs/design-rationale.md` in the kit).
+
+### 5.6. Execution = historical log · Knowledge = living memory
+- An **execution** is a **historical log** — chronological, immutable by design, never `stale`, archivable by quarter. It answers "**when/how** was this done".
+- A **knowledge page** is the **living, thematic memory** — the distilled current state. It answers "**what do we know about X today**".
+- **Rule — a recurring lesson graduates to a knowledge page.** When work reveals a costly lesson (recurring bug, discarded hypothesis, non-obvious workaround), that lesson **must not die in the execution**: promote it to a thematic knowledge page (`cross-cutting/` or `postmortems/`). Then "this bug came back — what did we already try?" is answered by reading **one** thematic page, not by chronological archaeology.
+- **Rule — a repeated review finding becomes a rule, not another comment.** Fixing the same finding work after work only guarantees it returns. When the reviewer reports something that already appeared in an earlier work (check with `/work-find`), fix it **at the source** that should have prevented it — a lint/check, a test, a skill or agent-instruction line, or a rule clause with provenance (§10.1) — and record where it went in the execution. When the human marks a finding `wrong` or `intentional` and it is a pattern, add it to `REVIEW.md` "Do not flag" with its origin `work_id`, so the reviewer stops paying for it. `CLAUDE.md`/`AGENTS.md` teach how to write here; `REVIEW.md` teaches how to review here.
+- To **find** old work: use `/work-find <term>` (ranked grep over executions+frontmatter) instead of re-reading the index.
+
+## 6. Operational workflows
+
+### 6.1. External source ingest
+1. Human places the source in a known location (or links it).
+2. Human requests the ingest.
+3. LLM reads, discusses takeaways with the human.
+4. LLM creates `cockpit_tower_wiki/sources/external/YYYY-MM-DD_slug.md` — short summary + absolute link + list of topics covered. **Do not copy raw content.**
+5. LLM identifies and updates the affected wiki pages.
+6. LLM updates `index.md` and `log.md`.
+
+See `.claude/skills/ingest-source/SKILL.md`.
+
+### 6.2. Query (exploratory question)
+1. LLM reads `cockpit_tower_wiki/_meta/index.md` first.
+2. Drills into relevant pages.
+3. Answers with citations to wiki pages.
+4. If the answer has durable value, offer to archive it as a new page.
+
+### 6.3. Lint (wiki health)
+Run periodically (`/wiki-lint`). Check: knowledge pages `status: stale`; orphan pages; contradictions; topics mentioned but without a page; broken cross-references; tasks `open` too long without a plan; plans `approved` too long without an execution; executions `in_progress` too long without progress. Lint **ignores** `cockpit_tower_wiki/work/` for `stale`. Unambiguous checks are scripted gates that ratchet against a baseline, in CI.
+
+### 6.4. Wiki sync (post-execution)
+See §4.5.
+
+## 6.5. Gates are marked inline, and the list is generated
+
+A rule file grows two kinds of sentence: **obligations** (proibitions, gates, mandatory sequences) and **recipes** (command runbooks, release flows, worked examples). Most projects keep a consolidated "gates" list at the end of the rule as a **summary** of the obligations scattered through the body.
+
+**That summary drifts, and it drifts silently.** A sub-rule added to the body is a gate the day it is written; the summary is updated only if the author remembers. In the project this kit came from, an exhaustive sweep of four normative documents found **29 imperative sub-rules living only in the body**, against 26 items in the three consolidated lists — more unlisted gates than listed ones. Several were tied to incidents that had already happened.
+
+The fix is not to promote them by hand into a bigger summary, which would drift again. It is to change the regime:
+
+- Every sub-rule that is a gate carries a marker (`🔒`) **on its own line, in the body, where it already lives**.
+- The consolidated list is **generated** from those markers, and points back with `file:line`. It is a router, not a digest.
+- Either it has the marker and appears, or it is not a gate. There is no third state.
+
+This is the same verdict as "the work index is generated, not hand-edited" (§5.5): **regenerate beats hand-maintain**, for the same reason. Generator: `/wiki-lint`'s `list_gates.py`.
+
+> Two traps, both learned the hard way. **Do not mark meta** — a note that *talks about* gates is not one, and self-inclusion inflates the list silently. And **read the generated summary**: if a marked line's summary does not stand on its own, the marker is on the wrong line (a section heading, or the tail of a previous sentence) — that reading is the cheapest correctness check you have.
+
+## 6.6. The mandatory prefix has a budget
+
+Everything an agent must read before it can start is a **prefix** paid on every session — and, on runtimes where the prompt cache is keyed by model or effort, re-paid on every switch. It also competes directly with the work: source files, build output, device logs.
+
+Three failure modes produce a bloated prefix, and all three are structural rather than a discipline problem:
+
+1. **Catalogs read instead of searched.** An index exists to be queried; an entry-point that says "read it" turns a growing artifact into a fixed per-session cost. Fix: §9's two-level list, plus a search skill.
+2. **Catalog entries that became digests.** One paragraph per entry duplicates what the target page already says. Fix: one line per entry, a byte budget on the file, and a check that **fails** — a convention with no verification is a suggestion.
+3. **Recipe living inside a normative rule.** The obligation must be loaded always; the runbook around it must not. Fix: keep the gate in the rule, move the recipe to a skill (§8 — the skill body is genuinely deferred).
+
+**Some runtimes also cap each file.** Antigravity CLI cuts every rule file at ~24,000 bytes and the model never sees the rest — a gate past the cut is silently absent, and the rule still looks loaded. So every file an agent loads whole (a rule of any trigger, a root entry-point, a skill body) has a per-file target of **≤ 22,000 bytes** after de-templating, and `/wiki-lint`'s `rule-size` gate enforces it. Over the target, move rationale, examples and history into the rule's skill or runbook, behind a one-line pointer; never a 🔒 line.
+
+**Measure before you cut, and measure at section granularity.** A file-level ratio ("the core is ~30%") is misleading: the heavy sections tend to be exactly the ones containing gates, so the movable share is smaller than the average suggests. Cut against a measurement, not an estimate.
+
+## 6.7. Every non-negotiable needs a mechanism
+
+A rule, copy or check that nobody runs does not warn that it is wrong — written rules were broken repeatedly until a check existed (provenance: `docs/design-rationale.md` in the kit). A guard that works:
+
+- **Ask "when it finds a violation, what does it return?"** An analyzer that prints the violation and exits 0 approves the PR.
+- **See it red once** — plant a violation, watch it fail, revert.
+- **Give it a trigger** (CI, or a script step of a skill that runs); manual-only is a suggestion.
+- **Scope it to what the change adds** (the PR range); a permanently red pipeline gets ignored.
+- **Start advisory, block via a ratchet or incremental mode** — never on zero from day one; never charge a branch for debt it cannot fix.
+- **Fail loudly when it cannot verify** (unresolved base, shallow clone, empty range).
+
+## 7. Anti-patterns (do NOT)
+- ❌ Execute code without plan approval.
+- ❌ Write to the wiki without a `file:line` citation.
+- ❌ Copy raw content from external sources into the wiki (use summary + link).
+- ❌ Mix content from different areas/apps/packages in one page without it being cross-cutting.
+- ❌ Rewrite an entire plan when the human asks for a punctual adjustment (use surgical edits).
+- ❌ Close an execution without recording divergences from the plan.
+- ❌ Record a validation as passed without its command and output.
+- ❌ Review a diff in the same context that wrote it, or hand the reviewer the execution's reasoning.
+- ❌ Run a fourth review round instead of returning to the human to rethink the approach.
+- ❌ Fix the same review finding a second time without promoting it to a rule, check or `REVIEW.md` line.
+- ❌ Update the wiki automatically in a PR — always go through `/wiki-sync` with a human gate.
+- ❌ Pseudocode in the wiki. If it has no `file:line`, it is `⚠ unverified`.
+- ❌ A non-negotiable with no mechanism, or a guard never seen red (§6.7).
+
+## 8. Agent Skills
+
+This project adopts the [Agent Skills spec](https://agentskills.io/specification). Skills live in `.claude/skills/` (the conventional path Claude Code discovers natively; other agents consume the same directory via an instruction in their entry-point). Each skill is a directory with `SKILL.md` (frontmatter + body) and optionally `references/*.md`.
+
+⚠️ **Know which half of that is a mechanism.** On Claude Code the **body of a skill genuinely does not enter context until the skill is invoked** — that is runtime behaviour, and it is the lever. `references/*.md`, by contrast, is a **naming convention**: the model reads those files because the `SKILL.md` prose tells it to, not because anything defers them. Outside a skill directory, a `references/` folder is indistinguishable from any other path mentioned in prose. Verify this on your own runtime before designing around it — the distinction decides whether "move it to `references/`" buys anything at all.
+
+Core skills (portable to any project): `work-cycle`, `wiki-sync`, `wiki-lint`, `wiki-index`, `ingest-source`, `commit`, `sync-context`, `work-index`, `work-find`, `work-audit`, `methodology-upgrade`. Skills do not replace METHODOLOGY or rules — they offload material that can live on demand. Catalog in `.claude/skills/_index.md`.
+
+## 9. For agents new to the project
+
+**Read always, in order:**
+
+1. This document (`.agents/METHODOLOGY.md`).
+2. `.agents/rules/mandatory_planning_rule.md`.
+3. `.agents/rules/git_branching_rule.md` (the core single-repo branching rule; if the monorepo module is installed, the same path holds its monorepo variant, which also brings `.agents/rules/knowledge_source_of_truth_rule.md`).
+4. `.agents/llm/<your-name>.md`, if present.
+5. `cockpit_tower_wiki/overview.md` — the product map.
+
+**Consult on demand — catalogs and references, not prerequisites:**
+
+- `cockpit_tower_wiki/work/_index.md` — work in flight. To find *past* work, **search** (`/work-find <term>`), do not read the catalog end to end.
+- `cockpit_tower_wiki/_meta/index.md` — the knowledge catalog.
+- `cockpit_tower_wiki/_meta/conventions.md` — only if you will write to the wiki.
+- `.claude/skills/_index.md` — Claude Code discovers skills by itself; the index is for understanding the set, not a prerequisite.
+- `.agents/mcp.md` — the MCP server catalog, when the project has one. Every MCP client reads its config from a different path, so the catalog is what keeps the mirrored files in agreement; consult it before adding or removing a server.
+
+> **Why the split.** Loading a catalog at session open costs context that then competes with the actual work — and catalogs grow monotonically while the work does not. Everything that is a **gate** is in the first list; the rest is looked up. This is the single highest-return change in this document: in the project this kit came from it cut the mandatory prefix by more than half, on its own.
+
+## 10. Version and evolution
+This methodology is versioned with the code. Relevant changes append an entry to `cockpit_tower_wiki/_meta/log.md`: `## [YYYY-MM-DD] methodology-update | summary`.
+
+### 10.1. Rules carry their provenance
+A rule — or a single rule clause — that exists because of a concrete incident **cites that incident inline**, the same discipline as a wiki claim citing `file:line`. When a costly lesson hardens a rule (a recurring failure, a discarded hypothesis, a non-obvious workaround graduated from an execution per §5.6), the new clause names its origin: a dated `postmortems/`/`cross-cutting/` page, an ADR, or the commit/cycle that produced it. This makes each clause **self-justifying** — the methodology shows its evidence instead of asking for faith — and **safe to prune**, because you can tell why a clause exists before removing it. Keep provenance markers terse (a wikilink or a short parenthetical); the narrative lives in the cited page, not in the rule.
+
+## 11. Optional modules
+- **Monorepo module** (`modules/monorepo/` in the kit): git branching model, knowledge-canonical-in-`main` rule, `promote-knowledge`/`sync-knowledge`/`distribute-packages` skills, CI broadcast. Install only for multi-app/multi-package repos with per-app branches.
+- **Cross-team module** (`modules/cross-team/` in the kit): `cross-team-handoff` skill, handoff/response/living-contract templates, extended source frontmatter. Install only when a partner team collaborates through their own LLM.
+- **Intra-team module** (`modules/intra-team/` in the kit): `intra-team` skill (notes/requests/responses/handoffs/conflicts + coordination board), message/board templates, extended relay frontmatter. The mirror of cross-team for agents that **share** the repo — reference-first instead of self-contained. Install only when more than one agent works the repo and needs to coordinate.
+- **Peer-relay module** (`modules/peer-relay/` in the kit): the **third value** of the axis the two modules above split on — an agent in a *separate repo on the same machine* that **can read** your files but does not **share** your checkout. Self-contained wastes the access that exists; reference-first produces ambiguity (the same `path:line` exists in both repos) and dead wikilinks (separate vaults). Adds a `peer-relay` skill, a **peer registry** (`.agents/peers.md`) that is the absorption mechanism, and a qualified-citation rule where a `file:line` without a repo prefix is a format error. Registers a `relay` ephemeral branch **scope** — delivery is by Pull Request, and relay messages are neither knowledge layer nor tooling. Requires the intra-team module, whose machinery it inherits rather than duplicates. Install only when another project on this machine is a genuine collaborator.
+- **Benchmarks module** (`modules/benchmarks/` in the kit): the empirical-claim discipline — a `benchmark_protocol_rule.md`, a benchmark-page template, a `run-benchmark` skill, and a conventions extension adding the `⚠ unverified <metric>` seal (a quantitative claim without a reproducible page cannot be cited). Registers a `bench` ephemeral branch type. Install when the project makes quantitative/empirical claims (performance, cost, accuracy, …) it must stand behind.
+- **Contracts module** (`modules/contracts/` in the kit): the cross-boundary-contract discipline — a `contract_change_rule.md` requiring an atomic ADR + synchronized multi-artifact PR for any change to a versioned contract (public API, DB schema, wire/IPC protocol, event schema, FFI ABI), an ADR-contract template, and a `⚠ contract-drift` tag. Registers a `contract` ephemeral branch type. Install when the project exposes a versioned contract other code/teams depend on.
+- **Writing module** (`modules/writing/` in the kit): long-form prose as a first-class deliverable — a directory-scoped override (§4.6) installing a `content/` entry-point with the writing cycle (outline → draft → review → polish → deliver), three human-gated skills (`write-academic`, `write-article`, `write-post`), and a conventions extension adding the `⚠ source needed` seal (a bibliographic assertion with no real source cannot be delivered). Prose reads from the vault and never writes back. Install when the project delivers writing — a thesis, papers, articles, posts — derived from the work it does.
+- **Dev-environment module** (`modules/dev-env/` in the kit): reproducible external-service environments — a `dev_environment_rule.md` (versioned per-service containers, mandatory healthcheck, persistent/ephemeral/benchmark lifecycle modes) and a `dev-env` skill. Install when the project depends on external services (DB, broker, cache, …) that must be reproducible across machines and CI.
