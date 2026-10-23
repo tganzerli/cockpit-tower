@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-23_public-repo-migration
 scope:
   area: [repo]
-status: open
+status: in_progress
 updated: 2026-10-23
 summary: Criar tganzerli/cockpit-tower público a partir de um commit inicial sanitizado; o repositório atual vira tganzerli/cockpit-tower-archive, privado.
 topic: [tooling]
@@ -32,9 +32,9 @@ O dono quer tornar o tower público. Não há decisão registrada para ele ser p
 
 ## Critérios de aceite
 
-- [ ] O conteúdo da `dev` não tem o nome do Mac na tailnet, os nomes de projetos do dono, o e-mail pessoal nem caminhos com o usuário. Uma varredura com padrões fixos não acha nada.
-- [ ] `npm test` passa depois da troca nos testes.
-- [ ] `tganzerli/cockpit-tower` é público, com `main` e `dev` num commit inicial sanitizado, de autor noreply.
-- [ ] O repositório antigo continua privado como `tganzerli/cockpit-tower-archive`, com todo o histórico e os PRs.
-- [ ] O clone local aponta para o público, e o arquivo fica como remote secundário. O tower continua rodando.
+- [x] O conteúdo da `dev` não tem o nome do Mac na tailnet, os nomes de projetos do dono, o e-mail pessoal nem caminhos com o usuário. Uma varredura com padrões fixos não acha nada.
+- [x] `npm test` passa depois da troca nos testes.
+- [x] `tganzerli/cockpit-tower` é público, com `main` e `dev` num commit inicial sanitizado, de autor noreply.
+- [x] O repositório antigo continua privado como `tganzerli/cockpit-tower-archive`, com todo o histórico e os PRs.
+- [x] O clone local aponta para o público, e o arquivo fica como remote secundário. O tower continua rodando.
 - [ ] O CI (`methodology-checks.yml`) roda no público.
