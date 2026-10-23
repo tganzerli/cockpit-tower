@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-23_public-repo-migration
 scope:
   area: [repo]
-status: approved
+status: executed
 risk: high
 updated: 2026-10-23
 summary: Sanitizar a dev, renomear o repositório atual para cockpit-tower-archive (privado) e publicar tganzerli/cockpit-tower a partir de um commit inicial limpo.

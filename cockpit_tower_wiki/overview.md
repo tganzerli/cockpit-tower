@@ -38,6 +38,8 @@ Single-repo default: list the functional areas/modules of the codebase.
 | panel | `panel/` | Painel do Cockpit (`tower.panel`) que liga/desliga o tower e mostra estado, URL e QR — [[flows/tower-on-off]] |
 | upstream-cockpit | fora do repo (fork `tganzerli/remote_pi`) | Contribuições ao Cockpit (`remote_pi`) feitas a partir do tower; o código fica no fork, aqui ficam o trio e o conhecimento |
 
+Repositório público: `github.com/tganzerli/cockpit-tower`, desde 2026-10-23, a partir de um commit inicial sanitizado. O histórico anterior (PRs #1–#22) está num arquivo privado ([[work/executions/2026-10-23_public-repo-migration]]).
+
 Decisão central: [[decisions/2026-10-23_phone-input-client]] — libera só `pty.input`, por conexão em modo de comando e para a sessão assistida, com `Origin`, dono do Tailscale e registro local. Ela substituiu [[decisions/2026-10-22_read-only-client]] e foi refinada por [[decisions/2026-10-23_phone-pty-resize]], que libera `pty.resize` só em modo de comando, com o tamanho do Mac devolvido.
 
 <!--
