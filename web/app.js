@@ -65,6 +65,8 @@
   // Typing state mirrors the gateway, which owns it: the page never assumes command mode is on.
   let mayCommand = false;
   let commandOn = false;
+  // The (+) request waiting for its session to show up in a list: { ws, before, at }, or null.
+  let newTab = null;
   // The agent scroll in progress (a one-finger drag in command mode) and the lines not yet sent.
   let drag = null;
   let pendingWheel = 0;
@@ -464,7 +466,42 @@
         b.onclick = () => select(s);
         return b;
       }),
+      ...(current && ws !== '' && mayCommand ? [newTabButton(ws)] : []),
     );
+  }
+
+  // The (+) at the end of the strip, as on the Mac: a terminal in this workspace, opened by the gateway in command
+  // mode (ADR 2026-10-24_phone-new-tab). The page sends no folder; the gateway uses the watched session's.
+  function newTabButton(ws) {
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'tab-add';
+    add.textContent = '+';
+    add.setAttribute('aria-label', 'New terminal');
+    add.disabled = !commandOn || newTab !== null;
+    add.onclick = () => {
+      if (!send({ type: 'new-tab' })) return note('not sent: no connection', 'bad');
+      newTab = { ws, before: new Set(sessions.map((s) => s.id)), at: Date.now() };
+      renderTabs();
+    };
+    return add;
+  }
+
+  /** Selects the session the (+) opened once a list has it: a new id in the same workspace. Gives up after 15 s. */
+  function pickNewTab() {
+    if (!newTab) return false;
+    const opened = sessions.find((s) => !newTab.before.has(s.id) && groupOf(s).ws === newTab.ws);
+    if (opened) {
+      newTab = null;
+      select(opened);
+      return true;
+    }
+    if (Date.now() - newTab.at > 15000) {
+      newTab = null;
+      note('terminal opened on the Mac; pick it in the tabs');
+      renderTabs();
+    }
+    return false;
   }
 
   // Opening a workspace lands where this phone last was in it, else on Cockpit's focused tab there, else on
@@ -694,6 +731,15 @@
     busy: 'another viewer sized this session; lines wrap',
     gone: 'session ended',
   };
+  const NEW_TAB_REASONS = {
+    ...REASONS,
+    no_workspace: 'no workspace for this terminal',
+    no_anchor: 'open a terminal in this workspace on the Mac first',
+    gone: 'workspace not open in Cockpit',
+    remote: 'remote workspaces are not supported',
+    failed: 'Cockpit did not open the terminal',
+    opening: 'already opening a terminal',
+  };
 
   function note(text, kind) {
     noteEl.textContent = text || '';
@@ -717,6 +763,7 @@
       note('');
       composeEl.blur();
     }
+    renderTabs(); // the (+) follows command mode
     fitViewport();
   }
 
@@ -927,6 +974,7 @@
           if (again) return select(again);
         }
         renderSessions();
+        if (pickNewTab()) return;
         const hasTabs = sessions.some((s) => s.info && s.info.tab);
         if (!current && sessions.length > 0) {
           select(preferred());
@@ -953,6 +1001,11 @@
         onSize(msg);
       } else if (msg.type === 'resize' && msg.ok === false) {
         note(REASONS[msg.reason] || `size not set: ${msg.reason}`, 'bad');
+      } else if (msg.type === 'new-tab' && msg.ok === false) {
+        if (msg.reason === 'opening') return; // the first request is still running: keep waiting for its session
+        newTab = null;
+        note(NEW_TAB_REASONS[msg.reason] || `terminal not opened: ${msg.reason}`, 'bad');
+        renderTabs();
       } else if (msg.type === 'wheel' && msg.ok === false) {
         note(msg.reason === 'invalid' ? 'scroll not sent' : REASONS[msg.reason] || `scroll not sent: ${msg.reason}`, 'bad');
       } else if (msg.type === 'error') {
@@ -961,6 +1014,7 @@
     };
     ws.onclose = (event) => {
       clearInterval(pingTimer);
+      newTab = null; // a request on the old connection gets no answer
       setCommand(false); // a new connection starts with command mode off
       if (event.code === 4408) {
         setStatus('disconnected after inactivity, tap to reconnect', 'warn');

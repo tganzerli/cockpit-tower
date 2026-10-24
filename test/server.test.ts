@@ -1018,3 +1018,151 @@ test('a wheel after selecting another session is refused: command mode does not 
   await tower.close();
   await fake.close();
 });
+
+// --- A new terminal from the phone (ADR 2026-10-24_phone-new-tab) ---
+
+const W = '/Users/me/app/w';
+/** s1 lives in workspace W; s2 has no workspace. */
+const workspaceInfo = (async (sessions: Array<{ id: string }>) => ({
+  info: Object.fromEntries(sessions.map((s) => [s.id, { workspace: s.id === 's1' ? { name: 'w', path: W, rank: 0 } : null }])),
+  theme: 'system',
+})) as unknown as TowerServerOptions['sessionInfo'];
+
+/** A newTab that records the folders it was asked for; `hold` keeps it running until released. */
+function fakeNewTab(result: Awaited<ReturnType<NonNullable<TowerServerOptions['newTab']>>> = { ok: true, tabId: 't12' }) {
+  const folders: string[] = [];
+  let release: (() => void) | undefined;
+  let hold = false;
+  const newTab: NonNullable<TowerServerOptions['newTab']> = async (folder) => {
+    folders.push(folder);
+    if (hold) await new Promise<void>((r) => (release = r));
+    return result;
+  };
+  return { newTab, folders, holdNext: () => (hold = true), release: () => release?.() };
+}
+
+async function newTabTo(v: { ws: WebSocket; inbox: Array<Record<string, unknown>> }, msg: object = {}) {
+  const before = v.inbox.filter((m) => m.type === 'new-tab').length;
+  v.ws.send(JSON.stringify({ type: 'new-tab', ...msg }));
+  await waitFor(() => v.inbox.filter((m) => m.type === 'new-tab').length > before);
+  return last(v.inbox, 'new-tab');
+}
+
+test('new-tab outside command mode is refused and nothing opens', async () => {
+  const nt = fakeNewTab();
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await watching(port);
+  assert.deepEqual(await newTabTo(v), { type: 'new-tab', ok: false, reason: 'command_off' });
+  assert.deepEqual(nt.folders, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('another Tailscale login cannot open a terminal', async () => {
+  const nt = fakeNewTab();
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await watching(port, { headers: { 'tailscale-user-login': 'someone@else.com' } });
+  v.ws.send(JSON.stringify({ type: 'command', on: true }));
+  assert.equal((await newTabTo(v))?.reason, 'command_off');
+  assert.deepEqual(nt.folders, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('without the input option, new-tab is refused even if a newTab is given', async () => {
+  const nt = fakeNewTab();
+  const { fake, tower, port } = await setup({ sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const { ws, inbox } = viewer(port);
+  await waitFor(() => inbox.some((m) => m.type === 'sessions'));
+  ws.send(JSON.stringify({ type: 'select', id: 's1' }));
+  assert.equal((await newTabTo({ ws, inbox }))?.reason, 'command_off');
+  assert.deepEqual(nt.folders, []);
+  ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('new-tab opens in the watched session\'s workspace, logged first, ignoring anything the browser sends', async () => {
+  const nt = fakeNewTab();
+  const { file, log } = tempLog();
+  const { fake, tower, port } = await inputSetup(log, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await commanding(port);
+  const lists = v.inbox.filter((m) => m.type === 'sessions').length;
+  const answer = await newTabTo(v, { folder: '/etc', cwd: '/tmp', dir: '/', id: 's2' });
+  assert.deepEqual(answer, { type: 'new-tab', ok: true, folder: W });
+  assert.deepEqual(nt.folders, [W]);
+  const line = JSON.parse(readFileSync(file, 'utf8').trim().split('\n').at(-1)!);
+  assert.deepEqual([line.kind, line.session, line.folder, line.login], ['new-tab', 's1', W, 'me@example.com']);
+  await waitFor(() => v.inbox.filter((m) => m.type === 'sessions').length > lists); // a fresh list for the page to pick from
+  assert.ok(fake.received.every((m) => ALLOWED_OUTBOUND.has(m.t)));
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a watched session with no workspace has nowhere to open', async () => {
+  const nt = fakeNewTab();
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await watching(port);
+  v.ws.send(JSON.stringify({ type: 'select', id: 's2' }));
+  await waitFor(() => fake.received.some((m) => m.t === 'pty.attach' && m.id === 's2'));
+  v.ws.send(JSON.stringify({ type: 'command', on: true }));
+  await waitFor(() => last(v.inbox, 'command')?.on === true);
+  assert.equal((await newTabTo(v))?.reason, 'no_workspace');
+  assert.deepEqual(nt.folders, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a log that cannot be written refuses new-tab', async () => {
+  const nt = fakeNewTab();
+  const failing: InputLog = { append: () => false };
+  const { fake, tower, port } = await inputSetup(failing, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await commanding(port);
+  assert.equal((await newTabTo(v))?.reason, 'log_failed');
+  assert.deepEqual(nt.folders, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a second new-tab while one is running is refused', async () => {
+  const nt = fakeNewTab();
+  nt.holdNext();
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await commanding(port);
+  v.ws.send(JSON.stringify({ type: 'new-tab' }));
+  await waitFor(() => nt.folders.length === 1);
+  assert.equal((await newTabTo(v))?.reason, 'opening');
+  nt.release();
+  await waitFor(() => last(v.inbox, 'new-tab')?.ok === true);
+  assert.deepEqual(nt.folders, [W]);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a newTab that throws is a failure, not a crash', async () => {
+  const newTab: NonNullable<TowerServerOptions['newTab']> = async () => {
+    throw new Error('boom');
+  };
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab });
+  const v = await commanding(port);
+  assert.deepEqual(await newTabTo(v), { type: 'new-tab', ok: false, reason: 'failed' });
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a failure from Cockpit comes back as the refusal reason', async () => {
+  const nt = fakeNewTab({ ok: false, reason: 'remote' });
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: nt.newTab });
+  const v = await commanding(port);
+  assert.deepEqual(await newTabTo(v), { type: 'new-tab', ok: false, reason: 'remote' });
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});

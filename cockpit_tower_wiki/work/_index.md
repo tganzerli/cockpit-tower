@@ -18,6 +18,8 @@ updated: 2026-10-24
 
 ## Closed — 2026-Q4 (current quarter)
 
+- ✅ [[work/tasks/2026-10-24_viewer-new-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
+  — Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova. ↳ [plan](work/plans/2026-10-24_viewer-new-tab-button) · [exec](work/executions/2026-10-24_viewer-new-tab-button)
 - ✅ [[work/tasks/2026-10-24_exec-process-group-citations]] · `done` 10-24 · `wiki` [wiki]
   — As três citações de bin/tower em cross-cutting/cockpit-exec-process-group voltaram às linhas certas; o aviso stale do wiki-lint saiu. ↳ [plan](work/plans/2026-10-24_exec-process-group-citations) · [exec](work/executions/2026-10-24_exec-process-group-citations)
 - ✅ [[work/tasks/2026-10-24_compose-font-workspace-nav]] · `done` 10-24 · `viewer` [ui]

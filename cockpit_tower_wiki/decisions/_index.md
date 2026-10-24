@@ -2,7 +2,7 @@
 title: Decisions — Architecture Decision Records
 type: index
 status: generated
-updated: 2026-10-23
+updated: 2026-10-24
 ---
 
 # Decisions — Architecture Decision Records
@@ -11,9 +11,10 @@ updated: 2026-10-23
 > frontmatter (`summary`, `status`) and regenerate. `_meta/index.md` points here
 > instead of repeating the list — a second copy drifts from the first.
 
-## Pages (4)
+## Pages (5)
 
+- [[decisions/2026-10-24_phone-new-tab]] — O gateway pode rodar um único verbo de escrita da CLI do Cockpit, new-tab, em modo de comando e com registro antes; pasta e aba âncora saem da listagem do Cockpit, nunca do navegador, e o Mac pode trocar de workspace. · _accepted_
 - [[decisions/2026-10-23_phone-pty-resize]] — Libera pty.resize só em modo de comando, para a sessão assistida, com tamanho limitado e registrado; o tower guarda o tamanho do Mac e o devolve uma vez por ciclo, se a PTY ainda estiver no tamanho que ele pôs. · _accepted_
-- [[decisions/2026-10-23_phone-input-client]] — Libera pty.input em modo de comando, para a sessão assistida, com Origin, dono do Tailscale e registro local; kill/open/ack/rpc seguem proibidos e nunca há pty.ack. Refinada pelas ADRs do resize e da roda. · _accepted_
+- [[decisions/2026-10-23_phone-input-client]] — Libera pty.input em modo de comando, para a sessão assistida, com Origin, dono do Tailscale e registro local; kill/open/ack/rpc seguem proibidos e nunca há pty.ack. Refinada pelas ADRs do resize, da roda e do terminal novo. · _accepted_
 - [[decisions/2026-10-23_phone-fullscreen-scroll]] — A roda do mouse vira entrada nomeada (wheel), só em modo de comando; o gateway monta os bytes por três moldes (SGR, X10, setas), limita quantidade e posição e registra antes de enviar por pty.input, seguindo as regras do app do Mac. · _accepted_
 - [[decisions/2026-10-22_read-only-client]] — Só hello/list/attach/detach; nunca pty.ack; uma conexão por espectador; acesso por token + header do Tailscale. · _superseded_
