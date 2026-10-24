@@ -13,6 +13,8 @@ updated: 2026-10-24
 
 ## In progress (open / in_progress / future / paused)
 
+- 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
+  — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
   — tganzerli/cockpit-tower publicado a partir de um commit inicial sanitizado; o histórico antigo ficou em tganzerli/cockpit-tower-archive, privado. ↳ [plan](work/plans/2026-10-23_public-repo-migration) · [exec](work/executions/2026-10-23_public-repo-migration)
 

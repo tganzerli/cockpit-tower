@@ -99,6 +99,13 @@ exit=1
 - O dono aprovou ("ok") depois do resumo, que tinha o diff, o registro e a checagem sugerida no iPhone.
 - **A checagem no iPhone não foi registrada nesta sessão:** a aprovação veio sem relato de uso no aparelho. As validações reais ficaram nos testes pelo gateway `--dev` (seção Validações).
 
+### `2026-10-24` — checagem do dono no iPhone (depois do merge, PR #11)
+
+- O dono testou no aparelho, pelo gateway de produção (`~/.cockpit-tower/input.log`):
+  - **Fechou:** `t44` (21:31:25, sessão `s19`) e `t161` (21:31:36, `s22`), ambos o único terminal de agent-dev-methodology. Depois da `t161`, o app deixou a aba vazia, como previsto. A `t44` que o passo 11 listou como possível efeito colateral era do dono.
+  - **Não fechou:** os terminais que o dono abriu pelo (+) em cockpit-tower às 21:29 e às 21:30. Com eles, o workspace ficou com dois terminais, e o (x) recusou `no_tab`. A recusa vem antes do registro, por isso não há linha `close-tab`.
+- A recusa é a da regra do terminal único (custo aceito na ADR), mas impede um uso natural: fechar o que o celular acabou de abrir. Isso virou o k26, trio [[work/tasks/2026-10-24_phone-made-tab-close]].
+
 ## Commits
 
 - `3f43617` docs(work): open the viewer-close-tab-button task and plan
@@ -204,4 +211,4 @@ Cada título é o da aba real do workspace (`list-tabs`). Nada foi fechado nem r
 
 ## Notas abertas
 
-—
+- Terminal aberto pelo (+) não fecha pelo (x) num workspace com outro terminal: k26 ([[work/tasks/2026-10-24_phone-made-tab-close]]).
