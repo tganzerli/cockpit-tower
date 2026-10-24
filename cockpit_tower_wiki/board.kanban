@@ -76,20 +76,6 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       - recusar quando um agente está trabalhando (`tab.working`)?
       - só em modo de comando (como o +)?
 
-- [ ] `tower off` diz "off" e deixa o gateway vivo na porta <!-- id: k25 labels: bug, média, P, bin -->
-      **O quê:** em 2026-10-24, o `bin/tower off` do worktree do k23 respondeu "tower: off" sem a linha "tower: gateway stopped". O gateway (pid 28072) continuou vivo na porta 7681, já sem a publicação no tailnet e sem o `gateway.pid`. Depois, o `tower on` do checkout principal morreu com "port 7681 is already in use by another process". Foi preciso um `kill` à mão.
-
-      **Contexto (`bin/tower`):**
-      - `cmd_off` só para o gateway se `gateway_pid` reconhece o pid do `gateway.pid` com o caminho do próprio checkout (`$MAIN`). Senão segue em silêncio e apaga o pidfile mesmo assim (`cmd_off`, linhas ~157-175).
-      - Os erros de `kill` são engolidos (`|| true`). O `wait_gone` trata qualquer falha do `kill -0` como "morreu", inclusive EPERM (sem permissão, como no sandbox do Claude Code).
-      - O `cmd_on`, com a porta ocupada por um gateway do tower, não diz qual é (pid e caminho) nem como pará-lo.
-      - Causa exata não confirmada: o processo tinha o caminho certo (`ps -p 28072` batia com `$MAIN`). Pode ter sido o pidfile com outro pid, ou o `ps`/`kill` sem permissão no sandbox.
-
-      **Para começar:** reproduzir com dois checkouts (principal e um worktree) e dentro do sandbox. Avaliar:
-      - `off` só apagar o pidfile quando o processo de fato saiu;
-      - avisar quando a porta segue respondendo `cockpit-tower` no `/healthz` depois do `off`, mostrando o pid e o caminho do processo que escuta (`lsof -iTCP:<porta> -sTCP:LISTEN`);
-      - no `on`, a mesma mensagem em vez de só "port in use".
-
 - [ ] Teste automatizado da visão do terminal <!-- id: k6 labels: test, média, M, viewer -->
       **O quê:** levar para o repositório o teste de consistência da visão HTML, que hoje só existe como roteiro fora do repo.
 
@@ -136,6 +122,20 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). Esperando a resposta do mantenedor; se ele quiser, novo trio e PR separado.
 
 ## Em curso
+
+- [ ] `tower off` diz "off" e deixa o gateway vivo na porta <!-- id: k25 labels: bug, média, P, bin -->
+      **O quê:** em 2026-10-24, o `bin/tower off` do worktree do k23 respondeu "tower: off" sem a linha "tower: gateway stopped". O gateway (pid 28072) continuou vivo na porta 7681, já sem a publicação no tailnet e sem o `gateway.pid`. Depois, o `tower on` do checkout principal morreu com "port 7681 is already in use by another process". Foi preciso um `kill` à mão.
+
+      **Contexto (`bin/tower`):**
+      - `cmd_off` só para o gateway se `gateway_pid` reconhece o pid do `gateway.pid` com o caminho do próprio checkout (`$MAIN`). Senão segue em silêncio e apaga o pidfile mesmo assim (`cmd_off`, linhas ~157-175).
+      - Os erros de `kill` são engolidos (`|| true`). O `wait_gone` trata qualquer falha do `kill -0` como "morreu", inclusive EPERM (sem permissão, como no sandbox do Claude Code).
+      - O `cmd_on`, com a porta ocupada por um gateway do tower, não diz qual é (pid e caminho) nem como pará-lo.
+      - Causa exata não confirmada: o processo tinha o caminho certo (`ps -p 28072` batia com `$MAIN`). Pode ter sido o pidfile com outro pid, ou o `ps`/`kill` sem permissão no sandbox.
+
+      **Estado:** causa reproduzida (estado compartilhado, reconhecimento por checkout); plano aprovado (D1: `on` troca de checkout; D2: `off` para qualquer gateway do tower). Execução na branch `fix/2026-10-24_tower-off-orphan-gateway__bin`. Proposta original:
+      - `off` só apagar o pidfile quando o processo de fato saiu;
+      - avisar quando a porta segue respondendo `cockpit-tower` no `/healthz` depois do `off`, mostrando o pid e o caminho do processo que escuta (`lsof -iTCP:<porta> -sTCP:LISTEN`);
+      - no `on`, a mesma mensagem em vez de só "port in use".
 
 ## Done
 
