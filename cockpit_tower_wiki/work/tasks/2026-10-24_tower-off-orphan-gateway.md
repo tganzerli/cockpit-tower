@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-24_tower-off-orphan-gateway
 scope:
   area: [bin]
-status: in_progress
+status: done
 updated: 2026-10-24
 summary: O bin/tower passa a reconhecer o gateway do tower de qualquer checkout, para pará-lo no off e trocá-lo no on, sem apagar o pidfile de um gateway vivo nem dizer "off" com ele rodando.
 topic: [bugfix, tooling]
@@ -31,14 +31,14 @@ O estado (`~/.cockpit-tower`: pidfile, config, token) é **um só para todos os 
 
 ## Critérios de aceite
 
-- [ ] `tower off` para o gateway do tower mesmo quando ele foi ligado por outro checkout, e diz de qual caminho era.
-- [ ] `tower off` também acha um gateway do tower que perdeu o pidfile (escutando na porta e respondendo `cockpit-tower` no `/healthz`).
-- [ ] Nenhum caminho apaga o pidfile de um gateway que continua vivo. Se o gateway não morrer, o `off` diz isso e sai com erro, em vez de "off".
-- [ ] `tower on` com o gateway de outro checkout rodando troca para o deste, avisando.
-- [ ] `tower on` com a porta ocupada por algo que não é o tower mostra o pid e o comando de quem a ocupa.
-- [ ] `tower status` (e o `--json` do painel) mostra o gateway de qualquer checkout como ligado.
-- [ ] O gateway só é parado se for do tower (`node …/src/main.ts`); nunca outro processo, nem o servidor do Cockpit.
-- [ ] Um teste automatizado reproduz o cenário de dois checkouts com um estado só.
+- [x] `tower off` para o gateway do tower mesmo quando ele foi ligado por outro checkout, e diz de qual caminho era.
+- [x] `tower off` também acha um gateway do tower que perdeu o pidfile (escutando na porta e respondendo `cockpit-tower` no `/healthz`).
+- [x] Nenhum caminho apaga o pidfile de um gateway que continua vivo. Se o gateway não morrer, o `off` diz isso e sai com erro, em vez de "off".
+- [x] `tower on` com o gateway de outro checkout rodando troca para o deste, avisando.
+- [x] `tower on` com a porta ocupada por algo que não é o tower mostra o pid e o comando de quem a ocupa.
+- [x] `tower status` (e o `--json` do painel) mostra o gateway de qualquer checkout como ligado.
+- [x] O gateway só é parado se for do tower (`node …/src/main.ts`); nunca outro processo, nem o servidor do Cockpit.
+- [x] Um teste automatizado reproduz o cenário de dois checkouts com um estado só.
 
 ## Escopo declarado
 

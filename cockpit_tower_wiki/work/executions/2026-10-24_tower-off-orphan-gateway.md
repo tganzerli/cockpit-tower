@@ -4,9 +4,9 @@ type: execution
 work_id: 2026-10-24_tower-off-orphan-gateway
 scope:
   area: [bin]
-status: in_progress
+status: done
 updated: 2026-10-24
-summary: Em andamento — o bin/tower reconhece o gateway do tower de qualquer checkout no on, no off e no status.
+summary: O bin/tower reconhece o gateway do tower de qualquer checkout (pidfile de checkout do tower, ou a porta com /healthz): o off para e só apaga o pidfile quando ele sai, o on troca de checkout e o status mostra a origem.
 topic: [bugfix, tooling]
 related: []
 ---
@@ -18,9 +18,9 @@ related: []
 - **ID:** `2026-10-24_tower-off-orphan-gateway`
 - **Tarefa:** [[work/tasks/2026-10-24_tower-off-orphan-gateway]]
 - **Plano:** [[work/plans/2026-10-24_tower-off-orphan-gateway]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-24`
-- **Fim:** `—`
+- **Fim:** `2026-10-24`
 - **Escopo:** área `[bin]`
 - **Branch:** `fix/2026-10-24_tower-off-orphan-gateway__bin`. A branch foi criada como `wip/…` num worktree próprio a partir da `origin/dev` `7d0a71d` e renomeada após a aprovação; a base foi conferida.
 
@@ -31,7 +31,7 @@ related: []
 - [x] 3 — `test/tower-cli.test.ts`.
 - [x] 4 — `bash -n`, `npm test`, trailers e wiki-lint.
 - [x] 5 — Revisão por agente com contexto limpo.
-- [ ] 6 — Teste real pelo dono e sinalização.
+- [x] 6 — Teste real pelo dono e sinalização.
 
 ## Atividade (cronológica)
 
@@ -103,7 +103,21 @@ related: []
   ```
 - [x] `python3 scripts/ci/check_commit_trailers.py origin/dev` → `ok — 2 new commit(s) in origin/dev..HEAD, no LLM attribution`
 - [x] `python3 .claude/skills/wiki-lint/lint.py --root .` → nenhuma linha `✗`. Antes de regenerar o `work/_index.md` (`/work-index`) acusava `catalog-drift: 1`, por causa dos status novos da tarefa e do plano.
-- [ ] Verificação §4.4 (teste real pelo dono)
+- [x] Verificação §4.4: teste real pelo dono no Terminal.app, com o tower real. As URLs, que levam o token, foram omitidas:
+  ```
+  $W/bin/tower on
+  tower: a gateway from /Users/thiagoganzerli/app/cockpit-tower is running; switching to …/scratchpad/wt-tower-off
+  tower: on — https://…:8443/<token>/
+  ~/app/cockpit-tower/bin/tower status      # script antigo (pré-merge): o bug
+  gateway:   off
+  $W/bin/tower status
+  gateway:   on (pid 63499, http://127.0.0.1:7681)
+  $W/bin/tower off
+  tower: gateway stopped
+  tower: off — tailnet port 8443 unpublished; the Mac can sleep again
+  ~/app/cockpit-tower/bin/tower on
+  tower: on — https://…:8443/<token>/
+  ```
 
 ## Revisão por agente
 
