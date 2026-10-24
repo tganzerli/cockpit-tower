@@ -43,7 +43,7 @@ O que pesa na decisão (análises do plano [[work/plans/2026-10-23_phone-termina
 - **Formato da entrada.** É `pty.input {id, d}`, com `d` = base64 dos bytes crus (`remote_pi: cockpit/packages/cockpit_protocol/lib/src/messages.dart:345-363`). O app manda Enter `\r`, Esc `\x1b`, Tab `\t`, Shift-Tab `\x1b[Z`, setas CSI e Ctrl-C `0x03` (`remote_pi: cockpit/lib/app/core/terminal/xterm/src/core/input/keytab/keytab_default.dart:24-32,67-70`).
 - **`pty.resize` muda a PTY para todos,** e o app reaplica o tamanho a cada layout. Fica para a fase 2.
 - **Crédito de fluxo.** Pelo `cockpit-server`, o `flow` do `pty.open` não é repassado (`remote_server.dart:588-596`; `flowControlled` começa `false`, `remote_pi: cockpit/packages/cockpit_core/lib/src/terminal/terminal_service.dart:13`), então o `ack()` não faz nada (`remote_pi: cockpit/packages/cockpit_engine/lib/src/pty/native_terminal_service.dart:220`). O risco "o shell trava sem o ack do tower", registrado na decisão anterior, não tem apoio no código (leitura, sem teste ao vivo).
-- **Acesso de hoje.** Token no caminho, header `Tailscale-User-Login` só conferido por presença (`src/server.ts:76-77`), listener em `127.0.0.1` exposto por `tailscale serve`, e nenhuma checagem de `Origin`. Bastava para ler; para escrever, não.
+- **Acesso de hoje.** Token no caminho, header `Tailscale-User-Login` só conferido por presença (`src/server.ts:79-80`), listener em `127.0.0.1` exposto por `tailscale serve`, e nenhuma checagem de `Origin`. Bastava para ler; para escrever, não.
 
 ## Decisão
 

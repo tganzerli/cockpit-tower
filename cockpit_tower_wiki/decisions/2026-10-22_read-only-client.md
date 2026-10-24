@@ -34,7 +34,7 @@ O tower se conecta ao `cockpit-server` como um cliente extra, para mostrar termi
    - Para o Cockpit, só são enviados `hello`, `pty.list`, `pty.attach` e `pty.detach`, com lista branca no `encode` (`src/protocol.ts:7,36`).
    - Do navegador, só são aceitas as mensagens `list`, `select` e `ping`.
 2. **Nunca enviar `pty.ack`.** O tower anexa só enquanto uma página assiste, e fecha a página após 10 min sem atividade. Assim ele raramente é o único consumidor de uma sessão.
-3. **Uma conexão com o Cockpit por espectador**, aberta e fechada com a página (`src/server.ts:138`).
+3. **Uma conexão com o Cockpit por espectador**, aberta e fechada com a página (`src/server.ts:141`).
 4. **Acesso** por prefixo secreto `/<token>/` + header `Tailscale-User-Login`, com listener só em `127.0.0.1` e exposição apenas via `tailscale serve`. O `funnel` nunca é usado.
 
 ## Alternativas descartadas

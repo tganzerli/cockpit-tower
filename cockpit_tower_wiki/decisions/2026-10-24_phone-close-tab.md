@@ -6,7 +6,7 @@ scope:
   area: [gateway, viewer]
 status: accepted
 updated: 2026-10-24
-summary: O gateway pode rodar close-tab, segundo verbo de escrita da CLI do Cockpit: só a sessão assistida, em modo de comando, em dois passos, e só se ela é o único terminal de um workspace equilibrado; recusa agente trabalhando.
+summary: O gateway pode rodar close-tab, segundo verbo de escrita da CLI do Cockpit: só a sessão assistida, em modo de comando, em dois passos, se é o terminal único do workspace ou foi aberta pelo (+) (k26).
 revisit_when: "o Cockpit expor o id da aba no pty.sessions (k5) ou o pid no list-tabs, ou corrigir o shell que sobrevive ao fechamento (k21)"
 supersedes: []
 superseded_by: ""
@@ -23,6 +23,7 @@ related:
   - services/gateway
   - contracts/cockpit-protocol-v2
   - work/plans/2026-10-24_viewer-close-tab-button
+  - work/plans/2026-10-24_phone-made-tab-close
 ---
 
 # 2026-10-24 — Em modo de comando, o (x) do celular fecha a aba da sessão assistida
@@ -86,7 +87,7 @@ O que pesa (plano [[work/plans/2026-10-24_viewer-close-tab-button]], §4.0, e te
 
 - **Positivas:** o dono fecha pelo celular o terminal que está vendo, sem tocar no Mac. A ação só acontece quando o tower prova qual é a aba e o dono vê o título dela.
 - **Custos aceitos:**
-  - **Só o terminal único do workspace fecha pelo celular.** Com dois ou mais terminais no workspace, o (x) recusa (`no_tab`) e o fechamento fica no Mac.
+  - **Só o terminal único do workspace fecha pelo celular,** ou um aberto pelo (+) do celular (ver Atualização k26). Fora disso, com dois ou mais terminais no workspace, o (x) recusa (`no_tab`) e o fechamento fica no Mac.
   - **Risco residual de aba errada:** shells que trocaram de pasta em ciclo (o de X entrou em Y e o de Y entrou em X) mantêm o equilíbrio e parecem cada um o único do seu workspace. O título na confirmação é a última barreira.
   - **Um shell fora de qualquer workspace bloqueia o (x) em todas as abas,** porque poderia ser de qualquer aba. Também conta um shell num caminho que só bate com o workspace por link simbólico, como `/tmp` × `/private/tmp`.
   - **Shell órfão (k21).** O processo some da lista, mas o zsh fica vivo até um SIGHUP. A correção é upstream, no k21.
@@ -132,7 +133,33 @@ O que pesa (plano [[work/plans/2026-10-24_viewer-close-tab-button]], §4.0, e te
 - **Refina:** [[decisions/2026-10-24_phone-new-tab]] (segundo verbo de escrita, terceiro arquivo com `child_process`).
 - **Abre:** nada novo.
 
+## Atualização 2026-10-24 (k26): a aba aberta pelo (+)
+
+**Contexto.** No teste do dono no iPhone, o terminal aberto pelo (+) não fechava pelo (x). O (+) abre a aba no workspace da sessão assistida, e o workspace passa a ter dois terminais ([[work/executions/2026-10-24_viewer-close-tab-button]], checagem do dono).
+
+**Emenda à Decisão, item 3 (Preparar).** Antes do `soleTab`, a aba pode vir do **par** gravado no (+) (plano [[work/plans/2026-10-24_phone-made-tab-close]]):
+- **Como nasce:** o gateway lê as sessões antes do `new-tab` e as relê depois, até aparecer uma sessão nova. Faz mais uma leitura e grava `{sessão, pid, aba, pasta}` só se for exatamente uma sessão nova, a mesma nas duas leituras.
+- **Um (+) por vez no gateway inteiro,** para que um viewer não tome a sessão de outro como a sua.
+- **Quando vale:** enquanto a sessão tem o mesmo pid e a aba continua um terminal local na mesma pasta. Se não, vale o `soleTab`.
+- **Quando sai:** quando a sessão some da lista, quando a aba é fechada ou quando o gateway reinicia (o par vive só na memória).
+
+O verbo, as cercas, os dois passos, a assinatura e o registro não mudam. Por isso a mudança é uma emenda, não uma ADR nova.
+
+**Risco residual aceito:** um terminal aberto no Mac no mesmo instante que o (+), cuja sessão se assente antes da nossa, seria pareado por engano. O título na confirmação continua sendo a última barreira.
+
+**Policiada por:**
+- testes do `close-tab`: o par com dois terminais na pasta, e a queda para o `soleTab` por pid, aba, pasta, aba remota ou aba que não é terminal;
+- testes do servidor:
+  - uma sessão nova vira par;
+  - nenhuma ou duas sessões novas não viram par;
+  - uma segunda sessão entre as leituras, ou a saída da nossa, não vira par;
+  - o (+) de outro viewer é recusado durante o pareamento;
+  - um viewer que sai libera o próximo (+);
+  - o par cai quando a sessão sai da lista e depois do fechamento;
+- a linha "Fechar terminal" do `REVIEW.md`.
+
 ## Referências
 
 - Plano: [[work/plans/2026-10-24_viewer-close-tab-button]] (§4.0, com as citações do `remote_pi`).
 - Teste real: [[work/executions/2026-10-24_viewer-close-tab-button]] (passo 2).
+- k26: [[work/executions/2026-10-24_phone-made-tab-close]] (teste real e checagem do dono no iPhone).

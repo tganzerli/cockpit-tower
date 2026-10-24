@@ -14,7 +14,7 @@ updated: 2026-10-24
 ## Pages (6)
 
 - [[decisions/2026-10-24_phone-new-tab]] — O gateway pode rodar um único verbo de escrita da CLI do Cockpit, new-tab, em modo de comando e com registro antes; pasta e aba âncora saem da listagem do Cockpit, nunca do navegador, e o Mac pode trocar de workspace. · _accepted_
-- [[decisions/2026-10-24_phone-close-tab]] — O gateway pode rodar close-tab, segundo verbo de escrita da CLI do Cockpit: só a sessão assistida, em modo de comando, em dois passos, e só se ela é o único terminal de um workspace equilibrado; recusa agente trabalhando. · _accepted_
+- [[decisions/2026-10-24_phone-close-tab]] — O gateway pode rodar close-tab, segundo verbo de escrita da CLI do Cockpit: só a sessão assistida, em modo de comando, em dois passos, se é o terminal único do workspace ou foi aberta pelo (+) (k26). · _accepted_
 - [[decisions/2026-10-23_phone-pty-resize]] — Libera pty.resize só em modo de comando, para a sessão assistida, com tamanho limitado e registrado; o tower guarda o tamanho do Mac e o devolve uma vez por ciclo, se a PTY ainda estiver no tamanho que ele pôs. · _accepted_
 - [[decisions/2026-10-23_phone-input-client]] — Libera pty.input em modo de comando, para a sessão assistida, com Origin, dono do Tailscale e registro local; kill/open/ack/rpc seguem proibidos e nunca há pty.ack. Refinada pelas ADRs do resize, da roda e do terminal novo. · _accepted_
 - [[decisions/2026-10-23_phone-fullscreen-scroll]] — A roda do mouse vira entrada nomeada (wheel), só em modo de comando; o gateway monta os bytes por três moldes (SGR, X10, setas), limita quantidade e posição e registra antes de enviar por pty.input, seguindo as regras do app do Mac. · _accepted_

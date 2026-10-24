@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-24_phone-made-tab-close
 scope:
   area: [gateway, viewer]
-status: approved
+status: executed
 risk: high
 updated: 2026-10-24
 summary: O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab (sessão, pid, aba, pasta) e o (x) fecha por esse par, com as cercas do k24; sem par, vale o terminal único.

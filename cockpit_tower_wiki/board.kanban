@@ -110,10 +110,10 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Em curso
 
-- [ ] Fechar pelo (x) o terminal que o (+) do celular abriu <!-- id: k26 labels: feature, risk-high, gateway, média, P -->
-      Trio `2026-10-24_phone-made-tab-close`. No teste do k24, o terminal aberto pelo (+) não fechava pelo (x): o workspace passa a ter dois terminais e a regra do terminal único recusa (`no_tab`). O gateway passa a guardar o par sessão → aba de cada (+), pela única sessão nova depois do `new-tab`, e o (x) fecha por esse par.
-
 ## Done
+
+- [x] Fechar pelo (x) o terminal que o (+) do celular abriu (PR #13) <!-- id: k26 labels: feature, risk-high, gateway, média, P -->
+      Trio `2026-10-24_phone-made-tab-close`. No teste do k24, o terminal aberto pelo (+) não fechava pelo (x): o workspace passa a ter dois terminais e a regra do terminal único recusa (`no_tab`). Agora o gateway guarda o par sessão → aba de cada (+), pela única sessão nova depois do `new-tab`, e o (x) fecha por esse par. Testado no iPhone.
 
 - [x] Botão (x) na aba assistida: fechar o terminal pelo celular (PR #11) <!-- id: k24 labels: feature, ui, risk-high, gateway, viewer -->
       Trio `2026-10-24_viewer-close-tab-button`, ADR `decisions/2026-10-24_phone-close-tab`. Em modo de comando, o (x) da aba assistida fecha o terminal pela CLI do Cockpit (`close-tab`) em dois passos, com o título da aba na confirmação. Só fecha o único terminal de um workspace com shells e abas equilibrados, e recusa com agente trabalhando.
