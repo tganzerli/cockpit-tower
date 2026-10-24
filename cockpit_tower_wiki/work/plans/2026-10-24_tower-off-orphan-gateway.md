@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-24_tower-off-orphan-gateway
 scope:
   area: [bin]
-status: approved
+status: executed
 risk: medium
 updated: 2026-10-24
 summary: O bin/tower reconhece o gateway do tower de qualquer checkout (pelo pidfile ou pela porta), para no off, troca no on e só apaga o pidfile quando o processo saiu; um teste sobe dois checkouts falsos com um estado só.
