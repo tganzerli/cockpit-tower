@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-23_cockpit-editor-soft-wrap
 scope:
   area: [upstream-cockpit]
-status: approved
+status: executed
 risk: medium
 updated: 2026-10-23
 summary: Modo de quebra de linha opcional no CodeEditor do Cockpit, com uma tabela de altura por linha lógica para gutter, reveal, hover e overview; ligado por padrão em .md/.txt, alternado por ⌥Z.

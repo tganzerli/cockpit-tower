@@ -11,6 +11,7 @@ updated: 2026-10-24
 > frontmatter (`summary`, `status`) and regenerate. `_meta/index.md` points here
 > instead of repeating the list — a second copy drifts from the first.
 
-## Pages (1)
+## Pages (2)
 
 - [[cross-cutting/cockpit-exec-process-group]] — Um processo de fundo iniciado por cockpit exec ou por um .panel sobrevive ao fim do comando, mas fica no grupo de processos do app Cockpit; use setsid via perl. · _stable_
+- [[cross-cutting/upstream-contributions]] — Fluxo, toolchain, build ad-hoc e uso diário do fork tganzerli/remote_pi (clone ~/app/remote_pi) para mandar issues e PRs ao jacobaraujo7/remote_pi, mais as contribuições já abertas. · _draft_

@@ -4,11 +4,11 @@ type: execution
 work_id: 2026-10-23_cockpit-editor-soft-wrap
 scope:
   area: [upstream-cockpit]
-status: in_progress
+status: done
 updated: 2026-10-24
-summary: Em andamento — modo de quebra de linha no CodeEditor do Cockpit, com issue e PR no remote_pi.
+summary: "Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono no dia a dia e proposto upstream na issue #261 e no PR #264 do remote_pi."
 topic: [ui]
-related: []
+related: ["[[sources/external/2026-10-23_cockpit-code-editor]]", "[[cross-cutting/upstream-contributions]]", "[[overview]]"]
 ---
 
 # Log de execução — 2026-10-23_cockpit-editor-soft-wrap
@@ -20,9 +20,9 @@ related: []
 - **ID:** `2026-10-23_cockpit-editor-soft-wrap`
 - **Task:** [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]]
 - **Plano:** [[work/plans/2026-10-23_cockpit-editor-soft-wrap]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-23 10:05`
-- **Fim:** `—`
+- **Fim:** `2026-10-24`
 - **Escopo:**
   - Área(s) afetada(s): `[upstream-cockpit]`
 - **Repositório do código:** fork `tganzerli/remote_pi`, clone `~/app/remote_pi`, branch `feat/cockpit-editor-soft-wrap`.
@@ -42,7 +42,7 @@ related: []
 - [x] 10 — Medir a abertura de um `.md` grande
 - [x] 11 — Commits + revisão `reviewer`
 - [x] 12 — Gate humano; push + PR com aprovação → [#264](https://github.com/jacobaraujo7/remote_pi/pull/264), aberto em 2026-10-24 depois do teste de usabilidade
-- [ ] 13 — Fechar e propor `/wiki-sync`
+- [x] 13 — Fechar e propor `/wiki-sync` (dono aprovou em 2026-10-24)
 
 ## Atividade (cronológica)
 
