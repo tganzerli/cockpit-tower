@@ -32,6 +32,6 @@ Um sinal enviado ao grupo inteiro, por exemplo quando o app fecha, alcançaria t
 
 ## O que fazer
 
-- **Abrir uma sessão própria.** O macOS não tem `setsid(1)`, mas o `perl` padrão tem: `perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV'`. O `exec` mantém o pid, então pid files e checagens por comando continuam válidos. No tower isso é o array `DETACH` (`bin/tower:26`), usado no gateway (`bin/tower:113`) e no `caffeinate` (`bin/tower:127`). É um array, e não uma função, porque o `nohup` não executa funções do bash.
+- **Abrir uma sessão própria.** O macOS não tem `setsid(1)`, mas o `perl` padrão tem: `perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV'`. O `exec` mantém o pid, então pid files e checagens por comando continuam válidos. No tower isso é o array `DETACH` (`bin/tower:26`), usado no gateway (`bin/tower:164`) e no `caffeinate` (`bin/tower:178`). É um array, e não uma função, porque o `nohup` não executa funções do bash.
 - **Conferir com `ps`.** Depois de ligar pelo `cockpit exec`, o PGID deve ser igual ao pid do processo. Em 2026-10-22 foi `8936 PGID 8936` para o gateway e `8978 PGID 8978` para o `caffeinate`.
 - **Passar um `--timeout` explícito** no `exec` de ações demoradas (`panel/tower.panel:145`).

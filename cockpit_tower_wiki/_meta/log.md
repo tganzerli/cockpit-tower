@@ -123,3 +123,8 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/flows/tower-on-off.md` (UPDATE) — citação de src/main.ts remapeada
 - `cockpit_tower_wiki/decisions/2026-10-22_read-only-client.md` (UPDATE) — citações remapeadas
 - `cockpit_tower_wiki/decisions/_index.md` (UPDATE) — regenerado
+
+## [2026-10-24] wiki-sync | 2026-10-24_tower-off-orphan-gateway | 2 pages touched
+
+- `cockpit_tower_wiki/flows/tower-on-off.md` (UPDATE) — on troca de checkout e nomeia quem ocupa a porta; off para o gateway de qualquer checkout e mantém o pidfile se ele não sair; status mostra a origem; Cuidados: qual gateway é o do tower; citações bin/tower remapeadas
+- `cockpit_tower_wiki/cross-cutting/cockpit-exec-process-group.md` (UPDATE) — citações bin/tower remapeadas

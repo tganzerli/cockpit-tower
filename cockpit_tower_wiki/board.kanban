@@ -123,21 +123,10 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Em curso
 
-- [ ] `tower off` diz "off" e deixa o gateway vivo na porta <!-- id: k25 labels: bug, média, P, bin -->
-      **O quê:** em 2026-10-24, o `bin/tower off` do worktree do k23 respondeu "tower: off" sem a linha "tower: gateway stopped". O gateway (pid 28072) continuou vivo na porta 7681, já sem a publicação no tailnet e sem o `gateway.pid`. Depois, o `tower on` do checkout principal morreu com "port 7681 is already in use by another process". Foi preciso um `kill` à mão.
-
-      **Contexto (`bin/tower`):**
-      - `cmd_off` só para o gateway se `gateway_pid` reconhece o pid do `gateway.pid` com o caminho do próprio checkout (`$MAIN`). Senão segue em silêncio e apaga o pidfile mesmo assim (`cmd_off`, linhas ~157-175).
-      - Os erros de `kill` são engolidos (`|| true`). O `wait_gone` trata qualquer falha do `kill -0` como "morreu", inclusive EPERM (sem permissão, como no sandbox do Claude Code).
-      - O `cmd_on`, com a porta ocupada por um gateway do tower, não diz qual é (pid e caminho) nem como pará-lo.
-      - Causa exata não confirmada: o processo tinha o caminho certo (`ps -p 28072` batia com `$MAIN`). Pode ter sido o pidfile com outro pid, ou o `ps`/`kill` sem permissão no sandbox.
-
-      **Estado:** causa reproduzida (estado compartilhado, reconhecimento por checkout); plano aprovado (D1: `on` troca de checkout; D2: `off` para qualquer gateway do tower). Execução na branch `fix/2026-10-24_tower-off-orphan-gateway__bin`. Proposta original:
-      - `off` só apagar o pidfile quando o processo de fato saiu;
-      - avisar quando a porta segue respondendo `cockpit-tower` no `/healthz` depois do `off`, mostrando o pid e o caminho do processo que escuta (`lsof -iTCP:<porta> -sTCP:LISTEN`);
-      - no `on`, a mesma mensagem em vez de só "port in use".
-
 ## Done
+
+- [x] `tower off` reconhece o gateway de qualquer checkout (PR #9) <!-- id: k25 labels: bug, bin -->
+      Trio `2026-10-24_tower-off-orphan-gateway`. O estado era compartilhado entre os checkouts e cada `bin/tower` só reconhecia o próprio caminho; agora o `off` para o gateway do tower de qualquer checkout, o `on` troca de checkout e o pidfile só some quando o processo saiu.
 
 - [x] Botão (+) na faixa de abas: abrir um terminal novo pelo celular (PR #7) <!-- id: k23 labels: feature, ui, risk-high, gateway, viewer -->
       Trio `2026-10-24_viewer-new-tab-button`, ADR `decisions/2026-10-24_phone-new-tab`. Em modo de comando, o (+) fixo à direita abre um terminal no workspace da tela pela CLI do Cockpit (`new-tab --tab-id`), e o Mac pode trocar de workspace.

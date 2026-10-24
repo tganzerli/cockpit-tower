@@ -8,7 +8,7 @@ status: done
 updated: 2026-10-24
 summary: O bin/tower reconhece o gateway do tower de qualquer checkout (pidfile de checkout do tower, ou a porta com /healthz): o off para e só apaga o pidfile quando ele sai, o on troca de checkout e o status mostra a origem.
 topic: [bugfix, tooling]
-related: []
+related: ["[[flows/tower-on-off]]", "[[cross-cutting/cockpit-exec-process-group]]"]
 ---
 
 # Execução — 2026-10-24_tower-off-orphan-gateway
