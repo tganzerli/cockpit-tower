@@ -56,6 +56,10 @@ accepts a page opened at exactly that address, and no Tailscale login check).
 Tap **Command** in the top bar. A text box with a key bar opens, and only then does the gateway accept
 input, only for the session on screen. Switching session, the session ending, the page reconnecting or the
 gateway losing Cockpit turns it off.
+- **Drag a finger on the terminal to scroll the agent.** For full-screen agents (Claude Code in fullscreen,
+  for example) the drag is sent as the Mac's mouse wheel would be (or as arrows on an alternate screen
+  without mouse), so their history scrolls on the phone and on the Mac. Finger down shows older content.
+  On a plain shell, or outside command mode, the drag scrolls the page as before and nothing is sent.
 - **The session takes the phone's size** while command mode is on: the program redraws for the phone's
   columns and rows (measured without the keyboard; A−/A+ resize again). The Mac's tab shows that size too.
   When command mode ends, the Mac gets its size back, unless the Mac's layout changed in the meantime
