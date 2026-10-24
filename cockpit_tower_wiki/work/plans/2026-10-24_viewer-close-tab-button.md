@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-24_viewer-close-tab-button
 scope:
   area: [gateway, viewer]
-status: approved
+status: executed
 risk: high
 updated: 2026-10-24
 summary: ADR nova libera fechar, em modo de comando e em dois passos (preparar e confirmar), a aba da sessão assistida pela CLI do Cockpit (`close-tab`), com aba achada numa listagem fresca, recusa de agente trabalhando e registro antes.

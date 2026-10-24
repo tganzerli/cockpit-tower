@@ -128,3 +128,9 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 
 - `cockpit_tower_wiki/flows/tower-on-off.md` (UPDATE) — on troca de checkout e nomeia quem ocupa a porta; off para o gateway de qualquer checkout e mantém o pidfile se ele não sair; status mostra a origem; Cuidados: qual gateway é o do tower; citações bin/tower remapeadas
 - `cockpit_tower_wiki/cross-cutting/cockpit-exec-process-group.md` (UPDATE) — citações bin/tower remapeadas
+
+## [2026-10-24] wiki-sync | 2026-10-24_viewer-close-tab-button | 3 pages touched
+
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — seção "Fechar terminal pelo celular"; ordem quebra após reinício do Cockpit; citações remapeadas
+- `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — close-tab pela CLI, não pty.kill; causa do k21
+- `cockpit_tower_wiki/overview.md` (UPDATE) — (x) na linha do viewer; ADR nova na decisão central
