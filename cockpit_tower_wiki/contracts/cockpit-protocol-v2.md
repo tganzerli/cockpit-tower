@@ -18,6 +18,7 @@ related:
   - services/gateway
   - decisions/2026-10-23_phone-input-client
   - decisions/2026-10-23_phone-pty-resize
+  - decisions/2026-10-23_phone-fullscreen-scroll
   - decisions/2026-10-22_read-only-client
   - work/executions/2026-10-22_read-only-viewer
   - work/executions/2026-10-23_phone-terminal-input
@@ -51,6 +52,7 @@ São só estas seis, impostas por lista branca (`src/protocol.ts:10`, `src/proto
 - **Um só construtor.** `inputMessage` é o único que monta `pty.input`, e recusa 0 byte e mais de 16 KiB (`src/protocol.ts:13`, `src/protocol.ts:54`).
 - **Sem fila.** `CockpitClient.input` devolve `false` enquanto desconectado (`src/cockpit-client.ts:130`).
 - **Bytes decididos no tower.** Teclas por uma tabela fixa, igual à do app, e texto sem ESC, controles C0 (fora Tab e quebra de linha), DEL nem C1 (`src/input.ts:6`, `src/input.ts:19`, `src/input.ts:25`; app: `remote_pi: cockpit/lib/app/core/terminal/xterm/src/core/input/keytab/keytab_default.dart:24-32,67-70`).
+- **A rolagem também vai por `pty.input`.** O arrasto do celular vira os bytes da roda do mouse (botões 64/65 em SGR ou X10) ou setas, montados no gateway por moldes fixos (`src/input.ts:63`, [[decisions/2026-10-23_phone-fullscreen-scroll]]); não há tipo novo de mensagem.
 - **Resize com faixa fixa.** `resizeMessage` é o único que monta `pty.resize`, e recusa fora de 20–500 colunas e 5–300 linhas (`src/protocol.ts:16-17`, `src/protocol.ts:65`).
 - **Quem pode mandar** (o dono, em modo de comando, para a sessão assistida): [[services/gateway]], seções "Digitação pelo celular" e "Tamanho da PTY".
 

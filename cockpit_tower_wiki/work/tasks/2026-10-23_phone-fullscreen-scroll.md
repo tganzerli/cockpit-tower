@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-23_phone-fullscreen-scroll
 scope:
   area: [gateway, viewer]
-status: open
+status: done
 updated: 2026-10-23
 summary: Em modo de comando, arrastar o dedo no terminal rola o histórico dos agentes em tela cheia, mandando a roda do mouse ao programa como o Mac faz.
 topic: [contract, ui]
@@ -37,12 +37,12 @@ Cartão k3 do quadro. Os agentes em tela cheia (o Claude Code com `"tui": "fulls
 
 ## Critérios de aceite
 
-- [ ] Uma ADR nova, aprovada pelo dono, define a roda como entrada: bytes no gateway, formatos aceitos, limites e as regras do app (mouse → botões 64/65; sem mouse na tela alternativa → setas; tela normal → nada).
-- [ ] Em modo de comando, arrastar o dedo sobre o Claude Code em tela cheia rola o histórico dele no celular, e a aba do Mac rola junto.
-- [ ] Fora do modo de comando, ou na tela normal, o arrasto rola a visão como hoje, e nada é enviado.
-- [ ] O gateway só aceita formatos conhecidos, limita a quantidade por mensagem e a posição ao tamanho da PTY, e grava no registro antes de enviar.
-- [ ] Os testes cobrem os bytes de cada caso e as recusas. `npm test` passa.
-- [ ] Teste no iPhone, pelo dono, com o Claude Code em tela cheia.
+- [x] Uma ADR nova, aprovada pelo dono, define a roda como entrada: bytes no gateway, formatos aceitos, limites e as regras do app (mouse → botões 64/65; sem mouse na tela alternativa → setas; tela normal → nada).
+- [x] Em modo de comando, arrastar o dedo sobre o Claude Code em tela cheia rola o histórico dele no celular, e a aba do Mac rola junto.
+- [x] Fora do modo de comando, ou na tela normal, o arrasto rola a visão como hoje, e nada é enviado.
+- [x] O gateway só aceita formatos conhecidos, limita a quantidade por mensagem e a posição ao tamanho da PTY, e grava no registro antes de enviar.
+- [x] Os testes cobrem os bytes de cada caso e as recusas. `npm test` passa.
+- [x] Teste no iPhone, pelo dono, com o Claude Code em tela cheia.
 
 ## Escopo declarado
 

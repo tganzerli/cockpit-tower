@@ -12,7 +12,10 @@ supersedes: []
 superseded_by: ""
 sources:
   - https://github.com/jacobaraujo7/remote_pi (commit 7d923ab)
-code_refs: []
+code_refs:
+  - src/input.ts
+  - src/server.ts
+  - web/app.js
 related:
   - decisions/2026-10-23_phone-input-client
   - decisions/2026-10-23_phone-pty-resize

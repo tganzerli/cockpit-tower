@@ -10,6 +10,12 @@ summary: Em modo de comando, arrastar o dedo rola o histórico dos agentes em te
 topic: [contract, ui]
 related:
   - decisions/2026-10-23_phone-fullscreen-scroll
+  - "[[decisions/2026-10-23_phone-fullscreen-scroll]]"
+  - "[[decisions/2026-10-23_phone-input-client]]"
+  - "[[decisions/2026-10-23_phone-pty-resize]]"
+  - "[[services/gateway]]"
+  - "[[contracts/cockpit-protocol-v2]]"
+  - "[[overview]]"
 ---
 
 # Execution Log — 2026-10-23_phone-fullscreen-scroll

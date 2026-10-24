@@ -90,3 +90,12 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — pty.resize enviado; resize global; aba fechada deixa o shell vivo (k21)
 - `cockpit_tower_wiki/services/gateway.md` (UPDATE) — seção Tamanho da PTY; citações de src/server.ts atualizadas
 - `cockpit_tower_wiki/overview.md` (UPDATE) — modo de comando também dimensiona a PTY
+
+## [2026-10-23] wiki-sync | 2026-10-23_phone-fullscreen-scroll | 6 pages touched
+
+- `cockpit_tower_wiki/decisions/2026-10-23_phone-fullscreen-scroll.md` (UPDATE) — ADR nova (criada na execução); code_refs
+- `cockpit_tower_wiki/decisions/2026-10-23_phone-input-client.md` (UPDATE) — nota de refinamento (wheel)
+- `cockpit_tower_wiki/decisions/2026-10-23_phone-pty-resize.md` (UPDATE) — revisit_when e Abre sem o k3
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — seção Rolagem do agente; citações de src/server.ts atualizadas
+- `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — rolagem também por pty.input
+- `cockpit_tower_wiki/overview.md` (UPDATE) — arrasto rola os agentes em tela cheia

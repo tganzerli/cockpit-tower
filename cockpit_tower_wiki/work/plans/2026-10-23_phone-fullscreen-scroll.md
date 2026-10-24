@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-23_phone-fullscreen-scroll
 scope:
   area: [gateway, viewer]
-status: approved
+status: executed
 risk: high
 updated: 2026-10-23
 summary: Em modo de comando, o arrasto do dedo vira a roda do mouse (botões 64/65 em SGR ou X10, ou setas), com bytes montados no gateway, posição presa ao tamanho da PTY e registro antes do envio.
