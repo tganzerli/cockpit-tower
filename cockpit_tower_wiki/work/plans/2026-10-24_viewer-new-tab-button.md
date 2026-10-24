@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-24_viewer-new-tab-button
 scope:
   area: [gateway, viewer]
-status: approved
+status: executed
 risk: high
 updated: 2026-10-24
 summary: ADR nova libera, em modo de comando, abrir um terminal no workspace assistido; o gateway acha pasta e aba âncora na listagem do Cockpit e roda `cockpit new-tab --tab-id --cwd`, com registro antes; o viewer seleciona a sessão nova.

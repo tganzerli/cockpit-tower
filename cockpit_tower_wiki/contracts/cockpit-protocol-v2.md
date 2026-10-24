@@ -4,7 +4,7 @@ type: contract
 scope:
   area: [gateway]
 status: stable
-updated: 2026-10-23
+updated: 2026-10-24
 summary: O que o tower envia e recebe no socket do cockpit-server (protocolo v2), o que nunca envia (toda escrita menos pty.input e pty.resize) e os riscos de ser um segundo cliente.
 sources:
   - https://github.com/jacobaraujo7/remote_pi (commit 7d923ab)
@@ -19,6 +19,7 @@ related:
   - decisions/2026-10-23_phone-input-client
   - decisions/2026-10-23_phone-pty-resize
   - decisions/2026-10-23_phone-fullscreen-scroll
+  - decisions/2026-10-24_phone-new-tab
   - decisions/2026-10-22_read-only-client
   - work/executions/2026-10-22_read-only-viewer
   - work/executions/2026-10-23_phone-terminal-input
@@ -59,6 +60,8 @@ São só estas seis, impostas por lista branca (`src/protocol.ts:10`, `src/proto
 ## Mensagens que nunca enviamos
 
 `pty.kill`, `pty.open`, `pty.ack`, `rpc`, `rpc.res`. Elas matam processos, abrem PTYs, rodam comandos ou mexem no crédito do app. O `encode` recusa todas (`src/protocol.ts:48`). Um teste falha se algum desses tipos aparecer no código-fonte, ou se os literais `pty.input` e `pty.resize` aparecerem fora de `src/protocol.ts` (`test/protocol.test.ts`, teste "no source file outside protocol.ts names a write message type").
+
+Abrir um terminal pelo celular não usa `pty.open`: o gateway roda a CLI do app (`cockpit new-tab`), e o Cockpit cria a aba e a PTY como no "+" da barra de abas ([[decisions/2026-10-24_phone-new-tab]], `src/new-tab.ts:34`). Uma PTY aberta por `pty.open` não viraria aba no app.
 
 ## Mensagens que recebemos e ignoramos
 

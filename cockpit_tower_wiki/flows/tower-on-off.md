@@ -4,7 +4,7 @@ type: flow
 scope:
   area: [tower-cli]
 status: stable
-updated: 2026-10-23
+updated: 2026-10-24
 sources: []
 code_refs:
   - bin/tower
@@ -37,7 +37,7 @@ Há duas formas de operar o tower: pelo terminal (`bin/tower on|off|status`) ou 
 3. **Reinício por configuração.** A configuração é token + origem + dono (`bin/tower:97`). Se o gateway está vivo e `gateway.config` difere dela, o gateway é reiniciado (`bin/tower:100-103`). Antes valia só o token.
 4. **Porta.** Recusa subir se a porta já estiver ocupada por outro processo. Só aceita como gateway pronto quem responde `cockpit-tower` no `/healthz` (`bin/tower:40`).
    - **Ambiente do gateway.** `TOWER_TOKEN`, `TOWER_ORIGIN`, `TOWER_OWNER` e `TOWER_INPUT_LOG=$STATE/input.log` vão **por ambiente, nunca por argv** (`bin/tower:112-113`). Depois grava `gateway.config` com `umask 077` (`bin/tower:116`).
-   - **Sem os três** (`TOWER_INPUT_LOG`, `TOWER_ORIGIN`, `TOWER_OWNER`), o gateway sobe com a página só em leitura e avisa no log (`src/main.ts:18-30`).
+   - **Sem os três** (`TOWER_INPUT_LOG`, `TOWER_ORIGIN`, `TOWER_OWNER`), o gateway sobe com a página só em leitura e avisa no log (`src/main.ts:19-32`).
 5. **Mac acordado.** `caffeinate -is -w <pid do gateway>` (`bin/tower:127`): o Mac fica acordado só enquanto o gateway vive.
    - **Sessão própria.** O gateway (`bin/tower:113`) e o `caffeinate` (`bin/tower:127`) sobem por `DETACH` (`bin/tower:26`), que roda `perl -MPOSIX` com `POSIX::setsid()` e depois `exec`. O macOS não tem `setsid(1)`. O `exec` mantém o pid, então o pid file e o `pid_is` continuam valendo. Sem isso, quando o tower é ligado pelo painel, os dois entram no grupo de processos do app Cockpit. Ver [[cross-cutting/cockpit-exec-process-group]].
 6. **Publicação.** `tailscale serve --bg --https=8443 http://127.0.0.1:7681` (`bin/tower:134`). A saída vai para um arquivo e o script espera até 20 s.

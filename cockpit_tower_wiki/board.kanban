@@ -108,18 +108,10 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Em curso
 
-- [ ] Botão (+) na faixa de abas do viewer para abrir um terminal novo <!-- id: k23 labels: feature, ui, risk-high, média, M, gateway, viewer -->
-      **O quê:** um "+" no lado direito da faixa de abas do iPhone que abre um terminal novo no workspace (ou worktree) na tela, como o "+" da barra de abas do Cockpit.
-
-      **Contexto:**
-      - Tarefa `cockpit_tower_wiki/work/tasks/2026-10-24_viewer-new-tab-button.md`.
-      - É uma escrita nova: o tower só envia `pty.input`/`pty.resize` além da leitura (`ALLOWED_OUTBOUND` em `src/protocol.ts`), e a ADR `decisions/2026-10-23_phone-input-client` não cobre abrir terminal. O dono decide antes do código (ADR nova ou emenda).
-      - Caminho provável: o gateway roda `cockpit new-tab --cwd <pasta do workspace>`, como já roda `list-tabs`. Falta confirmar em que pane a aba nasce quando o comando não vem de um terminal do Cockpit.
-      - Botão de referência: `remote_pi` `cockpit/lib/app/cockpit/ui/widgets/pane_view.dart` (`Icons.add`, perto da linha 1260).
-
-      **Estado:** plano aprovado (D1: aceita a troca de workspace no Mac; D2: só em modo de comando). Execução na branch `feat/2026-10-24_viewer-new-tab-button__tower`.
-
 ## Done
+
+- [x] Botão (+) na faixa de abas: abrir um terminal novo pelo celular (PR #7) <!-- id: k23 labels: feature, ui, risk-high, gateway, viewer -->
+      Trio `2026-10-24_viewer-new-tab-button`, ADR `decisions/2026-10-24_phone-new-tab`. Em modo de comando, o (+) fixo à direita abre um terminal no workspace da tela pela CLI do Cockpit (`new-tab --tab-id`), e o Mac pode trocar de workspace.
 
 - [x] Tela do iPhone: fonte da caixa de texto e gaveta por workspace <!-- id: k22 labels: ui, viewer -->
       Trio `2026-10-24_compose-font-workspace-nav`. A caixa de texto usa a fonte do terminal (sem zoom do iOS ao focar) e a gaveta navega por workspace e worktree, como a lateral do Cockpit; o terminal se escolhe pelas abas.
