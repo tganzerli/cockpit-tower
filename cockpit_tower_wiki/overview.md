@@ -4,7 +4,7 @@ type: overview
 scope:
   area: []
 status: draft
-updated: 2026-10-23
+updated: 2026-10-24
 code_refs:
   - src/
   - web/
@@ -33,7 +33,7 @@ Single-repo default: list the functional areas/modules of the codebase.
 | Área | Onde fica | Descrição |
 |---|---|---|
 | gateway | `src/` | Cliente do `cockpit-server` + ponte HTTP/WebSocket em loopback — [[services/gateway]], [[contracts/cockpit-protocol-v2]] |
-| viewer | `web/` | Página para o iPhone, em leitura até o dono tocar em "Command", que abre caixa de texto e barra de teclas especiais 📎 [`web/index.html:23,32`](../web/index.html): o xterm.js só emula no tamanho da PTY e uma visão HTML mostra o texto quebrado na largura do celular, com histórico rolável e as cores do Cockpit no tema claro ou escuro, seguindo o tema do Cockpit 📎 [`web/app.js:1-5`](../web/app.js); navegação como a do Cockpit (ordem, cores e worktrees recolhíveis da lateral), com cada sessão identificada por projeto, aba, processo e branch ([[services/gateway]]) |
+| viewer | `web/` | Página para o iPhone, em leitura até o dono tocar em "Command", que abre caixa de texto e barra de teclas especiais 📎 [`web/index.html:23,32`](../web/index.html), com o texto digitado no tamanho da fonte do terminal (sem zoom do iOS ao focar, pela `maximum-scale=1` da página) 📎 [`web/style.css:298`](../web/style.css), [`web/index.html:5`](../web/index.html): o xterm.js só emula no tamanho da PTY e uma visão HTML mostra o texto quebrado na largura do celular, com histórico rolável e as cores do Cockpit no tema claro ou escuro, seguindo o tema do Cockpit 📎 [`web/app.js:1-5`](../web/app.js); navegação como a do Cockpit (ordem, cores e worktrees recolhíveis da lateral; na gaveta se toca no workspace ou worktree, e o terminal se escolhe pela faixa de abas 📎 [`web/app.js:472`](../web/app.js)), com cada sessão identificada por projeto, aba, processo e branch ([[services/gateway]]) |
 | tower-cli | `bin/tower` | Liga/desliga gateway, `caffeinate` e `tailscale serve` — [[flows/tower-on-off]] |
 | panel | `panel/` | Painel do Cockpit (`tower.panel`) que liga/desliga o tower e mostra estado, URL e QR — [[flows/tower-on-off]] |
 | upstream-cockpit | fora do repo (fork `tganzerli/remote_pi`) | Contribuições ao Cockpit (`remote_pi`) feitas a partir do tower; o código fica no fork, aqui ficam o trio e o conhecimento |

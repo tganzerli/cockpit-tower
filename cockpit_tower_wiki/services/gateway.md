@@ -4,7 +4,7 @@ type: service
 scope:
   area: [gateway, viewer]
 status: stable
-updated: 2026-10-23
+updated: 2026-10-24
 sources: []
 code_refs:
   - src/server.ts
@@ -45,7 +45,7 @@ Processo Node/TypeScript, executado sem build pelo type stripping nativo do Node
 | `src/input-log.ts` | registro local JSONL, `0600`, só acréscimos (`src/input-log.ts:19-21`) |
 | `src/tailnet-identity.ts` | origem da página e login do dono, lidos de `tailscale status --json` (`src/tailnet-identity.ts:10`) |
 | `src/session-info.ts` | contexto de cada sessão: projeto, aba, processo, branch e atividade (ver abaixo) |
-| `web/app.js` | xterm só como emulador no tamanho da PTY, visão HTML com quebra de linha, e navegação no estilo do Cockpit (barra, faixa de abas, gaveta de workspaces) |
+| `web/app.js` | xterm só como emulador no tamanho da PTY, visão HTML com quebra de linha, e navegação no estilo do Cockpit (barra, faixa de abas, gaveta de workspaces). Na gaveta, workspace e worktree são botões e o terminal se escolhe pelas abas; abrir um workspace volta à última sessão vista nele, senão à aba em foco no Cockpit, a um agente trabalhando ou à primeira (`web/app.js:472`, `web/app.js:495`). A caixa de texto usa a fonte do terminal (`web/app.js:321`) |
 | `src/serve-status.ts` | diz se o `tailscale serve` publica a porta **e** aponta para o gateway (`src/serve-status.ts:10`) |
 
 ## Acesso

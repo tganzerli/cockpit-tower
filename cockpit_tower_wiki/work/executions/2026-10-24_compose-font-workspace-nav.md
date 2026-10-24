@@ -4,11 +4,11 @@ type: execution
 work_id: 2026-10-24_compose-font-workspace-nav
 scope:
   area: [viewer]
-status: in_progress
+status: done
 updated: 2026-10-24
 summary: A caixa de texto do modo de comando usa a fonte do terminal sem zoom do iOS, e a gaveta navega por workspace e worktree, como a lateral do Cockpit.
 topic: [ui]
-related: []
+related: ["[[services/gateway]]", "[[overview]]"]
 ---
 
 # Execução — 2026-10-24_compose-font-workspace-nav
@@ -18,9 +18,9 @@ related: []
 - **ID:** `2026-10-24_compose-font-workspace-nav`
 - **Tarefa:** [[work/tasks/2026-10-24_compose-font-workspace-nav]]
 - **Plano:** [[work/plans/2026-10-24_compose-font-workspace-nav]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-24`
-- **Fim:** `—`
+- **Fim:** `2026-10-24`
 - **Escopo:** área `[viewer]`
 
 ## Checklist (espelha o plano §4.5)

@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-24_compose-font-workspace-nav
 scope:
   area: [viewer]
-status: in_progress
+status: done
 updated: 2026-10-24
 summary: A caixa de texto do modo de comando usa o tamanho de fonte do terminal, e a gaveta navega por workspace (como a lateral do Cockpit), deixando as abas para escolher o terminal.
 topic: [ui]

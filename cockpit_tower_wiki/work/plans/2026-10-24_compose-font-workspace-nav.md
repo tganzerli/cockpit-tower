@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-24_compose-font-workspace-nav
 scope:
   area: [viewer]
-status: approved
+status: executed
 risk: medium
 updated: 2026-10-24
 summary: Ligar a fonte da caixa de texto à fonte do terminal sem o zoom do iOS, e trocar os botões por terminal da gaveta por botões de workspace e worktree.
