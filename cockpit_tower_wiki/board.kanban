@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k23).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k24).
 
 ## Backlog
 
@@ -107,6 +107,17 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). Esperando a resposta do mantenedor; se ele quiser, novo trio e PR separado.
 
 ## Em curso
+
+- [ ] Botão (+) na faixa de abas do viewer para abrir um terminal novo <!-- id: k23 labels: feature, ui, risk-high, média, M, gateway, viewer -->
+      **O quê:** um "+" no lado direito da faixa de abas do iPhone que abre um terminal novo no workspace (ou worktree) na tela, como o "+" da barra de abas do Cockpit.
+
+      **Contexto:**
+      - Tarefa `cockpit_tower_wiki/work/tasks/2026-10-24_viewer-new-tab-button.md`.
+      - É uma escrita nova: o tower só envia `pty.input`/`pty.resize` além da leitura (`ALLOWED_OUTBOUND` em `src/protocol.ts`), e a ADR `decisions/2026-10-23_phone-input-client` não cobre abrir terminal. O dono decide antes do código (ADR nova ou emenda).
+      - Caminho provável: o gateway roda `cockpit new-tab --cwd <pasta do workspace>`, como já roda `list-tabs`. Falta confirmar em que pane a aba nasce quando o comando não vem de um terminal do Cockpit.
+      - Botão de referência: `remote_pi` `cockpit/lib/app/cockpit/ui/widgets/pane_view.dart` (`Icons.add`, perto da linha 1260).
+
+      **Estado:** plano aprovado (D1: aceita a troca de workspace no Mac; D2: só em modo de comando). Execução na branch `feat/2026-10-24_viewer-new-tab-button__tower`.
 
 ## Done
 
