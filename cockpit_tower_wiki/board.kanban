@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k26).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k27).
 
 ## Backlog
 
@@ -109,6 +109,9 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). Esperando a resposta do mantenedor; se ele quiser, novo trio e PR separado.
 
 ## Em curso
+
+- [ ] Fechar pelo (x) o terminal que o (+) do celular abriu <!-- id: k26 labels: feature, risk-high, gateway, média, P -->
+      Trio `2026-10-24_phone-made-tab-close`. No teste do k24, o terminal aberto pelo (+) não fechava pelo (x): o workspace passa a ter dois terminais e a regra do terminal único recusa (`no_tab`). O gateway passa a guardar o par sessão → aba de cada (+), pela única sessão nova depois do `new-tab`, e o (x) fecha por esse par.
 
 ## Done
 
