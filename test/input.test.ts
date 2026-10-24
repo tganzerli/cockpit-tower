@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { inputBytes, KEYS, ptySize } from '../src/input.ts';
+import { inputBytes, KEYS, ptySize, WHEEL_MAX, wheelBytes } from '../src/input.ts';
 import { MAX_INPUT_BYTES } from '../src/protocol.ts';
 
 test('each named key is the byte sequence Cockpit itself sends', () => {
@@ -48,4 +48,49 @@ test('ptySize clamps integers to the allowed range and refuses anything else', (
   for (const bad of [{ cols: '45', rows: 40 }, { cols: NaN, rows: 40 }, { cols: 45.5, rows: 40 }, { cols: null, rows: 40 }, { cols: 45 }, {}]) {
     assert.equal(ptySize(bad as never), null, JSON.stringify(bad));
   }
+});
+
+const S80 = { cols: 80, rows: 24 };
+const hex = (w: ReturnType<typeof wheelBytes>) => w?.bytes.toString('hex');
+
+test('wheel in SGR is buttons 64/65 at the cell, repeated', () => {
+  const one = '1b5b3c36343b31303b354d'; // ESC[<64;10;5M
+  assert.equal(hex(wheelBytes({ dir: 'up', count: 3, mode: 'sgr', col: 10, row: 5 }, S80)), one.repeat(3));
+  assert.equal(hex(wheelBytes({ dir: 'down', count: 1, mode: 'sgr', col: 10, row: 5 }, S80)), '1b5b3c36353b31303b354d');
+});
+
+test('wheel in X10 is raw bytes, up to cell 223', () => {
+  assert.equal(hex(wheelBytes({ dir: 'up', count: 1, mode: 'x10', col: 10, row: 5 }, S80)), '1b5b4d602a25');
+  const big = { cols: 300, rows: 300 };
+  assert.equal(wheelBytes({ dir: 'up', count: 1, mode: 'x10', col: 223, row: 1 }, big)?.bytes.at(4), 0xff);
+  assert.equal(wheelBytes({ dir: 'up', count: 1, mode: 'x10', col: 224, row: 1 }, big), null);
+});
+
+test('wheel as arrows on the alternate screen, CSI or application mode, without a cell', () => {
+  assert.equal(hex(wheelBytes({ dir: 'up', count: 2, mode: 'arrows' }, S80)), '1b5b411b5b41');
+  assert.equal(hex(wheelBytes({ dir: 'up', count: 1, mode: 'arrows', app: true }, S80)), '1b4f41');
+  assert.equal(hex(wheelBytes({ dir: 'down', count: 1, mode: 'arrows' }, S80)), '1b5b42');
+  assert.equal(wheelBytes({ dir: 'down', count: 1, mode: 'arrows' }, S80)?.col, undefined);
+});
+
+test('wheel count and cell are clamped, not refused', () => {
+  const w = wheelBytes({ dir: 'up', count: 100, mode: 'sgr', col: 999, row: 999 }, S80)!;
+  assert.equal(w.count, WHEEL_MAX);
+  assert.deepEqual([w.col, w.row], [80, 24]);
+  assert.equal(wheelBytes({ dir: 'up', count: 1, mode: 'sgr', col: 0, row: 0 }, S80)?.col, 1);
+});
+
+test('wheel with an unknown direction, format, count or cell type is refused', () => {
+  const bad = [
+    { dir: 'left', count: 1, mode: 'sgr', col: 1, row: 1 },
+    { dir: 'up', count: 1, mode: 'utf8', col: 1, row: 1 },
+    { dir: 'up', count: 1, mode: 'urxvt', col: 1, row: 1 },
+    { dir: 'up', count: 1, col: 1, row: 1 },
+    { dir: 'up', count: 0, mode: 'sgr', col: 1, row: 1 },
+    { dir: 'up', count: -1, mode: 'sgr', col: 1, row: 1 },
+    { dir: 'up', count: 1.5, mode: 'sgr', col: 1, row: 1 },
+    { dir: 'up', count: '3', mode: 'sgr', col: 1, row: 1 },
+    { dir: 'up', count: 1, mode: 'sgr', col: '10', row: 1 },
+  ];
+  for (const m of bad) assert.equal(wheelBytes(m as never, S80), null, JSON.stringify(m));
 });

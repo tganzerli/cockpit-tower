@@ -1,5 +1,6 @@
-// Turns a viewer `input` message into the bytes written to the PTY (ADR 2026-10-23_phone-input-client).
-// The bytes are built here, never by the browser, so this table is the whole of what the phone can type.
+// Turns viewer `input` and `wheel` messages into the bytes written to the PTY (ADRs 2026-10-23_phone-input-client
+// and _phone-fullscreen-scroll). The bytes are built here, never by the browser, so these tables are the whole of
+// what the phone can type or scroll.
 import { MAX_INPUT_BYTES, PTY_COLS, PTY_ROWS } from './protocol.ts';
 
 /** Same bytes Cockpit's own terminal emits (remote_pi keytab_default.dart); arrows always CSI, as the app sends them. */
@@ -39,4 +40,47 @@ export function ptySize(msg: { cols?: unknown; rows?: unknown }): { cols: number
   if (!Number.isInteger(cols) || !Number.isInteger(rows)) return null;
   const clamp = (n: number, r: { min: number; max: number }) => Math.min(r.max, Math.max(r.min, n));
   return { cols: clamp(cols as number, PTY_COLS), rows: clamp(rows as number, PTY_ROWS) };
+}
+
+/** Largest wheel batch per message: about seven mouse-wheel notches on the Mac (3 events each). */
+export const WHEEL_MAX = 20;
+/** X10 puts 32 + n in one byte: coordinates above 223 cannot be encoded. */
+const X10_MAX = 223;
+
+export interface Wheel {
+  dir: 'up' | 'down';
+  count: number;
+  mode: 'sgr' | 'x10' | 'arrows';
+  col?: number;
+  row?: number;
+  bytes: Buffer;
+}
+
+/**
+ * A viewer `wheel` message → the bytes Cockpit's own terminal sends for the same scroll (flterm terminal_input.dart):
+ * mouse buttons 64/65 in the encoding the program enabled, or arrows on the alternate screen. Null = refuse.
+ */
+export function wheelBytes(
+  msg: { dir?: unknown; count?: unknown; mode?: unknown; col?: unknown; row?: unknown; app?: unknown },
+  size: { cols: number; rows: number },
+): Wheel | null {
+  const { dir, count, mode } = msg;
+  if (dir !== 'up' && dir !== 'down') return null;
+  if (!Number.isInteger(count) || (count as number) < 1) return null;
+  if (mode !== 'sgr' && mode !== 'x10' && mode !== 'arrows') return null;
+  const n = Math.min(count as number, WHEEL_MAX);
+  if (mode === 'arrows') {
+    const one = (msg.app === true ? '\x1bO' : '\x1b[') + (dir === 'up' ? 'A' : 'B');
+    return { dir, count: n, mode, bytes: Buffer.from(one.repeat(n), 'latin1') };
+  }
+  if (!Number.isInteger(msg.col) || !Number.isInteger(msg.row)) return null;
+  const clamp = (v: number, max: number) => Math.min(max, Math.max(1, v));
+  const col = clamp(msg.col as number, size.cols);
+  const row = clamp(msg.row as number, size.rows);
+  const button = dir === 'up' ? 64 : 65;
+  let one: Buffer;
+  if (mode === 'sgr') one = Buffer.from(`\x1b[<${button};${col};${row}M`, 'latin1');
+  else if (col > X10_MAX || row > X10_MAX) return null;
+  else one = Buffer.from([0x1b, 0x5b, 0x4d, 32 + button, 32 + col, 32 + row]); // raw bytes, not UTF-8
+  return { dir, count: n, mode, col, row, bytes: Buffer.concat(Array<Buffer>(n).fill(one)) };
 }

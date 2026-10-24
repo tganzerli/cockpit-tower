@@ -35,3 +35,10 @@ test('a resize entry keeps its size and the size it will be restored to', () => 
   const line = JSON.parse(readFileSync(file, 'utf8'));
   assert.deepEqual({ ...line, ts: undefined }, { ts: undefined, login: 'me@example.com', session: 's1', kind: 'resize', cols: 45, rows: 40, from: { cols: 143, rows: 60 } });
 });
+
+test('a wheel entry keeps direction, count, format, cell and bytes', () => {
+  const file = path.join(tmp(), 'input.log');
+  openInputLog(file).append({ login: null, session: 's1', kind: 'wheel', dir: 'up', count: 3, mode: 'sgr', col: 10, row: 5, bytes: 33 });
+  const line = JSON.parse(readFileSync(file, 'utf8'));
+  assert.deepEqual([line.kind, line.dir, line.count, line.mode, line.col, line.row, line.bytes], ['wheel', 'up', 3, 'sgr', 10, 5, 33]);
+});
