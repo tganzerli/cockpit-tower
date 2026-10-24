@@ -7,6 +7,7 @@ import type { WebSocket } from 'ws';
 import { CockpitClient, ProtocolMismatch } from './cockpit-client.ts';
 import { inputBytes, ptySize, wheelBytes } from './input.ts';
 import type { InputLog, InputLogEntry } from './input-log.ts';
+import type { CloseTab, CloseTarget } from './close-tab.ts';
 import type { NewTab } from './new-tab.ts';
 import { EMPTY_RESULT } from './session-info.ts';
 import type { SessionInfoSource } from './session-info.ts';
@@ -50,6 +51,13 @@ export interface TowerServerOptions {
    * Only used with `input`; absent = no new tab from the phone.
    */
   newTab?: NewTab;
+  /**
+   * Closes the watched session's Cockpit tab, in two steps, once command mode is on (ADR 2026-10-24_phone-close-tab).
+   * Only used with `input`; absent = no closing from the phone.
+   */
+  closeTab?: CloseTab;
+  /** How long a prepared close waits for its confirmation. */
+  closeConfirmMs?: number;
   /** A viewer that sends nothing for this long is disconnected, which releases its session (plan D2). */
   idleMs?: number;
   /** While Cockpit is closed, a connected viewer retries this often. */
@@ -189,6 +197,7 @@ const CLOSE_GIVEBACK_MS = 2500;
 function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServerOptions, shared: Shared): void {
   const idleMs = opts.idleMs ?? 10 * 60 * 1000;
   const retryMs = opts.retryMs ?? 3000;
+  const closeConfirmMs = opts.closeConfirmMs ?? 30_000;
   const maxBuffered = opts.maxBufferedBytes ?? 8 * 1024 * 1024;
   const client = new CockpitClient({
     socketPath: opts.socketPath,
@@ -210,6 +219,10 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
   let folders = new Map<string, string>();
   /** A new-tab request is running for this connection. */
   let opening = false;
+  /** A close-tab step is running for this connection. */
+  let closingTab = false;
+  /** The close step 1 found, waiting for the page's confirmation; dropped whenever command mode changes. */
+  let pendingClose: { session: string; target: CloseTarget; at: number } | null = null;
   /** The phone size this viewer put on a session and the size it owes back. Null = nothing owed. */
   let hold: { id: string; original: Size; applied: Size } | null = null;
   /** Bumped on every size this viewer announces: a list started before it is stale for that session. */
@@ -287,6 +300,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
 
   const setCommand = (id: string | null) => {
     commanding = id;
+    pendingClose = null;
     post({ type: 'command', on: id !== null, ...(id !== null ? { id } : {}) });
     if (id === null && hold !== null) void giveBack();
   };
@@ -301,6 +315,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     // The session may end, or its id be reused by a restarted Cockpit, while we are away.
     listed = new Map();
     folders = new Map();
+    pendingClose = null;
     if (commanding !== null) setCommand(null);
   });
   client.on('reconnected', () => {
@@ -421,6 +436,59 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     }
   };
 
+  /**
+   * The (x) on the phone: closes the watched session's tab (ADR 2026-10-24_phone-close-tab). Step 1 (no `confirm`)
+   * finds the tab and answers with its Cockpit title; step 2 (`confirm: true`) acts only if a second fresh look
+   * finds the same tab and the same session and tab ids. Nothing but `confirm` is read from the browser.
+   */
+  const handleCloseTab = async (msg: { confirm?: unknown }) => {
+    const target = watching; // never an id from the browser
+    const refuse = (reason: string) => {
+      pendingClose = null;
+      post({ type: 'close-tab', ok: false, reason });
+    };
+    if (shared.closing || !mayCommand || !opts.closeTab || target === null || commanding !== target) return refuse('command_off');
+    if (closingTab) return post({ type: 'close-tab', ok: false, reason: 'closing' }); // the running step keeps its state
+    const confirming = msg.confirm === true;
+    const prepared = pendingClose;
+    if (confirming && (!prepared || prepared.session !== target || Date.now() - prepared.at > closeConfirmMs)) return refuse('expired');
+    closingTab = true;
+    try {
+      let sessions;
+      try {
+        sessions = await client.list(SIZE_LIST_MS);
+      } catch {
+        return refuse('cockpit_unavailable');
+      }
+      // A rejection would otherwise go unhandled and stop the gateway.
+      const found = await opts.closeTab.resolve(sessions, target).catch(() => ({ ok: false, reason: 'failed' }) as const);
+      if (!open) return;
+      if (shared.closing || commanding !== target || watching !== target) return refuse('command_off'); // changed meanwhile
+      if (confirming && pendingClose !== prepared) return refuse('expired'); // command mode cycled meanwhile
+      if (!found.ok) return refuse(found.reason);
+      if (!confirming) {
+        pendingClose = { session: target, target: found.target, at: Date.now() };
+        return post({ type: 'close-tab', stage: 'confirm', title: found.target.title });
+      }
+      pendingClose = null;
+      if (found.target.tabId !== prepared!.target.tabId || found.target.ids !== prepared!.target.ids) return refuse('changed');
+      const { tabId, title } = prepared!.target;
+      if (!opts.input!.log.append({ login, session: target, kind: 'close-tab', tab: tabId, title })) return refuse('log_failed');
+      const done = await opts.closeTab.close(tabId).catch(() => ({ ok: false, reason: 'failed' }) as const);
+      if (!open) return;
+      if (!done.ok) return refuse(done.reason);
+      if (commanding === target) setCommand(null);
+      if (watching === target) {
+        client.detach(target);
+        watching = null;
+      }
+      post({ type: 'close-tab', ok: true, id: target });
+      void sendSessions(); // the page moves to a neighbouring tab from this list
+    } finally {
+      closingTab = false;
+    }
+  };
+
   const applySize = (msg: { cols?: unknown; rows?: unknown }) =>
     serial(async () => {
       const target = watching; // never an id from the browser
@@ -464,6 +532,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
       col?: unknown;
       row?: unknown;
       app?: unknown;
+      confirm?: unknown;
     };
     try {
       msg = JSON.parse(String(raw));
@@ -488,6 +557,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     if (msg.type === 'resize') return void applySize(msg);
     if (msg.type === 'wheel') return handleWheel(msg);
     if (msg.type === 'new-tab') return void handleNewTab();
+    if (msg.type === 'close-tab') return void handleCloseTab(msg);
     // Anything else, including kill attempts, is dropped.
     console.warn(`cockpit-tower: ignored viewer message of type ${String(msg.type)}`);
   });
