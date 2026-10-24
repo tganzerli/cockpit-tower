@@ -20,6 +20,8 @@ updated: 2026-10-24
 
 - ✅ [[work/tasks/2026-10-24_viewer-new-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
   — Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova. ↳ [plan](work/plans/2026-10-24_viewer-new-tab-button) · [exec](work/executions/2026-10-24_viewer-new-tab-button)
+- ✅ [[work/tasks/2026-10-24_viewer-close-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
+  — Em modo de comando, um (x) na aba assistida fecha o terminal pela CLI do Cockpit em dois passos, só quando ele é o único terminal de um workspace com shells e abas equilibrados; testado em abas e workspace descartáveis. ↳ [plan](work/plans/2026-10-24_viewer-close-tab-button) · [exec](work/executions/2026-10-24_viewer-close-tab-button)
 - ✅ [[work/tasks/2026-10-24_tower-off-orphan-gateway]] · `done` 10-24 · `bin` [bugfix, tooling]
   — O bin/tower reconhece o gateway do tower de qualquer checkout (pidfile de checkout do tower, ou a porta com /healthz): o off para e só apaga o pidfile quando ele sai, o on troca de checkout e o status mostra a origem. ↳ [plan](work/plans/2026-10-24_tower-off-orphan-gateway) · [exec](work/executions/2026-10-24_tower-off-orphan-gateway)
 - ✅ [[work/tasks/2026-10-24_exec-process-group-citations]] · `done` 10-24 · `wiki` [wiki]

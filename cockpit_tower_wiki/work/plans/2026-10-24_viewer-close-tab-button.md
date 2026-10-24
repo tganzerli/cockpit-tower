@@ -7,7 +7,7 @@ scope:
 status: approved
 risk: high
 updated: 2026-10-24
-summary: ADR nova libera, em modo de comando e em dois passos (preparar e confirmar), fechar a aba da sessão assistida; o gateway acha a aba num casamento completo e fresco, confere que nada mudou entre os passos, recusa agente trabalhando e roda `cockpit close-tab <id> --json` com registro antes.
+summary: ADR nova libera fechar, em modo de comando e em dois passos (preparar e confirmar), a aba da sessão assistida pela CLI do Cockpit (`close-tab`), com aba achada numa listagem fresca, recusa de agente trabalhando e registro antes.
 topic: [contract, ui]
 related:
   - work/tasks/2026-10-24_viewer-close-tab-button

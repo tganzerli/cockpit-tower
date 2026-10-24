@@ -6,7 +6,7 @@ scope:
   area: [gateway, viewer]
 status: accepted
 updated: 2026-10-24
-summary: O gateway pode rodar um segundo verbo de escrita da CLI do Cockpit, close-tab, só para a sessão assistida, em modo de comando, em dois passos, e só quando ela é o único terminal do seu workspace (sem depender da ordem de criação), recusando agente trabalhando; o shell órfão do k21 é aceito.
+summary: O gateway pode rodar close-tab, segundo verbo de escrita da CLI do Cockpit: só a sessão assistida, em modo de comando, em dois passos, e só se ela é o único terminal de um workspace equilibrado; recusa agente trabalhando.
 revisit_when: "o Cockpit expor o id da aba no pty.sessions (k5) ou o pid no list-tabs, ou corrigir o shell que sobrevive ao fechamento (k21)"
 supersedes: []
 superseded_by: ""
