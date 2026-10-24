@@ -4,7 +4,7 @@ type: adr
 work_id: 2026-10-23_phone-fullscreen-scroll
 scope:
   area: [gateway, viewer]
-status: proposed
+status: accepted
 updated: 2026-10-23
 summary: A roda do mouse vira entrada nomeada (wheel), só em modo de comando; o gateway monta os bytes por três moldes (SGR, X10, setas), limita quantidade e posição e registra antes de enviar por pty.input, seguindo as regras do app do Mac.
 revisit_when: "o app do Cockpit mudar as regras da roda (flterm terminal_input.dart), um agente usar a codificação 1005/1015/1016, ou for pedida a rolagem horizontal"

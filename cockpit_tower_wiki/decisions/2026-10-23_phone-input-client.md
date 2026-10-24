@@ -6,7 +6,7 @@ scope:
   area: [gateway, viewer, tower-cli]
 status: accepted
 updated: 2026-10-23
-summary: Libera pty.input em modo de comando, para a sessão assistida, com Origin, dono do Tailscale e registro local; kill/open/ack/rpc seguem proibidos e nunca há pty.ack. Refinada pela ADR do resize (2026-10-23_phone-pty-resize).
+summary: Libera pty.input em modo de comando, para a sessão assistida, com Origin, dono do Tailscale e registro local; kill/open/ack/rpc seguem proibidos e nunca há pty.ack. Refinada pelas ADRs do resize e da roda.
 revisit_when: "o cockpit-server passar a repassar o flow do pty.open"
 supersedes:
   - decisions/2026-10-22_read-only-client
@@ -21,11 +21,14 @@ related:
   - flows/tower-on-off
   - work/plans/2026-10-23_phone-terminal-input
   - decisions/2026-10-23_phone-pty-resize
+  - decisions/2026-10-23_phone-fullscreen-scroll
 ---
 
 # 2026-10-23 — O tower lê e digita na sessão que o celular assiste, só com o modo de comando ligado
 
 > **Refinada em 2026-10-23** por [[decisions/2026-10-23_phone-pty-resize]]: `pty.resize` passou a ser permitido só em modo de comando, com o tamanho do Mac devolvido ao sair. As decisões 2–9 continuam valendo; o corpo abaixo fica como estava.
+>
+> **Refinada em 2026-10-23** por [[decisions/2026-10-23_phone-fullscreen-scroll]]: o navegador também manda `wheel` (decisão 2), com bytes montados no gateway como as teclas (decisão 5) e enviados por `pty.input`, sem tipo novo para o Cockpit. A decisão 1, com o `pty.resize` da nota acima, e as decisões 3–9 continuam valendo.
 
 ## Contexto
 
