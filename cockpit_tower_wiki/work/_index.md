@@ -15,6 +15,8 @@ updated: 2026-10-23
 
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
   — tganzerli/cockpit-tower publicado a partir de um commit inicial sanitizado; o histórico antigo ficou em tganzerli/cockpit-tower-archive, privado. ↳ [plan](work/plans/2026-10-23_public-repo-migration) · [exec](work/executions/2026-10-23_public-repo-migration)
+- 🔧 [[work/tasks/2026-10-23_phone-fullscreen-scroll]] · `open` · `gateway, viewer` [contract, ui]
+  — Em curso — roda do mouse como entrada nomeada em modo de comando, com bytes montados no gateway. ↳ [plan](work/plans/2026-10-23_phone-fullscreen-scroll) · [exec](work/executions/2026-10-23_phone-fullscreen-scroll)
 - 🚧 [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]] · `in_progress` · `upstream-cockpit` [ui]
   — Em andamento — modo de quebra de linha no CodeEditor do Cockpit, com issue e PR no remote_pi. ↳ [plan](work/plans/2026-10-23_cockpit-editor-soft-wrap) · [exec](work/executions/2026-10-23_cockpit-editor-soft-wrap)
 

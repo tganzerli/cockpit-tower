@@ -7,7 +7,7 @@ scope:
 status: approved
 risk: high
 updated: 2026-10-23
-summary: ADR nova refina a de digitação e cria a roda do mouse como entrada nomeada; em modo de comando, o arrasto do dedo vira eventos de roda (botões 64/65 em SGR ou X10, ou setas na tela alternativa), com bytes montados no gateway, posição limitada ao tamanho da PTY e uma linha de registro por mensagem antes do envio.
+summary: Em modo de comando, o arrasto do dedo vira a roda do mouse (botões 64/65 em SGR ou X10, ou setas), com bytes montados no gateway, posição presa ao tamanho da PTY e registro antes do envio.
 topic: [contract, ui]
 related:
   - work/tasks/2026-10-23_phone-fullscreen-scroll
