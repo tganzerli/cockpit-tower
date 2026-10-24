@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-24_viewer-new-tab-button
 scope:
   area: [viewer, gateway]
-status: in_progress
+status: done
 updated: 2026-10-24
 summary: Um botão (+) no fim da faixa de abas do viewer abre um terminal novo no workspace (ou worktree) na tela, como o "+" da barra de abas do Cockpit.
 topic: [ui]
@@ -33,12 +33,12 @@ O dono quer, pela página do iPhone, abrir um terminal novo sem precisar do Mac.
 
 ## Critérios de aceite
 
-- [ ] A faixa de abas do viewer mostra um botão (+) no lado direito, no estilo do "+" da barra de abas do Cockpit.
-- [ ] Tocar no (+) abre um terminal novo no workspace (ou worktree) que está na tela, que aparece também no Cockpit do Mac como aba normal.
-- [ ] Depois de criado, o terminal novo aparece na faixa de abas do viewer e fica selecionado.
-- [ ] O (+) só funciona com as mesmas garantias da digitação (modo de comando ligado, `Origin`, dono do Tailscale, registro local) — ou com as que a decisão do dono definir; fora disso o botão não aparece ou fica desabilitado.
-- [ ] A capacidade nova está registrada numa ADR (nova ou emenda de [[decisions/2026-10-23_phone-input-client]]) e no contrato [[contracts/cockpit-protocol-v2]] ou em [[services/gateway]], conforme o caminho escolhido.
-- [ ] `npm test` cobre a rota/mensagem nova do gateway, incluindo a recusa quando as garantias não valem.
+- [x] A faixa de abas do viewer mostra um botão (+) no lado direito, no estilo do "+" da barra de abas do Cockpit.
+- [x] Tocar no (+) abre um terminal novo no workspace (ou worktree) que está na tela, que aparece também no Cockpit do Mac como aba normal.
+- [x] Depois de criado, o terminal novo aparece na faixa de abas do viewer e fica selecionado.
+- [x] O (+) só funciona com as mesmas garantias da digitação (modo de comando ligado, `Origin`, dono do Tailscale, registro local) — ou com as que a decisão do dono definir; fora disso o botão não aparece ou fica desabilitado.
+- [x] A capacidade nova está registrada numa ADR (nova ou emenda de [[decisions/2026-10-23_phone-input-client]]) e no contrato [[contracts/cockpit-protocol-v2]] ou em [[services/gateway]], conforme o caminho escolhido.
+- [x] `npm test` cobre a rota/mensagem nova do gateway, incluindo a recusa quando as garantias não valem.
 
 ## Escopo declarado
 

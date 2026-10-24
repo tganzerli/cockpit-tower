@@ -13,13 +13,13 @@ updated: 2026-10-24
 
 ## In progress (open / in_progress / future / paused)
 
-- 🚧 [[work/tasks/2026-10-24_viewer-new-tab-button]] · `in_progress` · `viewer, gateway` [ui]
-  — Em andamento — botão (+) no viewer que abre, em modo de comando, um terminal no workspace assistido pela CLI do Cockpit. ↳ [plan](work/plans/2026-10-24_viewer-new-tab-button) · [exec](work/executions/2026-10-24_viewer-new-tab-button)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
   — tganzerli/cockpit-tower publicado a partir de um commit inicial sanitizado; o histórico antigo ficou em tganzerli/cockpit-tower-archive, privado. ↳ [plan](work/plans/2026-10-23_public-repo-migration) · [exec](work/executions/2026-10-23_public-repo-migration)
 
 ## Closed — 2026-Q4 (current quarter)
 
+- ✅ [[work/tasks/2026-10-24_viewer-new-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
+  — Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova. ↳ [plan](work/plans/2026-10-24_viewer-new-tab-button) · [exec](work/executions/2026-10-24_viewer-new-tab-button)
 - ✅ [[work/tasks/2026-10-24_exec-process-group-citations]] · `done` 10-24 · `wiki` [wiki]
   — As três citações de bin/tower em cross-cutting/cockpit-exec-process-group voltaram às linhas certas; o aviso stale do wiki-lint saiu. ↳ [plan](work/plans/2026-10-24_exec-process-group-citations) · [exec](work/executions/2026-10-24_exec-process-group-citations)
 - ✅ [[work/tasks/2026-10-24_compose-font-workspace-nav]] · `done` 10-24 · `viewer` [ui]

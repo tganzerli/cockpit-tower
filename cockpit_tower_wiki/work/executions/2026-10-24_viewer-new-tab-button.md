@@ -4,9 +4,9 @@ type: execution
 work_id: 2026-10-24_viewer-new-tab-button
 scope:
   area: [gateway, viewer]
-status: in_progress
+status: done
 updated: 2026-10-24
-summary: Em andamento — botão (+) no viewer que abre, em modo de comando, um terminal no workspace assistido pela CLI do Cockpit.
+summary: Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova.
 topic: [contract, ui]
 related: []
 ---
@@ -18,9 +18,9 @@ related: []
 - **ID:** `2026-10-24_viewer-new-tab-button`
 - **Tarefa:** [[work/tasks/2026-10-24_viewer-new-tab-button]]
 - **Plano:** [[work/plans/2026-10-24_viewer-new-tab-button]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-24 13:18`
-- **Fim:** `—`
+- **Fim:** `2026-10-24`
 - **Escopo:** áreas `[gateway, viewer]`
 - **Branch:** `feat/2026-10-24_viewer-new-tab-button__tower`. A branch foi criada como `wip/…` num worktree próprio e renomeada após a aprovação; a base `origin/dev` `b351182` foi conferida.
 
@@ -36,9 +36,9 @@ related: []
 - [x] 8 — `web/app.js` + `web/style.css`.
 - [x] 9 — `REVIEW.md`.
 - [x] 10 — `npm test`, trailers e wiki-lint.
-- [ ] 11 — Teste real no iPhone com o dono.
+- [x] 11 — Teste real no iPhone com o dono.
 - [x] 12 — Revisão por agente com contexto limpo (profunda).
-- [ ] 13 — Sinalizar o dono.
+- [x] 13 — Sinalizar o dono.
 
 ## Atividade (cronológica)
 
@@ -78,11 +78,18 @@ related: []
 - **Passo 9:** o `REVIEW.md` ganhou o contexto, a linha "Terminal novo" e o item em "Always high risk".
 - **Passo 10:** validações abaixo. `decisions/_index.md` e `work/_index.md` foram regenerados (`/wiki-index decisions`, `/work-index`).
 
+### `2026-10-24` — passos 11 e 13: teste no iPhone e fechamento
+
+- **Primeira tentativa:** o (+) não apareceu. O gateway ativo era o do checkout principal (pid 45349, na `dev` `b351182`, sem o botão). O dono trocou o tower para o do worktree.
+- **Pedido do dono:** fixar o (+) na borda direita, como no Cockpit. Feito em `web/style.css` (ver divergência).
+- **Resultado:** o dono confirmou que funcionou e pediu o fechamento do trio.
+- **Próximo pedido do dono:** fechar terminal e aba pelo celular, com um (x) na aba. Fica para um trio novo.
+
 ## Commits
 
 - `67fd368` docs(work): open the viewer-new-tab-button task and plan
 - `0d38c6b` docs(adr): let the phone open a terminal through Cockpit's new-tab CLI verb
-- `9ff4e81` feat: open a terminal from the phone's tab strip, as Cockpit's (+) does
+- `abb2932` feat: open a terminal from the phone's tab strip, as Cockpit's (+) does
 - docs(work): log the viewer-new-tab-button execution (este registro; o hash muda a cada emenda)
 
 ## Divergências do plano
@@ -109,7 +116,7 @@ related: []
     ✔ stalled: 0
     ✔ yaml-comment: 0
   ```
-- [ ] Verificação §4.4 (teste real)
+- [x] Verificação §4.4 (teste real) — o dono testou no iPhone com o tower desta branch (gateway `node …/wt-viewer-new-tab-button/src/main.ts`, pid 28072) e relatou: "funcionou". ⚠ A linha `new-tab` do `input.log` não foi conferida por mim.
 
 ## Revisão por agente
 
