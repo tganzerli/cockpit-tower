@@ -41,7 +41,7 @@ related: []
 - [x] 9 — `dart format` + verificação do §4.4
 - [x] 10 — Medir a abertura de um `.md` grande
 - [x] 11 — Commits + revisão `reviewer`
-- [ ] 12 — Gate humano; push + PR com aprovação — **em espera:** o humano decidiu testar a usabilidade com uma build de debug do fork antes do PR (de 1 a 2 dias, a partir de 2026-10-23)
+- [x] 12 — Gate humano; push + PR com aprovação → [#264](https://github.com/jacobaraujo7/remote_pi/pull/264), aberto em 2026-10-24 depois do teste de usabilidade
 - [ ] 13 — Fechar e propor `/wiki-sync`
 
 ## Atividade (cronológica)
@@ -361,6 +361,16 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
   - Editor, configuração e menu → `00:03 +48: All tests passed!`
   - `fvm flutter analyze lib test` → `39 issues found`.
 
+### `2026-10-24` — PR aberto
+- O dono testou a build com o `177aea97` ("está tudo certo"), revisou o texto do PR e aprovou
+  ("pode abrir").
+- Antes de abrir:
+  - a `upstream/main` continuava em `7d923ab`, e o `merge-tree` deu limpo;
+  - os commits não têm trailer de IA;
+  - os testes de editor, configuração e menu deram `+67: All tests passed!`.
+- `git push origin feat/cockpit-editor-soft-wrap`, com 6 commits sobre `7d923ab`, e depois
+  `gh pr create`: https://github.com/jacobaraujo7/remote_pi/pull/264 (`Closes #261`).
+
 ## Validações
 
 - [x] **Análise estática:** `fvm flutter analyze` → `39 issues found`. É a baseline, só info,
@@ -374,7 +384,7 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
       no `ce25e4e0`: a lista de falhas é sempre a mesma do `upstream/main`.
 - [x] **`fvm dart run slang`** → `Translations generated successfully.`
 - [x] **Verificação do §4.4 do plano:** os itens 1 a 3 acima.
-- [ ] **Teste manual no app:** não feito. Sem Rust e Zig não dá para compilar o app.
+- [x] **Teste manual no app:** o dono usou a build release do fork no dia a dia, de 2026-10-23 a 2026-10-24. O teste trouxe o `b95ce896` e o `177aea97`.
 
 ## Revisão do agente
 
