@@ -114,3 +114,12 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/sources/external/2026-10-23_cockpit-code-editor.md` (CREATE)
 - `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (CREATE)
 - `cockpit_tower_wiki/overview.md` (UPDATE) — área upstream-cockpit aponta as duas páginas novas
+
+## [2026-10-24] wiki-sync | 2026-10-24_viewer-new-tab-button | 6 pages touched
+
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — seção "Terminal novo pelo celular", peça src/new-tab.ts, mensagens, registro, limites e citações remapeadas
+- `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — abrir terminal passa pela CLI, não por pty.open
+- `cockpit_tower_wiki/overview.md` (UPDATE) — o (+) na linha do viewer e a ADR nova
+- `cockpit_tower_wiki/flows/tower-on-off.md` (UPDATE) — citação de src/main.ts remapeada
+- `cockpit_tower_wiki/decisions/2026-10-22_read-only-client.md` (UPDATE) — citações remapeadas
+- `cockpit_tower_wiki/decisions/_index.md` (UPDATE) — regenerado

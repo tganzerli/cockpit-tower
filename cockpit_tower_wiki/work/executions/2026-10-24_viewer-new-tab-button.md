@@ -8,7 +8,7 @@ status: done
 updated: 2026-10-24
 summary: Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova.
 topic: [contract, ui]
-related: []
+related: ["[[services/gateway]]", "[[contracts/cockpit-protocol-v2]]", "[[overview]]", "[[flows/tower-on-off]]", "[[decisions/2026-10-22_read-only-client]]", "[[decisions/_index]]"]
 ---
 
 # Execução — 2026-10-24_viewer-new-tab-button
