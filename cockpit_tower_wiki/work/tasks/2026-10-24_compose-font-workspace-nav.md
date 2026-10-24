@@ -24,11 +24,11 @@ Dois ajustes na página do iPhone, pedidos pelo dono em 2026-10-24:
 
 ## Critérios de aceite
 
-- [ ] O texto da caixa de texto tem o mesmo tamanho da fonte do terminal e acompanha A−/A+.
-- [ ] Focar a caixa de texto no iPhone não dá zoom na página.
-- [ ] Na gaveta, tocar no nome de um workspace (ou de um worktree) abre aquele workspace; os terminais dele aparecem na faixa de abas.
-- [ ] A gaveta não lista mais um botão por terminal dentro de cada workspace.
-- [ ] O workspace na tela fica destacado na gaveta, e o indicador de agente trabalhando aparece na linha do workspace.
+- [x] O texto da caixa de texto tem o mesmo tamanho da fonte do terminal e acompanha A−/A+.
+- [x] Focar a caixa de texto no iPhone não dá zoom na página.
+- [x] Na gaveta, tocar no nome de um workspace (ou de um worktree) abre aquele workspace; os terminais dele aparecem na faixa de abas.
+- [x] A gaveta não lista mais um botão por terminal dentro de cada workspace.
+- [x] O workspace na tela fica destacado na gaveta, e o indicador de agente trabalhando aparece na linha do workspace.
 
 ## Escopo declarado
 

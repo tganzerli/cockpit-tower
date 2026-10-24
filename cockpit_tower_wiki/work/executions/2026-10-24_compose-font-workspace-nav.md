@@ -51,6 +51,10 @@ related: ["[[services/gateway]]", "[[overview]]"]
 
 - `3167d7b` docs(work): open the compose-font-workspace-nav task and plan
 - `78b22ad` feat(viewer): type at the terminal's font size and navigate the drawer by workspace
+- `60009a7` docs(work): log the compose-font-workspace-nav execution
+- `bcc60f2` docs(work): record the owner's iPhone check
+- `ac54476` docs(wiki): sync compose-font-workspace-nav to the knowledge pages and close the trio
+- `e27e4c5` merge do PR #4 na `dev` (2026-10-24), sem CI (fora até 2026-11-01): `npm test` rodado de novo na `dev` após o merge → `ℹ pass 130` / `ℹ fail 0`
 
 ## Divergências do plano
 
