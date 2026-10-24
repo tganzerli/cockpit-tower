@@ -89,7 +89,15 @@ tabs after (x): [ 't170:terminal' ]
 ### `2026-10-24` — gate humano
 
 - O dono aprovou ("aprovo") depois do resumo com o diff, as validações, o teste real e as duas rodadas de revisão. PR #13 (`feat/2026-10-24_phone-made-tab-close__tower` → `dev`).
-- **Checagem no iPhone pendente:** o gateway de produção roda o `dev`, então ela só é possível depois do merge e de `tower off`/`tower on`.
+- O merge do PR #13 (`f1875b9`) foi feito a pedido do dono, para o teste no aparelho.
+
+### `2026-10-24` — checagem do dono no iPhone
+
+- Depois de `tower off`/`tower on`, o dono relatou: "funcionou no iphone".
+- `~/.cockpit-tower/input.log`:
+  - `new-tab` da sessão `s1`, em cockpit-tower, às 22:25:34;
+  - `close-tab` da sessão nova `s30`, aba `t176`, título "cockpit-tower", às 22:25:39.
+  - O workspace já tinha o terminal da `s1`, e o fechamento passou pelo par. Pela regra do terminal único ele seria recusado.
 
 ## Commits
 
