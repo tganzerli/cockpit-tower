@@ -4,8 +4,8 @@ type: task
 work_id: 2026-10-23_cockpit-editor-soft-wrap
 scope:
   area: [upstream-cockpit]
-status: in_progress
-updated: 2026-10-23
+status: done
+updated: 2026-10-24
 summary: Propor ao remote_pi (issue + PR) um modo de quebra de linha no editor do Cockpit, ligado por padrão em .md.
 topic: [ui]
 related:

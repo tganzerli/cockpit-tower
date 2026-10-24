@@ -4,11 +4,11 @@ type: execution
 work_id: 2026-10-23_cockpit-editor-soft-wrap
 scope:
   area: [upstream-cockpit]
-status: in_progress
-updated: 2026-10-23
-summary: Em andamento — modo de quebra de linha no CodeEditor do Cockpit, com issue e PR no remote_pi.
+status: done
+updated: 2026-10-24
+summary: "Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono no dia a dia e proposto upstream na issue #261 e no PR #264 do remote_pi."
 topic: [ui]
-related: []
+related: ["[[sources/external/2026-10-23_cockpit-code-editor]]", "[[cross-cutting/upstream-contributions]]", "[[overview]]"]
 ---
 
 # Log de execução — 2026-10-23_cockpit-editor-soft-wrap
@@ -20,9 +20,9 @@ related: []
 - **ID:** `2026-10-23_cockpit-editor-soft-wrap`
 - **Task:** [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]]
 - **Plano:** [[work/plans/2026-10-23_cockpit-editor-soft-wrap]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-23 10:05`
-- **Fim:** `—`
+- **Fim:** `2026-10-24`
 - **Escopo:**
   - Área(s) afetada(s): `[upstream-cockpit]`
 - **Repositório do código:** fork `tganzerli/remote_pi`, clone `~/app/remote_pi`, branch `feat/cockpit-editor-soft-wrap`.
@@ -41,8 +41,8 @@ related: []
 - [x] 9 — `dart format` + verificação do §4.4
 - [x] 10 — Medir a abertura de um `.md` grande
 - [x] 11 — Commits + revisão `reviewer`
-- [ ] 12 — Gate humano; push + PR com aprovação — **em espera:** o humano decidiu testar a usabilidade com uma build de debug do fork antes do PR (de 1 a 2 dias, a partir de 2026-10-23)
-- [ ] 13 — Fechar e propor `/wiki-sync`
+- [x] 12 — Gate humano; push + PR com aprovação → [#264](https://github.com/jacobaraujo7/remote_pi/pull/264), aberto em 2026-10-24 depois do teste de usabilidade
+- [x] 13 — Fechar e propor `/wiki-sync` (dono aprovou em 2026-10-24)
 
 ## Atividade (cronológica)
 
@@ -210,6 +210,8 @@ Fork `tganzerli/remote_pi`, branch `feat/cockpit-editor-soft-wrap`, base `7d923a
 - `13b752d8` feat(cockpit): View > Toggle Word Wrap (Alt+Z), on by default for Markdown
 - `55d9db49` fix(cockpit): measure wrapped lines with the field's effective style (correções da rodada 1)
 - `ce25e4e0` fix(cockpit): repaint the overview ruler when the wrap table changes (Nit da rodada 2)
+- `b95ce896` feat(cockpit): word wrap in Settings and in the Shortcuts list (pedido do dono no teste de usabilidade)
+- `177aea97` fix(cockpit): Alt+Z turns wrap back on per file kind (pedido do dono no teste de usabilidade)
 
 Os commits de correção ficam separados dos dois `feat` (§6.1 do branching): cada um é uma
 unidade lógica com mensagem própria, não um WIP. Separar o `55d9db49` entre os dois `feat` exigiria
@@ -269,6 +271,23 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
 
 ## Divergências do plano
 
+- **Configuração na tela e atalho na lista (2026-10-24), pedido do dono no teste de usabilidade.**
+  O plano não previa nenhum dos dois. Ele achou a falta ao usar a build: a quebra não aparecia
+  em Settings, e o ⌥Z não estava em Settings → Shortcuts.
+  - O dono escolheu um seletor de 3 opções em General → Editor: "Markdown and text" (`null`),
+    "All files" (`true`) e "Off" (`false`). Isso também conserta um furo do plano: depois do
+    primeiro ⌥Z, a escolha virava explícita e não havia como voltar ao padrão por linguagem.
+  - Por isso o `clearEditorWordWrap`, removido na rodada 1 por falta de uso, voltou ao `copyWith`.
+- **⌥Z sensível ao tipo de arquivo (2026-10-24), pedido do dono.** O plano gravava o oposto do
+  valor efetivo (`true`/`false`). No teste, ⌥Z duas vezes num `.md` saía de "Markdown e texto"
+  para "Todos os arquivos". A regra nova (`toggledEditorWordWrap`, em `file_viewer.dart`):
+  - desligar grava `false`;
+  - ligar num arquivo de texto corrido grava `null`, o padrão da linguagem;
+  - ligar num arquivo de código grava `true`, o único valor que quebra esse arquivo.
+- **Depois do limite de rodadas.** O `177aea97` veio depois da rodada 3, a última do §4.4.1, e
+  não teve revisão de agente. Fica sob a revisão do dono, que testa a build, conforme o próprio
+  §4.4.1 prevê.
+
 - **Comentários do código em pt-BR.** O plano tinha os exemplos em inglês, mas o `remote_pi`
   comenta em pt-BR (por exemplo `code_editor.dart:29-48`), e o código novo segue o código ao
   redor. Commits, PR e identificadores continuam em inglês.
@@ -295,6 +314,63 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
   substitui a divergência anterior: é a única forma de medir com o estilo efetivo do
   `EditableText` no mesmo frame.
 
+### `2026-10-24` — teste de usabilidade e configuração na tela
+- O dono usou a build release do fork no dia a dia e aprovou a quebra de linha. Achou dois
+  pontos de atenção: a opção não estava em Settings, e o atalho não estava na página de atalhos.
+- **Onde ficam:**
+  - A página de atalhos lê um catálogo fixo, só para exibição
+    (`remote_pi:cockpit/lib/app/settings/ui/shortcut_catalog.dart`). O comentário do arquivo
+    diz que ele precisa ser atualizado à mão a cada atalho novo.
+  - A seção Editor fica em General (`settings_page.dart`, `_GeneralPanel`, logo abaixo de
+    "Engine").
+- **Commit `b95ce896`:**
+  - `_WordWrapDropdown` usa o `_DropdownChip` e o `showAppMenu`. O valor vai embrulhado num
+    record `(bool?,)`, porque o `showAppMenu` devolve `null` quando o menu fecha sem escolha.
+  - `setEditorWordWrap(bool?)`: o `null` limpa a escolha.
+  - "Toggle Word Wrap" entra na seção Editor do catálogo.
+  - Strings em en, pt-BR e es; `slang` → `Translations generated successfully.`
+- **Testes:**
+  - `copyWith(clearEditorWordWrap: true)`;
+  - o controller grava `false` e depois volta ao padrão sem a chave `editor.wordWrap`;
+  - o catálogo tem o atalho.
+  - Mutação na cópia (o `null` deixa de limpar a escolha): o teste do controller falhou.
+    Depois a cópia foi restaurada.
+- **Resultados:**
+  - `fvm flutter analyze lib test` → `39 issues found`, a mesma baseline.
+  - Editor, configuração e menu → `00:03 +63: All tests passed!`
+  - Suíte inteira: `+1653 ~6 -18` na branch e `+1627 ~6 -18` na `~/cpb` (`upstream/main`). A
+    diferença de `+` é a dos testes novos.
+    - A lista de nomes que falharam não sai confiável da saída `-r expanded`, porque os
+      arquivos rodam em paralelo e as linhas se intercalam.
+    - Conferi por arquivo: os quatro arquivos com falhas conhecidas (`terminal_controller`,
+      `ghostty_presentation_visibility`, `otlp_and_config`, `mongo_socks_support`) dão
+      `+9 -13` nas duas cópias.
+    - Os três arquivos que o parser apontou só na branch passam quando rodam sozinhos (`+17`).
+- O checkout do fork passou de `local/test-build` para `feat/cockpit-editor-soft-wrap`.
+- Build release nova em `build/macos-next`, compilada com o Cockpit aberto. A troca é feita com
+  `cockpit-switch.sh atualizar`, no Terminal.app e com o app fechado.
+
+### `2026-10-24` — ⌥Z volta ao padrão em arquivos de texto
+- **O que o dono viu:** com "Markdown e texto", ⌥Z desligava e o segundo ⌥Z ligava "Todos os
+  arquivos".
+- **Correção no commit `177aea97`:** `toggledEditorWordWrap({chosen, language})` ao lado do
+  `fileEditorWordWrap`, e o `_toggleWordWrap` passou a usá-la. A regra está nas divergências.
+- **Testes:** 4 casos novos em `file_editor_word_wrap_test.dart`. Com a regra antiga aplicada na
+  cópia, deram `+4 -2`; a cópia foi restaurada depois.
+- **Resultados:**
+  - Editor, configuração e menu → `00:03 +48: All tests passed!`
+  - `fvm flutter analyze lib test` → `39 issues found`.
+
+### `2026-10-24` — PR aberto
+- O dono testou a build com o `177aea97` ("está tudo certo"), revisou o texto do PR e aprovou
+  ("pode abrir").
+- Antes de abrir:
+  - a `upstream/main` continuava em `7d923ab`, e o `merge-tree` deu limpo;
+  - os commits não têm trailer de IA;
+  - os testes de editor, configuração e menu deram `+67: All tests passed!`.
+- `git push origin feat/cockpit-editor-soft-wrap`, com 6 commits sobre `7d923ab`, e depois
+  `gh pr create`: https://github.com/jacobaraujo7/remote_pi/pull/264 (`Closes #261`).
+
 ## Validações
 
 - [x] **Análise estática:** `fvm flutter analyze` → `39 issues found`. É a baseline, só info,
@@ -308,7 +384,7 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
       no `ce25e4e0`: a lista de falhas é sempre a mesma do `upstream/main`.
 - [x] **`fvm dart run slang`** → `Translations generated successfully.`
 - [x] **Verificação do §4.4 do plano:** os itens 1 a 3 acima.
-- [ ] **Teste manual no app:** não feito. Sem Rust e Zig não dá para compilar o app.
+- [x] **Teste manual no app:** o dono usou a build release do fork no dia a dia, de 2026-10-23 a 2026-10-24. O teste trouxe o `b95ce896` e o `177aea97`.
 
 ## Revisão do agente
 
@@ -318,6 +394,7 @@ Tier `medium`.
 |---|---|---|---|---|
 | 1 | `7d923ab..13b752d8` (diff completo) | 2 | 2 | 0 |
 | 2 | `13b752d8..55d9db49` | 0 | 2 | 0 |
+| 3 | `ce25e4e0..b95ce896` | 0 | 1 | 0 |
 
 ### Achados e desfecho
 
@@ -329,6 +406,7 @@ Tier `medium`.
 | 4 | 1 | Nit | `code_editor.dart:1010-1025` / `app_settings.dart:274-277`, split a cada build e `clearEditorWordWrap` sem uso | fixed (`update` sem trabalho quando nada mudou; o flag foi removido) | — |
 | 6 | 2 | Nit | `code_editor.dart:1179` / `editor_overview_ruler.dart`, a revisão era capturada no build, um frame atrás | fixed (`ce25e4e0`, `repaint: wrap`) | — |
 | 7 | 2 | Nit | `code_editor.dart:960`, `_hoverOverlay` lia a tabela no build | nit-ignored (um frame, só visual, some ao mover o mouse) | — |
+| 8 | 3 | Nit | `settings_page.dart:1259`, o `_WordWrapDropdown` não tem teste de widget (record, `selected:`, `picked != null`) | nit-ignored: o revisor conferiu a lógica na leitura; montar a `SettingsPage` exige os providers da tela inteira; fica como lacuna no PR | — |
 | 5 | 1 | (achado do autor) | `editor_wrap_layout.dart`, a tabela media com o `codeStyle` e não com o estilo efetivo do campo | fixed (`55d9db49`), com teste visto vermelho | — |
 
 ## Páginas da wiki afetadas

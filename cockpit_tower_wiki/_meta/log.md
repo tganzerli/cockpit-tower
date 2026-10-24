@@ -108,3 +108,9 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 
 - `cockpit_tower_wiki/services/gateway.md` (UPDATE) — gaveta por workspace e worktree; caixa de texto na fonte do terminal
 - `cockpit_tower_wiki/overview.md` (UPDATE) — área viewer: fonte da caixa de texto e navegação da gaveta
+
+## [2026-10-24] wiki-sync | 2026-10-23_cockpit-editor-soft-wrap | 3 pages touched
+
+- `cockpit_tower_wiki/sources/external/2026-10-23_cockpit-code-editor.md` (CREATE)
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (CREATE)
+- `cockpit_tower_wiki/overview.md` (UPDATE) — área upstream-cockpit aponta as duas páginas novas

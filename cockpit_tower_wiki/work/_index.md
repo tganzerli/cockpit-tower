@@ -15,8 +15,6 @@ updated: 2026-10-24
 
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
   — tganzerli/cockpit-tower publicado a partir de um commit inicial sanitizado; o histórico antigo ficou em tganzerli/cockpit-tower-archive, privado. ↳ [plan](work/plans/2026-10-23_public-repo-migration) · [exec](work/executions/2026-10-23_public-repo-migration)
-- 🚧 [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]] · `in_progress` · `upstream-cockpit` [ui]
-  — Em andamento — modo de quebra de linha no CodeEditor do Cockpit, com issue e PR no remote_pi. ↳ [plan](work/plans/2026-10-23_cockpit-editor-soft-wrap) · [exec](work/executions/2026-10-23_cockpit-editor-soft-wrap)
 
 ## Closed — 2026-Q4 (current quarter)
 
@@ -24,6 +22,8 @@ updated: 2026-10-24
   — As três citações de bin/tower em cross-cutting/cockpit-exec-process-group voltaram às linhas certas; o aviso stale do wiki-lint saiu. ↳ [plan](work/plans/2026-10-24_exec-process-group-citations) · [exec](work/executions/2026-10-24_exec-process-group-citations)
 - ✅ [[work/tasks/2026-10-24_compose-font-workspace-nav]] · `done` 10-24 · `viewer` [ui]
   — A caixa de texto do modo de comando usa a fonte do terminal sem zoom do iOS, e a gaveta navega por workspace e worktree, como a lateral do Cockpit. ↳ [plan](work/plans/2026-10-24_compose-font-workspace-nav) · [exec](work/executions/2026-10-24_compose-font-workspace-nav)
+- ✅ [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]] · `done` 10-24 · `upstream-cockpit` [ui]
+  — Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono no dia a dia e proposto upstream na issue #261 e no PR #264 do remote_pi. ↳ [plan](work/plans/2026-10-23_cockpit-editor-soft-wrap) · [exec](work/executions/2026-10-23_cockpit-editor-soft-wrap)
 - ✅ [[work/tasks/2026-10-23_phone-terminal-input]] · `done` 10-23 · `gateway, viewer` [contract, ui]
   — O iPhone digita na sessão assistida em modo de comando — só pty.input, com Origin, dono do Tailscale e registro local; ADR nova substitui o somente leitura e o tower nunca envia pty.ack. ↳ [plan](work/plans/2026-10-23_phone-terminal-input) · [exec](work/executions/2026-10-23_phone-terminal-input)
 - ✅ [[work/tasks/2026-10-23_phone-pty-resize]] · `done` 10-23 · `gateway, viewer` [contract, ui]
