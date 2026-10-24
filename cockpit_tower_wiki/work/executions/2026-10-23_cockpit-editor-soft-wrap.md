@@ -211,6 +211,7 @@ Fork `tganzerli/remote_pi`, branch `feat/cockpit-editor-soft-wrap`, base `7d923a
 - `55d9db49` fix(cockpit): measure wrapped lines with the field's effective style (correções da rodada 1)
 - `ce25e4e0` fix(cockpit): repaint the overview ruler when the wrap table changes (Nit da rodada 2)
 - `b95ce896` feat(cockpit): word wrap in Settings and in the Shortcuts list (pedido do dono no teste de usabilidade)
+- `177aea97` fix(cockpit): Alt+Z turns wrap back on per file kind (pedido do dono no teste de usabilidade)
 
 Os commits de correção ficam separados dos dois `feat` (§6.1 do branching): cada um é uma
 unidade lógica com mensagem própria, não um WIP. Separar o `55d9db49` entre os dois `feat` exigiria
@@ -277,6 +278,15 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
     "All files" (`true`) e "Off" (`false`). Isso também conserta um furo do plano: depois do
     primeiro ⌥Z, a escolha virava explícita e não havia como voltar ao padrão por linguagem.
   - Por isso o `clearEditorWordWrap`, removido na rodada 1 por falta de uso, voltou ao `copyWith`.
+- **⌥Z sensível ao tipo de arquivo (2026-10-24), pedido do dono.** O plano gravava o oposto do
+  valor efetivo (`true`/`false`). No teste, ⌥Z duas vezes num `.md` saía de "Markdown e texto"
+  para "Todos os arquivos". A regra nova (`toggledEditorWordWrap`, em `file_viewer.dart`):
+  - desligar grava `false`;
+  - ligar num arquivo de texto corrido grava `null`, o padrão da linguagem;
+  - ligar num arquivo de código grava `true`, o único valor que quebra esse arquivo.
+- **Depois do limite de rodadas.** O `177aea97` veio depois da rodada 3, a última do §4.4.1, e
+  não teve revisão de agente. Fica sob a revisão do dono, que testa a build, conforme o próprio
+  §4.4.1 prevê.
 
 - **Comentários do código em pt-BR.** O plano tinha os exemplos em inglês, mas o `remote_pi`
   comenta em pt-BR (por exemplo `code_editor.dart:29-48`), e o código novo segue o código ao
@@ -337,6 +347,19 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
       `+9 -13` nas duas cópias.
     - Os três arquivos que o parser apontou só na branch passam quando rodam sozinhos (`+17`).
 - O checkout do fork passou de `local/test-build` para `feat/cockpit-editor-soft-wrap`.
+- Build release nova em `build/macos-next`, compilada com o Cockpit aberto. A troca é feita com
+  `cockpit-switch.sh atualizar`, no Terminal.app e com o app fechado.
+
+### `2026-10-24` — ⌥Z volta ao padrão em arquivos de texto
+- **O que o dono viu:** com "Markdown e texto", ⌥Z desligava e o segundo ⌥Z ligava "Todos os
+  arquivos".
+- **Correção no commit `177aea97`:** `toggledEditorWordWrap({chosen, language})` ao lado do
+  `fileEditorWordWrap`, e o `_toggleWordWrap` passou a usá-la. A regra está nas divergências.
+- **Testes:** 4 casos novos em `file_editor_word_wrap_test.dart`. Com a regra antiga aplicada na
+  cópia, deram `+4 -2`; a cópia foi restaurada depois.
+- **Resultados:**
+  - Editor, configuração e menu → `00:03 +48: All tests passed!`
+  - `fvm flutter analyze lib test` → `39 issues found`.
 
 ## Validações
 
