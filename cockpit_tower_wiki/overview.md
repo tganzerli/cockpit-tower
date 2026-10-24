@@ -18,7 +18,7 @@ code_refs:
 
 ## Product summary
 
-Visualizador web das abas de terminal do Remote Pi Cockpit rodando no Mac. Serve para acompanhar e continuar o trabalho dos agentes (Claude Code, Antigravity CLI) pelo Safari do iPhone, via Tailscale, **sob demanda** (`tower on/off`). A página **abre em leitura**; o dono do Mac pode **digitar na sessão assistida** ligando o modo de comando (texto, Enter, Esc, Ctrl-C, setas, Tab, Shift-Tab), e nesse modo a sessão assume o tamanho do celular e devolve o do Mac ao sair 📎 [`src/server.ts:355-395`](../src/server.ts). É um cliente do protocolo do Cockpit, não um fork. Maturidade: v0.1; leitura validada em aparelho real em 2026-10-22 e digitação em 2026-10-23.
+Visualizador web das abas de terminal do Remote Pi Cockpit rodando no Mac. Serve para acompanhar e continuar o trabalho dos agentes (Claude Code, Antigravity CLI) pelo Safari do iPhone, via Tailscale, **sob demanda** (`tower on/off`). A página **abre em leitura**; o dono do Mac pode **digitar na sessão assistida** ligando o modo de comando (texto, Enter, Esc, Ctrl-C, setas, Tab, Shift-Tab), e nesse modo a sessão assume o tamanho do celular (devolvendo o do Mac ao sair) e arrastar o dedo rola o histórico dos agentes em tela cheia 📎 [`src/server.ts:359-414`](../src/server.ts). É um cliente do protocolo do Cockpit, não um fork. Maturidade: v0.1; leitura validada em aparelho real em 2026-10-22 e digitação em 2026-10-23.
 
 ## Areas
 
@@ -40,7 +40,7 @@ Single-repo default: list the functional areas/modules of the codebase.
 
 Repositório público: `github.com/tganzerli/cockpit-tower`, desde 2026-10-23, a partir de um commit inicial sanitizado. O histórico anterior (PRs #1–#22) está num arquivo privado ([[work/executions/2026-10-23_public-repo-migration]]).
 
-Decisão central: [[decisions/2026-10-23_phone-input-client]] — libera só `pty.input`, por conexão em modo de comando e para a sessão assistida, com `Origin`, dono do Tailscale e registro local. Ela substituiu [[decisions/2026-10-22_read-only-client]] e foi refinada por [[decisions/2026-10-23_phone-pty-resize]], que libera `pty.resize` só em modo de comando, com o tamanho do Mac devolvido.
+Decisão central: [[decisions/2026-10-23_phone-input-client]] — libera só `pty.input`, por conexão em modo de comando e para a sessão assistida, com `Origin`, dono do Tailscale e registro local. Ela substituiu [[decisions/2026-10-22_read-only-client]] e foi refinada por [[decisions/2026-10-23_phone-pty-resize]], que libera `pty.resize` só em modo de comando, com o tamanho do Mac devolvido, e por [[decisions/2026-10-23_phone-fullscreen-scroll]], que manda a roda do mouse do arrasto por `pty.input`.
 
 <!--
 Monorepo module only (see modules/monorepo/): replace the "Areas" section

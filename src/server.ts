@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import type { WebSocket } from 'ws';
 import { CockpitClient, ProtocolMismatch } from './cockpit-client.ts';
-import { inputBytes, ptySize } from './input.ts';
+import { inputBytes, ptySize, wheelBytes } from './input.ts';
 import type { InputLog, InputLogEntry } from './input-log.ts';
 import { EMPTY_RESULT } from './session-info.ts';
 import type { SessionInfoSource } from './session-info.ts';
@@ -197,8 +197,9 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
   const mayCommand = opts.input !== undefined && (opts.dev === true || (login !== null && login === opts.input.owner));
   /** Session that command mode is on for, or null. Only ever the watched one; a new connection starts off. */
   let commanding: string | null = null;
-  /** Live session ids from the last list: command mode only turns on for one of them. */
-  let listed = new Set<string>();
+  /** Live sessions from the last list, with their current size: command mode only turns on for one of them,
+   * and a wheel's cell is clamped to that size. */
+  let listed = new Map<string, Size>();
   /** The phone size this viewer put on a session and the size it owes back. Null = nothing owed. */
   let hold: { id: string; original: Size; applied: Size } | null = null;
   /** Bumped on every size this viewer announces: a list started before it is stale for that session. */
@@ -208,6 +209,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
   const announceSize = (size: { id: string; cols: number; rows: number; by: 'phone' | 'mac' }) => {
     sizeEpoch++;
     announced.set(size.id, { cols: size.cols, rows: size.rows, epoch: sizeEpoch });
+    if (listed.has(size.id)) listed.set(size.id, { cols: size.cols, rows: size.rows });
     post({ type: 'size', ...size });
   };
   const me = {};
@@ -287,7 +289,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
   client.on('disconnected', () => {
     post({ type: 'status', state: 'unavailable', detail: 'Cockpit connection lost; retrying' });
     // The session may end, or its id be reused by a restarted Cockpit, while we are away.
-    listed = new Set();
+    listed = new Map();
     if (commanding !== null) setCommand(null);
   });
   client.on('reconnected', () => {
@@ -307,7 +309,14 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     const epoch = sizeEpoch;
     try {
       const sessions = await client.list(opts.listTimeoutMs);
-      listed = new Set(sessions.filter((s) => s.exit === undefined).map((s) => s.id));
+      // A size announced since this list was taken is newer than the list: the page's emulator keeps it.
+      const fresh = (s: (typeof sessions)[number]) => {
+        const a = announced.get(s.id);
+        return a && a.epoch > epoch ? { ...s, cols: a.cols, rows: a.rows } : s;
+      };
+      listed = new Map(
+        sessions.filter((s) => s.exit === undefined).map((s) => [s.id, { cols: fresh(s).cols, rows: fresh(s).rows }]),
+      );
       if (commanding !== null && !listed.has(commanding)) setCommand(null);
       // The Mac re-laid out while the phone commands: it owns the size now; do not fight it or give back over it.
       const mine = hold && commanding === hold.id && epoch === sizeEpoch ? sessions.find((s) => s.id === hold!.id) : undefined;
@@ -316,11 +325,6 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
         announceSize({ id: mine.id, cols: mine.cols, rows: mine.rows, by: 'mac' });
       }
       const { info, theme } = opts.sessionInfo ? await opts.sessionInfo(sessions).catch(() => EMPTY_RESULT) : EMPTY_RESULT;
-      // A size announced since this list was taken is newer than the list: the page's emulator keeps it.
-      const fresh = (s: (typeof sessions)[number]) => {
-        const a = announced.get(s.id);
-        return a && a.epoch > epoch ? { ...s, cols: a.cols, rows: a.rows } : s;
-      };
       post({ type: 'sessions', sessions: sessions.map((s) => (info[s.id] ? { ...fresh(s), info: info[s.id] } : fresh(s))), theme });
     } catch {
       // Connection dropped mid-request; the reconnect path sends a fresh list.
@@ -368,6 +372,21 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     post({ type: 'input', ok: true, bytes: bytes.length });
   };
 
+  /** A drag on the phone, sent as the Mac's wheel would be (ADR 2026-10-23_phone-fullscreen-scroll). */
+  const handleWheel = (msg: Parameters<typeof wheelBytes>[0]) => {
+    const target = watching; // never an id from the browser
+    const refuse = (reason: string) => post({ type: 'wheel', ok: false, reason });
+    if (!mayCommand || target === null || commanding !== target) return refuse('command_off');
+    const size = listed.get(target);
+    const wheel = size ? wheelBytes(msg, size) : null;
+    if (!wheel) return refuse('invalid');
+    if (!client.isConnected) return refuse('cockpit_unavailable');
+    const { bytes, ...what } = wheel;
+    if (!opts.input!.log.append({ login, session: target, kind: 'wheel', ...what, bytes: bytes.length })) return refuse('log_failed');
+    if (!client.input(target, bytes)) return refuse('cockpit_unavailable');
+    // No ok echo: a drag sends up to one message per frame.
+  };
+
   const applySize = (msg: { cols?: unknown; rows?: unknown }) =>
     serial(async () => {
       const target = watching; // never an id from the browser
@@ -405,6 +424,12 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
       paste?: unknown;
       cols?: unknown;
       rows?: unknown;
+      dir?: unknown;
+      count?: unknown;
+      mode?: unknown;
+      col?: unknown;
+      row?: unknown;
+      app?: unknown;
     };
     try {
       msg = JSON.parse(String(raw));
@@ -427,6 +452,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     }
     if (msg.type === 'input') return handleInput(msg);
     if (msg.type === 'resize') return void applySize(msg);
+    if (msg.type === 'wheel') return handleWheel(msg);
     // Anything else, including kill attempts, is dropped.
     console.warn(`cockpit-tower: ignored viewer message of type ${String(msg.type)}`);
   });

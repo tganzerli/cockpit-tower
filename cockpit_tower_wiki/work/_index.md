@@ -24,6 +24,8 @@ updated: 2026-10-23
   — O iPhone digita na sessão assistida em modo de comando — só pty.input, com Origin, dono do Tailscale e registro local; ADR nova substitui o somente leitura e o tower nunca envia pty.ack. ↳ [plan](work/plans/2026-10-23_phone-terminal-input) · [exec](work/executions/2026-10-23_phone-terminal-input)
 - ✅ [[work/tasks/2026-10-23_phone-pty-resize]] · `done` 10-23 · `gateway, viewer` [contract, ui]
   — Em modo de comando a PTY assume o tamanho do celular; o tower guarda o tamanho do Mac e o devolve uma vez por ciclo, se a PTY ainda estiver no tamanho que ele pôs. ↳ [plan](work/plans/2026-10-23_phone-pty-resize) · [exec](work/executions/2026-10-23_phone-pty-resize)
+- ✅ [[work/tasks/2026-10-23_phone-fullscreen-scroll]] · `done` 10-23 · `gateway, viewer` [contract, ui]
+  — Em modo de comando, arrastar o dedo rola o histórico dos agentes em tela cheia, mandando a roda do mouse (ou setas) por pty.input com bytes montados no gateway. ↳ [plan](work/plans/2026-10-23_phone-fullscreen-scroll) · [exec](work/executions/2026-10-23_phone-fullscreen-scroll)
 - ✅ [[work/tasks/2026-10-23_methodology-upgrade-5cff64d]] · `done` 10-23 · `methodology, tooling` [methodology, tooling]
   — Kit 9d25a9f → 5cff64d — work-cycle §3.5 com a regra de dobrar commits e portão de plano liberando experiment/<slug>, testado com payloads do Claude e do agy. ↳ [plan](work/plans/2026-10-23_methodology-upgrade-5cff64d) · [exec](work/executions/2026-10-23_methodology-upgrade-5cff64d)
 - ✅ [[work/tasks/2026-10-23_methodology-upgrade]] · `done` 10-23 · `methodology, tooling` [methodology, tooling]

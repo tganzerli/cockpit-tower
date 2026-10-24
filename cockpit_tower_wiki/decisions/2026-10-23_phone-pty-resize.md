@@ -7,7 +7,7 @@ scope:
 status: accepted
 updated: 2026-10-23
 summary: Libera pty.resize só em modo de comando, para a sessão assistida, com tamanho limitado e registrado; o tower guarda o tamanho do Mac e o devolve uma vez por ciclo, se a PTY ainda estiver no tamanho que ele pôs.
-revisit_when: "o app do Cockpit passar a ler ou anunciar o tamanho da PTY (broadcast de tamanho), ou a fase 3 (k3) precisar de outro tamanho para a rolagem em tela cheia"
+revisit_when: "o app do Cockpit passar a ler ou anunciar o tamanho da PTY (broadcast de tamanho)"
 supersedes: []
 superseded_by: ""
 sources:
@@ -97,7 +97,7 @@ O que pesa na decisão (plano [[work/plans/2026-10-23_phone-pty-resize]], §4.0)
 
 ## Revisão prevista
 
-**Gatilho:** o app do Cockpit passar a ler ou anunciar o tamanho da PTY; ou a fase 3 (k3) precisar de outro tamanho para a rolagem em tela cheia.
+**Gatilho:** o app do Cockpit passar a ler ou anunciar o tamanho da PTY. (A fase 3, k3, não precisou de outro tamanho: [[decisions/2026-10-23_phone-fullscreen-scroll]].)
 
 **O que a implementação deve ensinar:**
 - se a devolução falha em algum caso real e deixa o Mac pequeno;
@@ -109,7 +109,7 @@ O que pesa na decisão (plano [[work/plans/2026-10-23_phone-pty-resize]], §4.0)
 ## Decisões que esta abre ou fecha
 
 - **Fecha:** o tamanho da PTY no celular (k2).
-- **Abre:** rolagem em tela cheia (k3); o shell que continua vivo ao fechar uma aba no Cockpit (k21, upstream).
+- **Abre:** rolagem em tela cheia (k3), feita em [[decisions/2026-10-23_phone-fullscreen-scroll]] sem outro tamanho; o shell que continua vivo ao fechar uma aba no Cockpit (k21, upstream).
 
 ## Referências
 

@@ -1,5 +1,6 @@
-// Viewer: it renders terminal bytes, and only in command mode sends text, named keys and its own size for
-// the watched session (ADRs 2026-10-23_phone-input-client and _phone-pty-resize).
+// Viewer: it renders terminal bytes, and only in command mode sends text, named keys, its own size and the
+// agent scroll (mouse wheel or arrows) for the watched session (ADRs 2026-10-23_phone-input-client,
+// _phone-pty-resize and _phone-fullscreen-scroll).
 //
 // xterm is only the emulator: it parses the bytes at the PTY's exact size and is never opened on screen.
 // What the phone shows is an HTML view built from xterm's buffer, so lines can wrap to the phone's width
@@ -26,6 +27,36 @@
 
   const term = new Terminal({ disableStdin: true, convertEol: false, scrollback: 10000 });
 
+  // What the program asked of the mouse that xterm does not expose: the report encoding and alternate scroll (1007).
+  const mouseModes = { sgr: false, other: false, altScroll: true };
+  function resetMouseModes() {
+    mouseModes.sgr = false;
+    mouseModes.other = false;
+    mouseModes.altScroll = true;
+  }
+  const trackModes = (set) => (params) => {
+    for (const p of params) {
+      if (p === 1006) mouseModes.sgr = set;
+      else if (p === 1005 || p === 1015 || p === 1016) mouseModes.other = set; // encodings the gateway does not build
+      else if (p === 1007) mouseModes.altScroll = set;
+    }
+    return false; // xterm still applies the mode
+  };
+  term.parser.registerCsiHandler({ prefix: '?', final: 'h' }, trackModes(true));
+  term.parser.registerCsiHandler({ prefix: '?', final: 'l' }, trackModes(false));
+  term.parser.registerEscHandler({ final: 'c' }, () => {
+    resetMouseModes(); // RIS
+    return false;
+  });
+
+  /** What a drag sends, by Cockpit's own rules (flterm terminal_input.dart); null = the drag scrolls the view. */
+  function wheelMode() {
+    const tracking = term.modes.mouseTrackingMode;
+    if (tracking === 'x10') return null; // DECSET 9: not what the agents use; not sent
+    if (tracking !== 'none') return mouseModes.other ? null : mouseModes.sgr ? 'sgr' : 'x10';
+    return term.buffer.active.type === 'alternate' && mouseModes.altScroll ? 'arrows' : null;
+  }
+
   let ws = null;
   let sessions = [];
   let current = null;
@@ -34,6 +65,11 @@
   // Typing state mirrors the gateway, which owns it: the page never assumes command mode is on.
   let mayCommand = false;
   let commandOn = false;
+  // The agent scroll in progress (a one-finger drag in command mode) and the lines not yet sent.
+  let drag = null;
+  let pendingWheel = 0;
+  let wheelFrame = false;
+  let wheelAt = null; // last touch point of the drag; outlives the finger so its last lines still go out
   let pendingText = null; // text sent and not yet confirmed; cleared from the box only on ok
   // The view's text box without the keyboard, taken when command mode turns on; a font change reuses it.
   let restBox = null;
@@ -216,8 +252,13 @@
   // The visible screen, from row `from` to the end of the buffer. Agent CLIs pin their input box to the
   // bottom and leave blank rows above it, so runs of blank rows collapse into one and trailing blank rows
   // are dropped: the text uses the phone's height instead of the Mac's.
+  // Buffer row of each drawn screen line, so a touch maps back to a PTY row despite the collapsed blanks.
+  let liveRows = [];
+  let liveFrom = 0;
   function screenRows(buf, from, first) {
     const frag = document.createDocumentFragment();
+    liveRows = [];
+    liveFrom = from;
     let end = buf.length - 1;
     while (end >= from && buf.getLine(end).translateToString(true) === '') end--;
     let prevBlank = false;
@@ -226,6 +267,7 @@
       const blank = !line.isWrapped && line.translateToString(true) === '';
       if (blank && prevBlank) continue;
       prevBlank = blank;
+      liveRows.push(y);
       frag.append(rowElement(line, first));
       first = false;
     }
@@ -597,6 +639,7 @@
     current = session;
     setCommand(false); // the gateway turns command mode off on a session switch too
     term.reset();
+    resetMouseModes();
     term.resize(session.cols, session.rows); // local emulator: follows the PTY's size
     resetView();
     following = true;
@@ -640,6 +683,9 @@
     if (!commandOn) {
       pendingText = null;
       restBox = null;
+      drag = null;
+      pendingWheel = 0;
+      wheelAt = null;
       note('');
       composeEl.blur();
     }
@@ -687,6 +733,78 @@
       scheduleRender();
     }
     if (msg.by === 'mac' && commandOn) note('the Mac changed the size; lines wrap again', 'warn');
+  }
+
+  // ---- agent scroll (command mode) -------------------------------------------
+  // A one-finger drag scrolls the program like the Mac's trackpad: one event per line height, finger down = older.
+
+  const WHEEL_MAX = 20; // the gateway's limit (src/input.ts)
+
+  // The cell under the finger, 1-based on the PTY's screen. Blank runs are collapsed in the view (screenRows),
+  // so the visual line maps back through liveRows; the gateway clamps whatever this gets wrong.
+  function cellAt(p, cell) {
+    const rects = liveEl.getClientRects();
+    if (!rects.length || !liveRows.length) return { col: 1, row: 1 };
+    const fromBottom = Math.floor((rects[rects.length - 1].bottom - p.y) / cell.h);
+    const i = liveRows.length - 1 - fromBottom;
+    const y = i < 0 ? liveFrom : i < liveRows.length ? liveRows[i] : liveRows[liveRows.length - 1] + (i - liveRows.length + 1);
+    const left = viewEl.getBoundingClientRect().left + parseFloat(getComputedStyle(viewEl).paddingLeft);
+    return { col: Math.floor((p.x - left) / cell.w) + 1, row: y - liveFrom + 1 };
+  }
+
+  viewEl.addEventListener(
+    'touchstart',
+    (e) => {
+      drag =
+        commandOn && e.touches.length === 1 && wheelMode()
+          ? { y: e.touches[0].clientY, acc: 0, cell: cellSize(), at: null }
+          : null;
+    },
+    { passive: true },
+  );
+  viewEl.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!drag) return;
+      e.preventDefault(); // the drag scrolls the program, not the page
+      const t = e.touches[0];
+      drag.acc += t.clientY - drag.y;
+      drag.y = t.clientY;
+      const n = Math.trunc(drag.acc / drag.cell.h);
+      if (n === 0) return;
+      drag.acc -= n * drag.cell.h;
+      pendingWheel += n;
+      wheelAt = { x: t.clientX, y: t.clientY, cell: drag.cell };
+      if (!wheelFrame) {
+        wheelFrame = true;
+        requestAnimationFrame(flushWheel);
+      }
+    },
+    { passive: false },
+  );
+  const endDrag = () => {
+    drag = null;
+  };
+  viewEl.addEventListener('touchend', endDrag);
+  viewEl.addEventListener('touchcancel', endDrag);
+
+  // One message per frame at most: the pending lines of the drag, finger down (positive) = wheel up = older.
+  function flushWheel() {
+    wheelFrame = false;
+    const mode = commandOn ? wheelMode() : null;
+    if (!mode || pendingWheel === 0 || !wheelAt) {
+      pendingWheel = 0;
+      return;
+    }
+    const count = Math.min(Math.abs(pendingWheel), WHEEL_MAX);
+    const dir = pendingWheel > 0 ? 'up' : 'down';
+    pendingWheel -= Math.sign(pendingWheel) * count;
+    const cell = mode === 'arrows' ? {} : cellAt(wheelAt, wheelAt.cell);
+    send({ type: 'wheel', dir, count, mode, app: term.modes.applicationCursorKeysMode, ...cell });
+    if (pendingWheel !== 0) {
+      wheelFrame = true;
+      requestAnimationFrame(flushWheel);
+    }
   }
 
   // iOS keeps the layout viewport under the keyboard and scrolls the visible part down to the field. While
@@ -807,6 +925,8 @@
         onSize(msg);
       } else if (msg.type === 'resize' && msg.ok === false) {
         note(REASONS[msg.reason] || `size not set: ${msg.reason}`, 'bad');
+      } else if (msg.type === 'wheel' && msg.ok === false) {
+        note(msg.reason === 'invalid' ? 'scroll not sent' : REASONS[msg.reason] || `scroll not sent: ${msg.reason}`, 'bad');
       } else if (msg.type === 'error') {
         setStatus(`${msg.code}${msg.detail ? `: ${msg.detail}` : ''}`, 'bad');
       }

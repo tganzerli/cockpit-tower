@@ -1,13 +1,19 @@
-// Local record of everything the phone typed or sized (ADRs 2026-10-23_phone-input-client and _phone-pty-resize).
+// Local record of everything the phone typed, scrolled or sized (ADRs 2026-10-23_phone-input-client and _phone-pty-resize).
 import fs from 'node:fs';
 
 export interface InputLogEntry {
   login: string | null;
   session: string;
-  kind: 'text' | 'key' | 'resize' | 'restore';
+  kind: 'text' | 'key' | 'resize' | 'restore' | 'wheel';
   key?: string;
   text?: string;
-  /** Text and key: bytes written. */
+  /** Wheel: direction, events sent, format and, for mouse formats, the cell. */
+  dir?: 'up' | 'down';
+  count?: number;
+  mode?: 'sgr' | 'x10' | 'arrows';
+  col?: number;
+  row?: number;
+  /** Text, key and wheel: bytes written. */
   bytes?: number;
   /** Resize and restore: the size sent. */
   cols?: number;

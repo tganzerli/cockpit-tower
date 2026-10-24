@@ -205,6 +205,7 @@ test('selecting a session streams replay and live output; typing and resize with
   ws.send(JSON.stringify({ type: 'input', id: 's1', data: 'rm -rf ~\r' }));
   ws.send(JSON.stringify({ type: 'resize', id: 's1', cols: 10, rows: 5 }));
   ws.send(JSON.stringify({ type: 'kill', id: 's1' }));
+  ws.send(JSON.stringify({ type: 'wheel', dir: 'up', count: 3, mode: 'sgr', col: 1, row: 1 }));
   await waitFor(() => inbox.some((m) => m.type === 'output'));
   fake.write('s1', ' + live');
   await waitFor(() => inbox.filter((m) => m.type === 'output').length === 2);
@@ -876,5 +877,144 @@ test('command mode cannot be turned back on while the gateway stops', async () =
   assert.deepEqual(resizes(fake).at(-1), { id: 's1', cols: 80, rows: 24 });
   assert.ok(!resizes(fake).some((r) => r.cols === 30), 'no resize after the stop began');
   v.ws.close();
+  await fake.close();
+});
+
+// --- Scrolling the agent from the phone (ADR 2026-10-23_phone-fullscreen-scroll). s1 is 80x24. ---
+
+/** Sends a wheel and waits for a new pty.input in the fake or a wheel refusal. */
+async function wheelTo(fake: FakeCockpitServer, v: { ws: WebSocket; inbox: Array<Record<string, unknown>> }, msg: object) {
+  const sent = inputs(fake).length;
+  const refused = v.inbox.filter((m) => m.type === 'wheel').length;
+  v.ws.send(JSON.stringify({ type: 'wheel', ...msg }));
+  await waitFor(() => inputs(fake).length > sent || v.inbox.filter((m) => m.type === 'wheel').length > refused);
+}
+const SGR_UP_10_5 = '1b5b3c36343b31303b354d';
+
+test('wheel outside command mode is refused and nothing reaches Cockpit', async () => {
+  const { fake, tower, port } = await inputSetup();
+  const v = await watching(port);
+  await wheelTo(fake, v, { dir: 'up', count: 3, mode: 'sgr', col: 10, row: 5 });
+  assert.deepEqual(last(v.inbox, 'wheel'), { type: 'wheel', ok: false, reason: 'command_off' });
+  assert.deepEqual(inputs(fake), []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('in command mode a wheel reaches the watched session as exact bytes, logged first, with no ok echo', async () => {
+  const { file, log } = tempLog();
+  const { fake, tower, port } = await inputSetup(log);
+  const v = await commanding(port);
+  await wheelTo(fake, v, { id: 's2', dir: 'up', count: 3, mode: 'sgr', col: 10, row: 5 });
+  assert.deepEqual(inputs(fake), [{ id: 's1', bytes: SGR_UP_10_5.repeat(3) }]);
+  const entry = JSON.parse(readFileSync(file, 'utf8').trim().split('\n').at(-1)!);
+  assert.deepEqual([entry.kind, entry.dir, entry.count, entry.mode, entry.col, entry.row, entry.bytes], ['wheel', 'up', 3, 'sgr', 10, 5, 33]);
+  await new Promise((r) => setTimeout(r, 50));
+  assert.ok(!v.inbox.some((m) => m.type === 'wheel' || m.type === 'input'), 'no reply for an accepted wheel');
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('wheel count and cell are clamped to the limit and the PTY size', async () => {
+  const { fake, tower, port } = await inputSetup();
+  const v = await commanding(port);
+  await wheelTo(fake, v, { dir: 'up', count: 50, mode: 'sgr', col: 500, row: 500 });
+  assert.deepEqual(inputs(fake), [{ id: 's1', bytes: Buffer.from('\x1b[<64;80;24M'.repeat(20), 'latin1').toString('hex') }]);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('after the phone sizes the session, the wheel cell is clamped to the new size', async () => {
+  const { fake, tower, port } = await inputSetup();
+  const v = await commanding(port);
+  await sizeTo(v, { cols: 45, rows: 40 });
+  await wheelTo(fake, v, { dir: 'down', count: 1, mode: 'sgr', col: 80, row: 40 });
+  assert.deepEqual(inputs(fake), [{ id: 's1', bytes: Buffer.from('\x1b[<65;45;40M', 'latin1').toString('hex') }]);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('wheel in X10 and as application-mode arrows has the exact bytes', async () => {
+  const { fake, tower, port } = await inputSetup();
+  const v = await commanding(port);
+  await wheelTo(fake, v, { dir: 'up', count: 1, mode: 'x10', col: 10, row: 5 });
+  await wheelTo(fake, v, { dir: 'down', count: 2, mode: 'arrows', app: true });
+  assert.deepEqual(inputs(fake), [
+    { id: 's1', bytes: '1b5b4d602a25' },
+    { id: 's1', bytes: '1b4f421b4f42' },
+  ]);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('an invalid wheel is refused before anything is logged or sent', async () => {
+  const { file, log } = tempLog();
+  const { fake, tower, port } = await inputSetup(log);
+  const v = await commanding(port);
+  for (const bad of [{ dir: 'left', count: 1, mode: 'sgr', col: 1, row: 1 }, { dir: 'up', count: 1, mode: 'urxvt', col: 1, row: 1 }, { dir: 'up', count: 0, mode: 'arrows' }]) {
+    await wheelTo(fake, v, bad);
+    assert.equal(last(v.inbox, 'wheel')?.reason, 'invalid');
+  }
+  assert.deepEqual(inputs(fake), []);
+  assert.equal(readFileSync(file, 'utf8'), '');
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a wheel that cannot be logged is refused and not sent', async () => {
+  const failing: InputLog = { append: () => false };
+  const { fake, tower, port } = await inputSetup(failing);
+  const v = await commanding(port);
+  await wheelTo(fake, v, { dir: 'up', count: 1, mode: 'sgr', col: 1, row: 1 });
+  assert.equal(last(v.inbox, 'wheel')?.reason, 'log_failed');
+  assert.deepEqual(inputs(fake), []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('without the input option, wheel is refused as before', async () => {
+  const { fake, tower, port } = await setup();
+  const { ws, inbox } = viewer(port);
+  await waitFor(() => inbox.some((m) => m.type === 'sessions'));
+  ws.send(JSON.stringify({ type: 'select', id: 's1' }));
+  ws.send(JSON.stringify({ type: 'wheel', dir: 'up', count: 1, mode: 'sgr', col: 1, row: 1 }));
+  await waitFor(() => inbox.some((m) => m.type === 'wheel'));
+  assert.equal(last(inbox, 'wheel')?.reason, 'command_off');
+  assert.ok(!fake.received.some((m) => m.t === 'pty.input'));
+  ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a Mac-side size change seen in a list re-bounds the wheel cell', async () => {
+  const { fake, tower, port } = await inputSetup();
+  const v = await commanding(port);
+  fake.setSize('s1', 100, 30);
+  v.ws.send(JSON.stringify({ type: 'list' }));
+  await waitFor(() => v.inbox.some((m) => m.type === 'sessions' && (m.sessions as Array<{ id: string; cols: number }>).some((s) => s.id === 's1' && s.cols === 100)));
+  await wheelTo(fake, v, { dir: 'up', count: 1, mode: 'sgr', col: 999, row: 999 });
+  assert.deepEqual(inputs(fake), [{ id: 's1', bytes: Buffer.from('\x1b[<64;100;30M', 'latin1').toString('hex') }]);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a wheel after selecting another session is refused: command mode does not follow the viewer', async () => {
+  const { fake, tower, port } = await inputSetup();
+  const v = await commanding(port);
+  v.ws.send(JSON.stringify({ type: 'select', id: 's2' }));
+  await waitFor(() => last(v.inbox, 'command')?.on === false);
+  await wheelTo(fake, v, { dir: 'up', count: 1, mode: 'sgr', col: 1, row: 1 });
+  assert.equal(last(v.inbox, 'wheel')?.reason, 'command_off');
+  assert.deepEqual(inputs(fake), []);
+  v.ws.close();
+  await tower.close();
   await fake.close();
 });

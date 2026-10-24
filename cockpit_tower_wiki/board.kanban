@@ -68,15 +68,6 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Pronta p/ plano
 
-- [ ] Comandos pelo celular — fase 3: rolar o histórico dos agentes em tela cheia <!-- id: k3 labels: feature, média, M, gateway, viewer -->
-      **O quê:** ver o que já saiu da tela quando a CLI usa tela cheia (o Claude com `"tui": "fullscreen"`, e provavelmente Antigravity e Codex).
-
-      **Contexto:**
-      - Em tela cheia o histórico não está no terminal: no Mac, a rolagem é o mouse enviado à CLI, que se redesenha. Ver a execução `cockpit_tower_wiki/work/executions/2026-10-22_terminal-text-cockpit-style.md` (achado do passo 6 e decisão do humano).
-      - O dono não quer resolver mudando a configuração das CLIs.
-      - Caminho genérico: repassar só a rolagem (sequências de mouse/wheel) para a PTY. A aba no Mac rola junto, porque é o mesmo terminal.
-      - Alternativas descartadas ou adiadas na época: montar histórico por heurística comparando telas (frágil); ler o transcript `.jsonl` do Claude (só serve para o Claude).
-
 - [ ] Teste automatizado da visão do terminal <!-- id: k6 labels: test, média, M, viewer -->
       **O quê:** levar para o repositório o teste de consistência da visão HTML, que hoje só existe como roteiro fora do repo.
 
@@ -131,6 +122,9 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 ## Em curso
 
 ## Done
+
+- [x] Comandos pelo celular — fase 3: rolar o histórico dos agentes em tela cheia <!-- id: k3 labels: feature, gateway, viewer -->
+      Trio `2026-10-23_phone-fullscreen-scroll`, ADR `decisions/2026-10-23_phone-fullscreen-scroll`. Em modo de comando, arrastar o dedo manda a roda do mouse (ou setas) ao agente.
 
 - [x] Comandos pelo celular — fase 2: a PTY no tamanho do celular <!-- id: k2 labels: feature, risk-high, gateway, viewer -->
       Trio `2026-10-23_phone-pty-resize`, ADR `decisions/2026-10-23_phone-pty-resize`. Em modo de comando a sessão assume o tamanho do celular; o tower devolve o do Mac ao sair.
