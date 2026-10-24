@@ -2,7 +2,7 @@
 title: Work Index
 type: index
 status: generated
-updated: 2026-10-23
+updated: 2026-10-24
 ---
 
 # Work Index
@@ -20,6 +20,8 @@ updated: 2026-10-23
 
 ## Closed — 2026-Q4 (current quarter)
 
+- ✅ [[work/tasks/2026-10-24_exec-process-group-citations]] · `done` 10-24 · `wiki` [wiki]
+  — As três citações de bin/tower em cross-cutting/cockpit-exec-process-group voltaram às linhas certas; o aviso stale do wiki-lint saiu. ↳ [plan](work/plans/2026-10-24_exec-process-group-citations) · [exec](work/executions/2026-10-24_exec-process-group-citations)
 - ✅ [[work/tasks/2026-10-23_phone-terminal-input]] · `done` 10-23 · `gateway, viewer` [contract, ui]
   — O iPhone digita na sessão assistida em modo de comando — só pty.input, com Origin, dono do Tailscale e registro local; ADR nova substitui o somente leitura e o tower nunca envia pty.ack. ↳ [plan](work/plans/2026-10-23_phone-terminal-input) · [exec](work/executions/2026-10-23_phone-terminal-input)
 - ✅ [[work/tasks/2026-10-23_phone-pty-resize]] · `done` 10-23 · `gateway, viewer` [contract, ui]
