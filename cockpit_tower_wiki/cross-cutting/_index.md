@@ -2,7 +2,7 @@
 title: Cross-cutting — knowledge that crosses boundaries
 type: index
 status: generated
-updated: 2026-10-22
+updated: 2026-10-24
 ---
 
 # Cross-cutting — knowledge that crosses boundaries

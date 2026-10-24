@@ -99,3 +99,7 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/services/gateway.md` (UPDATE) — seção Rolagem do agente; citações de src/server.ts atualizadas
 - `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — rolagem também por pty.input
 - `cockpit_tower_wiki/overview.md` (UPDATE) — arrasto rola os agentes em tela cheia
+
+## [2026-10-24] wiki-sync | 2026-10-24_exec-process-group-citations | 1 page touched
+
+- `cockpit_tower_wiki/cross-cutting/cockpit-exec-process-group.md` (UPDATE) — citações do bin/tower
