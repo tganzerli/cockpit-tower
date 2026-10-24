@@ -52,6 +52,20 @@ test('no source file outside protocol.ts names a write message type, pty.input a
   assert.deepEqual(offenders, []);
 });
 
+test('only session-info.ts (listing) and new-tab.ts run commands: no other file imports node:child_process', () => {
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else files.push(full);
+    }
+  };
+  for (const dir of ['src', 'web'].filter((d) => existsSync(d))) walk(dir);
+  const runners = files.filter((f) => /['"](node:)?child_process['"]/.test(readFileSync(f, 'utf8')));
+  assert.deepEqual(runners.map((f) => f.replace(/\\/g, '/')).sort(), ['src/new-tab.ts', 'src/session-info.ts']);
+});
+
 test('LineDecoder splits JSONL across chunk boundaries and skips blank lines', () => {
   const d = new LineDecoder();
   assert.deepEqual(d.push('{"t":"hello.ack","v":2,'), []);

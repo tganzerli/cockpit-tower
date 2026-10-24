@@ -42,3 +42,10 @@ test('a wheel entry keeps direction, count, format, cell and bytes', () => {
   const line = JSON.parse(readFileSync(file, 'utf8'));
   assert.deepEqual([line.kind, line.dir, line.count, line.mode, line.col, line.row, line.bytes], ['wheel', 'up', 3, 'sgr', 10, 5, 33]);
 });
+
+test('a new-tab entry keeps the workspace folder', () => {
+  const file = path.join(tmp(), 'input.log');
+  openInputLog(file).append({ login: 'me@example.com', session: 's1', kind: 'new-tab', folder: '/Users/me/app/w' });
+  const line = JSON.parse(readFileSync(file, 'utf8'));
+  assert.deepEqual({ ...line, ts: undefined }, { ts: undefined, login: 'me@example.com', session: 's1', kind: 'new-tab', folder: '/Users/me/app/w' });
+});

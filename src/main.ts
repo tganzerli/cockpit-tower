@@ -2,6 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { openInputLog } from './input-log.ts';
 import type { InputLog } from './input-log.ts';
+import { createNewTab } from './new-tab.ts';
 import { startTowerServer } from './server.ts';
 import { createSessionInfo } from './session-info.ts';
 
@@ -15,7 +16,8 @@ if (!dev && !token) {
   process.exit(2);
 }
 
-// Typing needs all three (ADR 2026-10-23_phone-input-client); without them the page stays read-only.
+// Typing, and opening a terminal (ADR 2026-10-24_phone-new-tab), need all three (ADR 2026-10-23_phone-input-client);
+// without them the page stays read-only.
 const origin = process.env.TOWER_ORIGIN || undefined;
 const owner = process.env.TOWER_OWNER || undefined;
 const inputLogPath = process.env.TOWER_INPUT_LOG || undefined;
@@ -30,6 +32,7 @@ if (inputLogPath && (dev || (origin && owner))) {
 if (!input) console.warn('cockpit-tower: typing disabled (needs TOWER_INPUT_LOG, TOWER_ORIGIN and TOWER_OWNER); the page is read-only');
 
 const sessionInfo = createSessionInfo({ cockpitBin });
+const newTab = input ? createNewTab({ cockpitBin }) : undefined;
 const server = await startTowerServer({
   socketPath,
   port,
@@ -38,6 +41,7 @@ const server = await startTowerServer({
   ...(token ? { token } : {}),
   ...(origin ? { origin } : {}),
   ...(input ? { input } : {}),
+  ...(newTab ? { newTab } : {}),
 });
 const { address, port: boundPort } = server.address();
 console.log(`cockpit-tower listening on http://${address}:${boundPort}/${token ? '<token>/' : ''}${dev ? ' (dev: tailscale check off)' : ''}`);

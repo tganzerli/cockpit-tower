@@ -197,6 +197,21 @@ body.keyboard #compose { min-height: 38px; padding: 7px 10px; }
 }
 .tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tab.active { background: var(--surface); color: var(--text); border-bottom-color: var(--accent); }
+/* Pinned to the strip's right edge, as in Cockpit: pushed right when the tabs are few, kept in view when they scroll. */
+.tab-add {
+  flex: none;
+  position: sticky;
+  right: 0;
+  margin-left: auto;
+  padding: 0 14px;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: var(--tabstrip);
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+}
+.tab-add:disabled { opacity: 0.35; }
 
 /* Agent working (Cockpit reports it) or fresh output (the session's byte count grew). */
 .working {

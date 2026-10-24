@@ -7,6 +7,7 @@ import type { WebSocket } from 'ws';
 import { CockpitClient, ProtocolMismatch } from './cockpit-client.ts';
 import { inputBytes, ptySize, wheelBytes } from './input.ts';
 import type { InputLog, InputLogEntry } from './input-log.ts';
+import type { NewTab } from './new-tab.ts';
 import { EMPTY_RESULT } from './session-info.ts';
 import type { SessionInfoSource } from './session-info.ts';
 
@@ -44,6 +45,11 @@ export interface TowerServerOptions {
    * Absent = read-only. Outside dev it needs `origin` and `owner`: only that Tailscale login may type.
    */
   input?: { owner: string | null; log: InputLog };
+  /**
+   * Opens a terminal in the watched session's workspace once command mode is on (ADR 2026-10-24_phone-new-tab).
+   * Only used with `input`; absent = no new tab from the phone.
+   */
+  newTab?: NewTab;
   /** A viewer that sends nothing for this long is disconnected, which releases its session (plan D2). */
   idleMs?: number;
   /** While Cockpit is closed, a connected viewer retries this often. */
@@ -200,6 +206,10 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
   /** Live sessions from the last list, with their current size: command mode only turns on for one of them,
    * and a wheel's cell is clamped to that size. */
   let listed = new Map<string, Size>();
+  /** Each listed session's workspace folder, from the last list: the only source for where a new tab opens. */
+  let folders = new Map<string, string>();
+  /** A new-tab request is running for this connection. */
+  let opening = false;
   /** The phone size this viewer put on a session and the size it owes back. Null = nothing owed. */
   let hold: { id: string; original: Size; applied: Size } | null = null;
   /** Bumped on every size this viewer announces: a list started before it is stale for that session. */
@@ -290,6 +300,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     post({ type: 'status', state: 'unavailable', detail: 'Cockpit connection lost; retrying' });
     // The session may end, or its id be reused by a restarted Cockpit, while we are away.
     listed = new Map();
+    folders = new Map();
     if (commanding !== null) setCommand(null);
   });
   client.on('reconnected', () => {
@@ -325,6 +336,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
         announceSize({ id: mine.id, cols: mine.cols, rows: mine.rows, by: 'mac' });
       }
       const { info, theme } = opts.sessionInfo ? await opts.sessionInfo(sessions).catch(() => EMPTY_RESULT) : EMPTY_RESULT;
+      folders = new Map(Object.entries(info).flatMap(([id, i]) => (i.workspace?.path ? [[id, i.workspace.path] as const] : [])));
       post({ type: 'sessions', sessions: sessions.map((s) => (info[s.id] ? { ...fresh(s), info: info[s.id] } : fresh(s))), theme });
     } catch {
       // Connection dropped mid-request; the reconnect path sends a fresh list.
@@ -385,6 +397,28 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     if (!opts.input!.log.append({ login, session: target, kind: 'wheel', ...what, bytes: bytes.length })) return refuse('log_failed');
     if (!client.input(target, bytes)) return refuse('cockpit_unavailable');
     // No ok echo: a drag sends up to one message per frame.
+  };
+
+  /** The (+) on the phone: a terminal in the watched session's workspace (ADR 2026-10-24_phone-new-tab). */
+  const handleNewTab = async () => {
+    const target = watching; // never an id from the browser
+    const refuse = (reason: string) => post({ type: 'new-tab', ok: false, reason });
+    if (shared.closing || !mayCommand || !opts.newTab || target === null || commanding !== target) return refuse('command_off');
+    const folder = folders.get(target); // never a folder from the browser
+    if (!folder) return refuse('no_workspace');
+    if (opening) return refuse('opening');
+    if (!opts.input!.log.append({ login, session: target, kind: 'new-tab', folder })) return refuse('log_failed');
+    opening = true;
+    try {
+      // A rejection would otherwise go unhandled and stop the gateway.
+      const result = await opts.newTab(folder).catch(() => ({ ok: false, reason: 'failed' }) as const);
+      if (!open) return;
+      if (!result.ok) return refuse(result.reason);
+      post({ type: 'new-tab', ok: true, folder });
+      void sendSessions(); // the page picks the new session from this list
+    } finally {
+      opening = false;
+    }
   };
 
   const applySize = (msg: { cols?: unknown; rows?: unknown }) =>
@@ -453,6 +487,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     if (msg.type === 'input') return handleInput(msg);
     if (msg.type === 'resize') return void applySize(msg);
     if (msg.type === 'wheel') return handleWheel(msg);
+    if (msg.type === 'new-tab') return void handleNewTab();
     // Anything else, including kill attempts, is dropped.
     console.warn(`cockpit-tower: ignored viewer message of type ${String(msg.type)}`);
   });
