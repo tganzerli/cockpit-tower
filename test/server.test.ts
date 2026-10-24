@@ -1384,3 +1384,174 @@ test('a closeTab that throws or fails comes back as failed, not a crash', async 
   await tower.close();
   await fake.close();
 });
+
+// --- Closing a terminal the phone opened (k26) ---
+
+const PAIR = { pairPollMs: 10, pairWaitMs: 300 };
+
+/** A newTab that makes `appear` sessions show up in Cockpit, as a real new tab does (none = a tab with no PTY yet). */
+function birthingNewTab(fake: FakeCockpitServer, appear: string[]) {
+  const newTab: NonNullable<TowerServerOptions['newTab']> = async () => {
+    for (const id of appear) fake.addSession(id);
+    return { ok: true, tabId: 't12' };
+  };
+  return newTab;
+}
+
+/** A closeTab that records the pair each resolve was given. */
+function pairSpy() {
+  const made: unknown[] = [];
+  const closed: string[] = [];
+  const closeTab: CloseTabOpt = {
+    async resolve(_sessions, _session, pair) {
+      made.push(pair);
+      return T7;
+    },
+    async close(tabId) {
+      closed.push(tabId);
+      return { ok: true };
+    },
+  };
+  return { closeTab, made, closed };
+}
+
+/** Watches `id` with command mode on, once a list has shown it. */
+async function commandOnto(v: { ws: WebSocket; inbox: Array<Record<string, unknown>> }, fake: FakeCockpitServer, id: string) {
+  await waitFor(() => (last(v.inbox, 'sessions')?.sessions as Array<{ id: string }>).some((s) => s.id === id));
+  v.ws.send(JSON.stringify({ type: 'select', id }));
+  await waitFor(() => fake.received.some((m) => m.t === 'pty.attach' && m.id === id));
+  v.ws.send(JSON.stringify({ type: 'command', on: true }));
+  await waitFor(() => last(v.inbox, 'command')?.on === true);
+}
+
+const settle = () => new Promise((r) => setTimeout(r, 120));
+
+test('the one session that appears after a new tab is paired with it, and the close passes that pair', async () => {
+  const spy = pairSpy();
+  const late = { newTab: undefined as TowerServerOptions['newTab'] };
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: (f) => late.newTab!(f), closeTab: spy.closeTab, ...PAIR });
+  late.newTab = birthingNewTab(fake, ['s3']);
+  const v = await commanding(port);
+  assert.equal((await newTabTo(v))?.ok, true);
+  await settle();
+  await commandOnto(v, fake, 's3');
+  await closeTo(v);
+  assert.deepEqual(await closeTo(v, { confirm: true }), { type: 'close-tab', ok: true, id: 's3' });
+  const listed = (last(v.inbox, 'sessions')?.sessions as Array<{ id: string; pid: number }>).find((s) => s.id === 's3')!;
+  const pair = spy.made[0] as { pid: number; tabId: string; folder: string };
+  assert.deepEqual([pair.pid, pair.tabId, pair.folder], [listed.pid, 't12', W]);
+  assert.deepEqual(spy.made[1], spy.made[0], 'both steps see the same pair');
+  // Closed: the pair is gone (the fake never removed s3, as a surviving shell would not be).
+  await commandOnto(v, fake, 's3');
+  await closeTo(v);
+  assert.equal(spy.made[2], undefined);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('no new session, or two, after a new tab makes no pair', async () => {
+  for (const appear of [[], ['s3', 's4']]) {
+    const spy = pairSpy();
+    const late = { newTab: undefined as TowerServerOptions['newTab'] };
+    const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: (f) => late.newTab!(f), closeTab: spy.closeTab, sessionsRefreshMs: 20, ...PAIR });
+    late.newTab = birthingNewTab(fake, appear);
+    const v = await commanding(port);
+    assert.equal((await newTabTo(v))?.ok, true);
+    await new Promise((r) => setTimeout(r, PAIR.pairWaitMs + 100));
+    if (appear.length === 0) fake.addSession('s3');
+    await commandOnto(v, fake, 's3');
+    await closeTo(v);
+    assert.deepEqual(spy.made, [undefined], `appear=${appear.join(',')}`);
+    v.ws.close();
+    await tower.close();
+    await fake.close();
+  }
+});
+
+test('while a new tab is being paired, another viewer\'s new-tab is refused', async () => {
+  const late = { newTab: undefined as TowerServerOptions['newTab'] };
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: (f) => late.newTab!(f), ...PAIR });
+  late.newTab = birthingNewTab(fake, []); // no session ever shows: pairing waits its whole time
+  const a = await commanding(port);
+  const b = await commanding(port);
+  assert.equal((await newTabTo(a))?.ok, true);
+  assert.equal((await newTabTo(b))?.reason, 'opening');
+  await new Promise((r) => setTimeout(r, PAIR.pairWaitMs + 100));
+  assert.equal((await newTabTo(b))?.ok, true);
+  a.ws.close();
+  b.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a paired session that leaves the list loses its pair, even if one by that id comes back', async () => {
+  const spy = pairSpy();
+  const late = { newTab: undefined as TowerServerOptions['newTab'] };
+  const { fake, tower, port } = await inputSetup(undefined, {
+    sessionInfo: workspaceInfo,
+    newTab: (f) => late.newTab!(f),
+    closeTab: spy.closeTab,
+    sessionsRefreshMs: 20,
+    ...PAIR,
+  });
+  late.newTab = birthingNewTab(fake, ['s3']);
+  const v = await commanding(port);
+  assert.equal((await newTabTo(v))?.ok, true);
+  await settle();
+  fake.removeSession('s3');
+  await waitFor(() => (last(v.inbox, 'sessions')?.sessions as Array<{ id: string }>).every((s) => s.id !== 's3'));
+  await settle();
+  fake.addSession('s3');
+  await commandOnto(v, fake, 's3');
+  await closeTo(v);
+  assert.deepEqual(spy.made, [undefined]);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a second session that shows up between the two reads, or the one that leaves, makes no pair', async () => {
+  const SLOW = { pairPollMs: 100, pairWaitMs: 1000 };
+  // The first read (at ~100 ms) sees only s3; the settling read (at ~200 ms) sees what changed at ~150 ms.
+  const changes: Array<[string, (fake: FakeCockpitServer) => void]> = [
+    ['a Mac tab right after ours', (fake) => fake.addSession('s4')],
+    ['our session gone', (fake) => fake.removeSession('s3')],
+  ];
+  for (const [why, change] of changes) {
+    const spy = pairSpy();
+    const late = { newTab: undefined as TowerServerOptions['newTab'] };
+    const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: (f) => late.newTab!(f), closeTab: spy.closeTab, sessionsRefreshMs: 20, ...SLOW });
+    late.newTab = async () => {
+      fake.addSession('s3');
+      setTimeout(() => change(fake), 150);
+      return { ok: true, tabId: 't12' };
+    };
+    const v = await commanding(port);
+    assert.equal((await newTabTo(v))?.ok, true);
+    await new Promise((r) => setTimeout(r, 450));
+    if (!(last(v.inbox, 'sessions')?.sessions as Array<{ id: string }>).some((s) => s.id === 's3')) fake.addSession('s3');
+    await commandOnto(v, fake, 's3');
+    await closeTo(v);
+    assert.deepEqual(spy.made, [undefined], why);
+    v.ws.close();
+    await tower.close();
+    await fake.close();
+  }
+});
+
+test('a viewer that leaves while its new tab is being paired frees the next new-tab', async () => {
+  const late = { newTab: undefined as TowerServerOptions['newTab'] };
+  const { fake, tower, port } = await inputSetup(undefined, { sessionInfo: workspaceInfo, newTab: (f) => late.newTab!(f), pairPollMs: 10, pairWaitMs: 5000 });
+  late.newTab = birthingNewTab(fake, []); // nothing ever shows: only the closed connection ends the pairing
+  const a = await commanding(port);
+  const b = await commanding(port);
+  assert.equal((await newTabTo(a))?.ok, true);
+  assert.equal((await newTabTo(b))?.reason, 'opening');
+  a.ws.close();
+  await new Promise((r) => setTimeout(r, 150));
+  assert.equal((await newTabTo(b))?.ok, true, 'well before the 5 s wait');
+  b.ws.close();
+  await tower.close();
+  await fake.close();
+});

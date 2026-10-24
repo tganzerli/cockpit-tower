@@ -7,7 +7,7 @@ import type { WebSocket } from 'ws';
 import { CockpitClient, ProtocolMismatch } from './cockpit-client.ts';
 import { inputBytes, ptySize, wheelBytes } from './input.ts';
 import type { InputLog, InputLogEntry } from './input-log.ts';
-import type { CloseTab, CloseTarget } from './close-tab.ts';
+import type { CloseTab, CloseTarget, MadeTab } from './close-tab.ts';
 import type { NewTab } from './new-tab.ts';
 import { EMPTY_RESULT } from './session-info.ts';
 import type { SessionInfoSource } from './session-info.ts';
@@ -58,6 +58,9 @@ export interface TowerServerOptions {
   closeTab?: CloseTab;
   /** How long a prepared close waits for its confirmation. */
   closeConfirmMs?: number;
+  /** After a new tab, how often the session list is read for the tab's session, and for how long (k26). */
+  pairPollMs?: number;
+  pairWaitMs?: number;
   /** A viewer that sends nothing for this long is disconnected, which releases its session (plan D2). */
   idleMs?: number;
   /** While Cockpit is closed, a connected viewer retries this often. */
@@ -142,7 +145,7 @@ export async function startTowerServer(opts: TowerServerOptions): Promise<TowerS
     res.writeHead(200, { 'content-type': entry.type, 'cache-control': 'no-store' }).end(body);
   }
 
-  const shared: Shared = { sizedBy: new Map(), givebacks: new Set(), closing: false };
+  const shared: Shared = { sizedBy: new Map(), givebacks: new Set(), closing: false, made: new Map(), newTabBusy: false };
 
   // Viewer messages are small JSON commands; the largest is composer text (MAX_INPUT_BYTES plus JSON escaping).
   const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
@@ -181,6 +184,14 @@ interface Shared {
   givebacks: Set<() => Promise<void>>;
   /** Set by close(): no viewer may turn command mode on or size a session any more. */
   closing: boolean;
+  /**
+   * Session id → the tab a (+) opened for it, when exactly one session appeared after that new-tab (k26). `at` is
+   * when the pair was made: a list taken before then cannot drop it. Lives in memory only, and is pruned only by a
+   * connected viewer's list; a stale pair is harmless, since the close checks its pid and tab again.
+   */
+  made: Map<string, MadeTab & { at: number }>;
+  /** A new tab is being opened or paired, by any viewer: another viewer's session would read as this one's. */
+  newTabBusy: boolean;
 }
 
 type Size = { cols: number; rows: number };
@@ -217,8 +228,6 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
   let listed = new Map<string, Size>();
   /** Each listed session's workspace folder, from the last list: the only source for where a new tab opens. */
   let folders = new Map<string, string>();
-  /** A new-tab request is running for this connection. */
-  let opening = false;
   /** A close-tab step is running for this connection. */
   let closingTab = false;
   /** The close step 1 found, waiting for the page's confirmation; dropped whenever command mode changes. */
@@ -333,6 +342,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     }
     listing = true;
     const epoch = sizeEpoch;
+    const listedAt = Date.now();
     try {
       const sessions = await client.list(opts.listTimeoutMs);
       // A size announced since this list was taken is newer than the list: the page's emulator keeps it.
@@ -344,6 +354,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
         sessions.filter((s) => s.exit === undefined).map((s) => [s.id, { cols: fresh(s).cols, rows: fresh(s).rows }]),
       );
       if (commanding !== null && !listed.has(commanding)) setCommand(null);
+      for (const [id, pair] of shared.made) if (!listed.has(id) && pair.at < listedAt) shared.made.delete(id);
       // The Mac re-laid out while the phone commands: it owns the size now; do not fight it or give back over it.
       const mine = hold && commanding === hold.id && epoch === sizeEpoch ? sessions.find((s) => s.id === hold!.id) : undefined;
       if (hold && mine && (mine.cols !== hold.applied.cols || mine.rows !== hold.applied.rows)) {
@@ -421,18 +432,54 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
     if (shared.closing || !mayCommand || !opts.newTab || target === null || commanding !== target) return refuse('command_off');
     const folder = folders.get(target); // never a folder from the browser
     if (!folder) return refuse('no_workspace');
-    if (opening) return refuse('opening');
+    if (shared.newTabBusy) return refuse('opening');
     if (!opts.input!.log.append({ login, session: target, kind: 'new-tab', folder })) return refuse('log_failed');
-    opening = true;
+    shared.newTabBusy = true;
+    let pairing = false;
     try {
+      const before = await client.list(SIZE_LIST_MS).then(
+        (sessions) => new Set(sessions.map((x) => x.id)),
+        () => null, // Cockpit away: the tab still opens, only without a pair
+      );
       // A rejection would otherwise go unhandled and stop the gateway.
       const result = await opts.newTab(folder).catch(() => ({ ok: false, reason: 'failed' }) as const);
+      if (result.ok && before) {
+        pairing = true;
+        void pairNewTab(before, result.tabId, folder).finally(() => (shared.newTabBusy = false));
+      }
       if (!open) return;
       if (!result.ok) return refuse(result.reason);
       post({ type: 'new-tab', ok: true, folder });
       void sendSessions(); // the page picks the new session from this list
     } finally {
-      opening = false;
+      if (!pairing) shared.newTabBusy = false;
+    }
+  };
+
+  /**
+   * Pairs a new tab with its session (k26): the sessions that were not in `before` are polled for until one
+   * appears, then read once more; only exactly one new session, the same one both times, makes a pair. A tab
+   * opened on the Mac meanwhile shows as a second new session and leaves no pair. Gives up when this
+   * connection closes.
+   */
+  const pairNewTab = async (before: Set<string>, tabId: string, folder: string) => {
+    const pollMs = opts.pairPollMs ?? 250;
+    const deadline = Date.now() + (opts.pairWaitMs ?? 5000);
+    const wait = () => new Promise((r) => setTimeout(r, pollMs));
+    const appeared = async () => (await client.list(SIZE_LIST_MS)).filter((x) => x.exit === undefined && !before.has(x.id));
+    try {
+      let seen: Awaited<ReturnType<typeof appeared>> = [];
+      while (seen.length === 0 && open && Date.now() < deadline) {
+        await wait();
+        seen = await appeared();
+      }
+      if (seen.length !== 1 || !open) return;
+      await wait();
+      const settled = await appeared();
+      if (settled.length !== 1 || settled[0]!.id !== seen[0]!.id || settled[0]!.pid !== seen[0]!.pid) return;
+      shared.made.set(seen[0]!.id, { pid: seen[0]!.pid, tabId, folder, at: Date.now() });
+    } catch {
+      // Cockpit away or this connection closed: no pair, and the (x) falls back to the sole-terminal rule.
     }
   };
 
@@ -461,7 +508,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
         return refuse('cockpit_unavailable');
       }
       // A rejection would otherwise go unhandled and stop the gateway.
-      const found = await opts.closeTab.resolve(sessions, target).catch(() => ({ ok: false, reason: 'failed' }) as const);
+      const found = await opts.closeTab.resolve(sessions, target, shared.made.get(target)).catch(() => ({ ok: false, reason: 'failed' }) as const);
       if (!open) return;
       if (shared.closing || commanding !== target || watching !== target) return refuse('command_off'); // changed meanwhile
       if (confirming && pendingClose !== prepared) return refuse('expired'); // command mode cycled meanwhile
@@ -477,6 +524,7 @@ function serveViewer(ws: WebSocket, req: http.IncomingMessage, opts: TowerServer
       const done = await opts.closeTab.close(tabId).catch(() => ({ ok: false, reason: 'failed' }) as const);
       if (!open) return;
       if (!done.ok) return refuse(done.reason);
+      shared.made.delete(target);
       if (commanding === target) setCommand(null);
       if (watching === target) {
         client.detach(target);

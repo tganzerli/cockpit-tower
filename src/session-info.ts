@@ -222,7 +222,7 @@ export async function freshTabs(sessions: Session[], opts: { cockpitBin: string;
   return { cwds, tabs: cockpit.tabs, ids: idsOf(sessions, cockpit.tabs) };
 }
 
-const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH workspace: its tabs have no local PTY
+export const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH workspace: its tabs have no local PTY
 
 /**
  * The session's tab when nothing else can be it, without trusting creation order (which a Cockpit restart breaks:

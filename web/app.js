@@ -826,7 +826,7 @@
   };
   const CLOSE_TAB_REASONS = {
     ...REASONS,
-    no_tab: 'only the single terminal of a workspace closes from here; close this one on the Mac',
+    no_tab: 'only the single terminal of a workspace, or one opened from here, closes from the phone; close this one on the Mac',
     working: 'an agent is working here; stop it first (Esc or Ctrl-C)',
     changed: 'tabs changed in Cockpit; try again',
     expired: 'confirmation expired; try again',

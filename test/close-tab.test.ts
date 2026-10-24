@@ -112,3 +112,40 @@ test('only lsof, the listing verbs and close-tab are ever run', async () => {
   const verbs = f.calls.map((c) => (c[0] === LSOF ? 'lsof' : c[1]));
   assert.deepEqual([...new Set(verbs)].sort(), ['close-tab', 'list-tabs', 'list-workspaces', 'lsof']);
 });
+
+// --- A tab the phone's (+) opened (k26) ---
+
+// A second terminal in w, opened by the (+): the folder alone can no longer tell the two apart.
+const MADE_TABS = [...TABS, { id: 't12', kind: 'terminal', title: 'w', working: false, workspaceId: 'w1', workspacePath: W }];
+const MADE_SESSIONS = [...SESSIONS, session('s13', 130)];
+const MADE_CWDS = { ...CWDS, 130: W };
+const PAIR = { pid: 130, tabId: 't12', folder: W };
+
+test('the (+) pair finds its tab even with another terminal in the workspace', async () => {
+  const f = fake({ tabs: MADE_TABS, cwds: MADE_CWDS });
+  assert.deepEqual(await f.closeTab.resolve(MADE_SESSIONS, 's13', PAIR), {
+    ok: true,
+    target: { tabId: 't12', title: 'w', ids: 's11,s13,s8|t12,t3,t7' },
+  });
+  assert.deepEqual(await f.closeTab.resolve(MADE_SESSIONS, 's13'), { ok: false, reason: 'no_tab' }, 'no pair: the sole-terminal rule refuses');
+  assert.deepEqual(closed(f.calls), []);
+});
+
+test('a pair whose pid, tab or folder no longer holds falls back to the sole-terminal rule', async () => {
+  const cases: Array<[string, unknown[], typeof PAIR]> = [
+    ['another pid (a Cockpit restart)', MADE_TABS, { ...PAIR, pid: 999 }],
+    ['the tab is gone', TABS.concat({ id: 't14', kind: 'terminal', title: 'w', working: false, workspaceId: 'w1', workspacePath: W }), PAIR],
+    ['the tab is in another folder', MADE_TABS.map((t) => (t.id === 't12' ? { ...t, workspaceId: 'r1', workspacePath: R } : t)), PAIR],
+    ['the tab is remote', MADE_TABS.map((t) => (t.id === 't12' ? { ...t, workspaceId: '__remote__pin1' } : t)), PAIR],
+    ['the tab is not a terminal', MADE_TABS.map((t) => (t.id === 't12' ? { ...t, kind: 'file' } : t)), PAIR],
+  ];
+  for (const [why, tabs, pair] of cases) {
+    const f = fake({ tabs, cwds: MADE_CWDS });
+    assert.deepEqual(await f.closeTab.resolve(MADE_SESSIONS, 's13', pair), { ok: false, reason: 'no_tab' }, why);
+  }
+});
+
+test('an agent at work in the paired tab refuses', async () => {
+  const f = fake({ tabs: MADE_TABS.map((t) => (t.id === 't12' ? { ...t, working: true } : t)), cwds: MADE_CWDS });
+  assert.deepEqual(await f.closeTab.resolve(MADE_SESSIONS, 's13', PAIR), { ok: false, reason: 'working' });
+});
