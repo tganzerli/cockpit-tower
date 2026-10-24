@@ -20,6 +20,7 @@ related:
   - decisions/2026-10-23_phone-pty-resize
   - decisions/2026-10-23_phone-fullscreen-scroll
   - decisions/2026-10-24_phone-new-tab
+  - decisions/2026-10-24_phone-close-tab
   - decisions/2026-10-22_read-only-client
   - work/executions/2026-10-22_read-only-viewer
   - work/executions/2026-10-23_phone-terminal-input
@@ -63,6 +64,8 @@ São só estas seis, impostas por lista branca (`src/protocol.ts:10`, `src/proto
 
 Abrir um terminal pelo celular não usa `pty.open`: o gateway roda a CLI do app (`cockpit new-tab`), e o Cockpit cria a aba e a PTY como no "+" da barra de abas ([[decisions/2026-10-24_phone-new-tab]], `src/new-tab.ts:34`). Uma PTY aberta por `pty.open` não viraria aba no app.
 
+Fechar o terminal assistido pelo celular também não usa `pty.kill`: o gateway roda `cockpit close-tab <id> --json`, e o Cockpit fecha a aba como no (x) do Mac ([[decisions/2026-10-24_phone-close-tab]], `src/close-tab.ts:43`). O app traduz isso num `pty.kill` dele mesmo, que manda só SIGTERM ao grupo da PTY (`remote_pi: cockpit/plugins/cockpit_pty/src/cockpit_pty_unix.c:269-282`).
+
 ## Mensagens que recebemos e ignoramos
 
 - `turn.status`: broadcast para todos os clientes.
@@ -77,7 +80,7 @@ Nunca respondemos a nenhuma delas (`src/cockpit-client.ts:171`).
   - Se uma versão futura ligar o fluxo, o crédito é por sessão e os acks são subtraídos (`native_terminal_service.dart:222`): os do tower se somariam aos do app e anulariam o controle de fluxo dele. Por isso o tower continua sem mandar `pty.ack` ([[decisions/2026-10-23_phone-input-client]], `revisit_when`).
 - **Intercalação de entrada.** O servidor aceita `pty.input` (e `pty.resize`, `pty.kill`) de qualquer conexão, sem exigir attach nem dono (`remote_pi: cockpit/packages/cockpit_server/lib/src/remote_server.dart:652-667`). Digitar no Mac e no celular ao mesmo tempo mistura os bytes. Toda a proteção fica no tower ([[services/gateway]]).
 - **O resize vale para todos e o app não sabe dele.** O servidor aplica `pty.resize` à PTY e atualiza o `pty.list`, sem avisar ninguém (`remote_pi: cockpit/packages/cockpit_engine/lib/src/pty/native_terminal_service.dart:292-296`, `cockpit/packages/cockpit_server/lib/src/remote_server.dart:603-616,658-663`). O app só manda o tamanho quando a grade dele muda e nunca o lê de volta (`flterm: controller/terminal_session.dart:460-469`), então quem redimensiona precisa devolver o tamanho. Visto num teste em 2026-10-23: 40×45 ficou valendo 20 s sem o app reagir ([[work/plans/2026-10-23_phone-pty-resize]] §4.0).
-- **Fechar a aba no Mac tira a sessão da lista** para todos, inclusive para o celular; o `pty.detach` só tira a assinatura da conexão. Mas o shell da aba fechada **continua vivo**, filho do `cockpit-server`, até receber SIGHUP: visto duas vezes em 2026-10-23 (cartão k21, upstream) ([[work/executions/2026-10-23_phone-pty-resize]]).
+- **Fechar a aba no Mac tira a sessão da lista** para todos, inclusive para o celular; o `pty.detach` só tira a assinatura da conexão. Mas o shell da aba fechada **continua vivo**, filho do `cockpit-server`, até receber SIGHUP: visto duas vezes em 2026-10-23 (cartão k21, upstream) ([[work/executions/2026-10-23_phone-pty-resize]]). A causa: o fechamento manda só SIGTERM, que o zsh interativo ignora, e nada fecha o master da PTY. Vale também para o `cockpit close-tab`, reproduzido em 2026-10-24 ([[work/executions/2026-10-24_viewer-close-tab-button]], passo 2).
 - **CLI `cockpit`.** Com mais de uma conexão aberta, comandos `cockpit …` sem aba dona falham com "more than one Cockpit is attached" (`remote_pi: cockpit/packages/cockpit_server/lib/src/remote_server.dart:188-226`).
 - **Ciclo de vida.** O sidecar morre quando o app fecha. O app mata servidores que não reconhece, então nunca criamos nem substituímos o socket (`src/cockpit-client.ts:48`).
 

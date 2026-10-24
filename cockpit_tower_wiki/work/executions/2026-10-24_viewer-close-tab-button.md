@@ -11,6 +11,9 @@ topic: [contract, ui]
 related:
   - work/tasks/2026-10-24_viewer-close-tab-button
   - work/plans/2026-10-24_viewer-close-tab-button
+  - "[[services/gateway]]"
+  - "[[contracts/cockpit-protocol-v2]]"
+  - "[[overview]]"
 ---
 
 # Execution Log — 2026-10-24_viewer-close-tab-button

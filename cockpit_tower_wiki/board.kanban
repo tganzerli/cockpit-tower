@@ -44,6 +44,8 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
       **Para começar:** reproduzir numa aba descartável (`cockpit new-tab`, `cockpit close-tab`, `ps -o pid,ppid,stat`), achar no `remote_pi` o caminho do fechamento da aba até o `pty.kill`, e abrir issue no `remote_pi` (modelo: k10, issue antes do PR).
 
+      **Causa achada em 2026-10-24 (k24, só leitura de código):** o `pty_kill` manda só SIGTERM ao grupo, que o zsh interativo ignora, e nada fecha o master da PTY (`remote_pi` `cockpit/plugins/cockpit_pty/src/cockpit_pty_unix.c:269-282`). O comentário em `:264-268` diz que o Dart não usa esse caminho, mas `native_terminal_service.dart:303-320` passou a usar. Correção provável: SIGHUP e depois SIGKILL ao grupo. Reproduzido também pelo `close-tab` do (x) do celular.
+
 - [ ] Pedir ao mantenedor do Cockpit o id da aba no `pty.sessions` <!-- id: k5 labels: upstream, baixa, P, gateway, externo -->
       **O quê:** o tower saber com certeza qual sessão é qual aba, sem o casamento por ordem e pasta.
 
@@ -60,21 +62,6 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Contexto:** "Possible follow-up" no texto do PR do soft wrap. Só vale a pena se aparecerem travadas ao arrastar; o teste de usabilidade do k10 não relatou nenhuma.
 
 ## Pronta p/ plano
-
-- [ ] Fechar terminal e aba pelo celular, com um (x) na aba <!-- id: k24 labels: feature, ui, decisão, risk-high, média, M, gateway, viewer, dono -->
-      **O quê:** um (x) na aba da faixa do iPhone que fecha o terminal e a aba no Cockpit, como o (x) da aba no Mac. É o par do (+) do k23.
-
-      **Contexto:**
-      - O caminho técnico seria `cockpit close-tab <tab-id>`, pela mesma estrutura do `new-tab` (`src/new-tab.ts`, ADR `decisions/2026-10-24_phone-new-tab`). Outro verbo de escrita da CLI exige ADR nova (consequência registrada naquela ADR), e o `pty.kill` continua proibido.
-      - **É destrutivo:** mata o processo da aba, que pode ser um agente no meio do trabalho.
-      - **Achar a aba certa é o ponto delicado:** o casamento sessão ↔ aba é só por ordem de criação (`matchTabs` em `src/session-info.ts`, k5). Fechar a aba errada é bem pior do que abrir na pane errada.
-      - **k21:** o `close-tab` deixa o shell vivo, reproduzido em 2026-10-24 (pid 82275; execução `2026-10-24_viewer-new-tab-button`, passo 1). Decidir se o tower convive com isso ou depende da correção upstream.
-
-      **Decisões do dono antes do plano:**
-      - confirmar antes de fechar?
-      - só a sessão assistida ou qualquer aba da faixa?
-      - recusar quando um agente está trabalhando (`tab.working`)?
-      - só em modo de comando (como o +)?
 
 - [ ] Teste automatizado da visão do terminal <!-- id: k6 labels: test, média, M, viewer -->
       **O quê:** levar para o repositório o teste de consistência da visão HTML, que hoje só existe como roteiro fora do repo.
@@ -124,6 +111,9 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 ## Em curso
 
 ## Done
+
+- [x] Botão (x) na aba assistida: fechar o terminal pelo celular (PR #11) <!-- id: k24 labels: feature, ui, risk-high, gateway, viewer -->
+      Trio `2026-10-24_viewer-close-tab-button`, ADR `decisions/2026-10-24_phone-close-tab`. Em modo de comando, o (x) da aba assistida fecha o terminal pela CLI do Cockpit (`close-tab`) em dois passos, com o título da aba na confirmação. Só fecha o único terminal de um workspace com shells e abas equilibrados, e recusa com agente trabalhando.
 
 - [x] `tower off` reconhece o gateway de qualquer checkout (PR #9) <!-- id: k25 labels: bug, bin -->
       Trio `2026-10-24_tower-off-orphan-gateway`. O estado era compartilhado entre os checkouts e cada `bin/tower` só reconhecia o próprio caminho; agora o `off` para o gateway do tower de qualquer checkout, o `on` troca de checkout e o pidfile só some quando o processo saiu.
