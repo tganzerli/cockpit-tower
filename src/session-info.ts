@@ -193,6 +193,66 @@ export function matchTabs(sessions: { id: string; cwd: string | null }[], tabs: 
   return out;
 }
 
+/** Both id lists, sorted: equal fingerprints mean no session or tab opened or closed in between. */
+const idsOf = (sessions: { id: string }[], tabs: Tab[]) =>
+  `${sessions.map((s) => s.id).sort().join(',')}|${tabs.map((t) => t.id).sort().join(',')}`;
+
+export interface FreshTabs {
+  /** Each session's cwd, null when `lsof` could not tell. */
+  cwds: Map<string, string | null>;
+  tabs: Tab[];
+  /** Fingerprint of both id lists: equal on two looks means no session or tab opened or closed in between. */
+  ids: string;
+}
+
+/**
+ * One fresh look for an action (ADR 2026-10-24_phone-close-tab), outside the viewers' shared cache and their
+ * `stable` history: the action compares two of these itself. Null when the Cockpit CLI is unavailable.
+ */
+export async function freshTabs(sessions: Session[], opts: { cockpitBin: string; run?: Runner }): Promise<FreshTabs | null> {
+  const run = opts.run ?? execRunner;
+  const pids = sessions.map((s) => s.pid).filter(isPid);
+  const [lsof, cockpit] = await Promise.all([
+    pids.length ? run(LSOF, ['-a', '-d', 'cwd', '-Fpn', '-p', pids.join(',')]) : Promise.resolve({ ok: true, stdout: '' }),
+    cockpitList(opts.cockpitBin, run),
+  ]);
+  if (!cockpit) return null;
+  const byPid = parseLsofCwd(lsof.stdout);
+  const cwds = new Map(sessions.map((s) => [s.id, isPid(s.pid) ? byPid.get(s.pid) ?? null : null] as const));
+  return { cwds, tabs: cockpit.tabs, ids: idsOf(sessions, cockpit.tabs) };
+}
+
+const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH workspace: its tabs have no local PTY
+
+/**
+ * The session's tab when nothing else can be it, without trusting creation order (which a Cockpit restart breaks:
+ * tab ids are restored, session ids are new). Each shell's cwd picks the most specific folder of a local terminal
+ * tab. Every shell must be in one (a shell whose cwd is unknown or outside them all could be any tab's), every
+ * folder must hold as many shells as terminal tabs (a shell that moved to another tab's folder unbalances both),
+ * and the session's folder must hold exactly one of each. Null otherwise. Shells that swapped folders in a cycle
+ * still look balanced; the title in the confirmation is the last check for that.
+ */
+export function soleTab(cwds: Map<string, string | null>, tabs: Tab[], session: string): Tab | null {
+  const local = tabs.filter((t) => !t.workspaceId.startsWith(REMOTE_PREFIX));
+  const folders = [...new Set(local.map((t) => t.workspacePath).filter((p) => p !== ''))];
+  const folderOf = (cwd: string | null) =>
+    cwd === null ? undefined : folders.filter((f) => within(cwd, f)).sort((a, b) => b.length - a.length)[0];
+  const shells = new Map<string, string>();
+  for (const [id, cwd] of cwds) {
+    const folder = folderOf(cwd);
+    if (folder === undefined) return null;
+    shells.set(id, folder);
+  }
+  const count = <T>(items: T[], folder: string, of: (x: T) => string) => items.filter((x) => of(x) === folder).length;
+  for (const folder of folders) {
+    if (count(local, folder, (t) => t.workspacePath) !== count([...shells.values()], folder, (f) => f)) return null;
+  }
+  const folder = shells.get(session);
+  if (folder === undefined) return null;
+  const inFolder = local.filter((t) => t.workspacePath === folder);
+  return inFolder.length === 1 && count([...shells.values()], folder, (f) => f) === 1 ? inFolder[0]! : null;
+}
+
 /** The workspace for a session: its tab's workspace when matched, else the most specific folder holding its cwd. */
 function workspaceFor(cwd: string | null, tab: Tab | undefined, workspaces: Workspace[], state: CockpitState): SessionInfo['workspace'] {
   let ws = tab ? workspaces.find((w) => w.id === tab.workspaceId) : undefined;
@@ -262,7 +322,7 @@ export function createSessionInfo(opts: SessionInfoOptions): SessionInfoSource {
     const cwds = parseLsofCwd(lsof.stdout);
     const fg = parseForeground(ps.stdout, pids);
     const cwdOf = (s: Session) => (isPid(s.pid) ? cwds.get(s.pid) ?? null : null);
-    const ids = cockpit ? `${sessions.map((s) => s.id).sort().join(',')}|${cockpit.tabs.map((t) => t.id).sort().join(',')}` : null;
+    const ids = cockpit ? idsOf(sessions, cockpit.tabs) : null;
     const stable = ids !== null && ids === lastIds;
     lastIds = ids;
     const tabs = cockpit ? matchTabs(sessions.map((s) => ({ id: s.id, cwd: cwdOf(s) })), cockpit.tabs, stable) : new Map<string, Tab>();

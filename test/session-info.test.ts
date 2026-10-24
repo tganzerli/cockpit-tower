@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { branchOf, cockpitList, createSessionInfo, matchTabs, parseForeground, parseLsofCwd } from '../src/session-info.ts';
+import { branchOf, cockpitList, createSessionInfo, freshTabs, matchTabs, soleTab, parseForeground, parseLsofCwd } from '../src/session-info.ts';
 import type { Runner, Tab } from '../src/session-info.ts';
 import type { CockpitState } from '../src/cockpit-state.ts';
 import type { Session } from '../src/protocol.ts';
@@ -282,4 +282,78 @@ test('pids that are not positive integers never reach a command line', async () 
   const info = createSessionInfo({ cockpitBin: '/bin/cockpit', run, home: H, readState: async () => ({ projects: new Map(), theme: 'system' }) });
   await info([{ ...session('s1', 11), pid: '11;rm' as unknown as number }, session('s2', -3)]);
   assert.ok(!seen.some(([file]) => file === '/usr/sbin/lsof'), 'no valid pid, so lsof is not run');
+});
+
+test('a fresh look reads each session\'s cwd and the tabs, and fingerprints both id lists', async () => {
+  const mac = fakeMac();
+  const out = await freshTabs([session('s1', 11), session('s2', 22), session('s3', 33)], { cockpitBin: '/bin/cockpit', run: mac.run });
+  assert.deepEqual(out && [...out.cwds], [['s1', `${H}/app/project-b`], ['s2', `${H}/app/project-c/wt-2e-be/lib`], ['s3', null]]);
+  assert.deepEqual(out?.tabs.map((t) => t.id), ['t5', 't9']);
+  assert.equal(out?.ids, 's1,s2,s3|t5,t9');
+  assert.ok(!mac.calls.includes('/bin/ps'), 'an action reads only cwds and the listing');
+  assert.equal(await freshTabs([session('s1', 11)], { cockpitBin: '/bin/cockpit', run: fakeMac({ cockpitOk: false }).run }), null);
+});
+
+test('a fresh look leaves the viewers\' stable history alone', async () => {
+  const mac = fakeMac();
+  const opts = { cockpitBin: '/bin/cockpit', run: mac.run, readFile: mac.read, readState: mac.readState, home: H, ttlMs: 0 };
+  const info = createSessionInfo(opts);
+  const sessions = [session('s1', 11), session('s2', 22)];
+  await freshTabs(sessions, opts);
+  // The viewers' first look is still a first look: no tab until the same ids are seen twice.
+  assert.equal((await info(sessions)).info.s1?.tab, null);
+  assert.ok((await info(sessions)).info.s1?.tab);
+});
+
+const cwdMap = (entries: Array<[string, string | null]>) => new Map(entries);
+// The live layout of 2026-10-24 after a Cockpit restart: restored tab ids no longer follow the new session ids.
+const RESTARTED = [tab('t16', `${H}/app/gtecq`), tab('t29', `${H}/app/condor`), tab('t38', `${H}/app/atm`), tab('t133', `${H}/app/cockpit-tower`)];
+const RESTARTED_CWDS = cwdMap([['s1', `${H}/app/cockpit-tower`], ['s2', `${H}/app/atm/lib`], ['s4', `${H}/app/condor`], ['s8', `${H}/app/gtecq`]]);
+
+test('the only terminal in the session\'s folder is its tab, whatever the id order', () => {
+  assert.deepEqual(matchTabs([...RESTARTED_CWDS].map(([id, cwd]) => ({ id, cwd })), RESTARTED, true).size, 0, 'creation order fails here');
+  assert.equal(soleTab(RESTARTED_CWDS, RESTARTED, 's1')?.id, 't133');
+  assert.equal(soleTab(RESTARTED_CWDS, RESTARTED, 's2')?.id, 't38', 'a cd into a subfolder still counts');
+});
+
+test('two terminals, or two shells, in the folder are no tab', () => {
+  const twoTabs = [...RESTARTED, tab('t140', `${H}/app/cockpit-tower`)];
+  assert.equal(soleTab(RESTARTED_CWDS, twoTabs, 's1'), null);
+  // s8's shell cd'd into cockpit-tower: two shells there, so neither can be told apart.
+  const twoShells = cwdMap([...RESTARTED_CWDS].map(([id, c]) => [id, id === 's8' ? `${H}/app/cockpit-tower/src` : c]));
+  assert.equal(soleTab(twoShells, RESTARTED, 's1'), null);
+  assert.equal(soleTab(twoShells, RESTARTED, 's8'), null);
+});
+
+test('a shell outside every folder, or one that moved to another tab\'s folder, leaves no tab to prove', () => {
+  // s1 (tab t133) cd'd into atm while atm's own shell s2 left every workspace: atm holds one tab and one shell,
+  // but that shell is s1. Any shell outside the folders refuses.
+  const moved = cwdMap([...RESTARTED_CWDS].map(([id, c]) => [id, id === 's1' ? `${H}/app/atm` : id === 's2' ? '/tmp' : c]));
+  assert.equal(soleTab(moved, RESTARTED, 's1'), null);
+  assert.equal(soleTab(moved, RESTARTED, 's4'), null);
+  // s1 cd'd into atm and s2 into condor: atm and condor hold two shells, cockpit-tower none; unbalanced, so no tab.
+  const shifted = cwdMap([...RESTARTED_CWDS].map(([id, c]) => [id, id === 's1' ? `${H}/app/atm` : id === 's2' ? `${H}/app/condor/x` : c]));
+  for (const id of ['s1', 's2', 's4', 's8']) assert.equal(soleTab(shifted, RESTARTED, id), null, id);
+  // A folder that is only a symlink of the shell's real cwd leaves the shell outside every folder.
+  assert.equal(soleTab(cwdMap([['s1', '/private/tmp/w']]), [tab('t1', '/tmp/w')], 's1'), null);
+});
+
+test('remote tabs have no local shell and do not unbalance the local folders', () => {
+  const tabs = [...RESTARTED, tab('t200', '/srv/app', { workspaceId: '__remote__pin1' })];
+  assert.equal(soleTab(RESTARTED_CWDS, tabs, 's1')?.id, 't133');
+  assert.equal(soleTab(cwdMap([...RESTARTED_CWDS, ['s9', '/srv/app']]), tabs, 's1'), null, 'a local shell in a remote-only path is outside');
+});
+
+test('a nested workspace is the most specific folder, so the parent keeps its own tab', () => {
+  const tabs = [tab('t3', `${H}/app/adm`), tab('t5', `${H}/app/adm/.claude/worktrees/agent-a9`)];
+  const cwds = cwdMap([['s1', `${H}/app/adm`], ['s2', `${H}/app/adm/.claude/worktrees/agent-a9/src`]]);
+  assert.equal(soleTab(cwds, tabs, 's1')?.id, 't3');
+  assert.equal(soleTab(cwds, tabs, 's2')?.id, 't5');
+});
+
+test('an unknown cwd anywhere, a cwd outside every folder, or a folderless tab gives no tab', () => {
+  assert.equal(soleTab(cwdMap([...RESTARTED_CWDS, ['s9', null]]), RESTARTED, 's1'), null);
+  assert.equal(soleTab(cwdMap([['s1', '/tmp']]), RESTARTED, 's1'), null);
+  assert.equal(soleTab(cwdMap([['s1', H]]), [tab('t10', '')], 's1'), null);
+  assert.equal(soleTab(RESTARTED_CWDS, RESTARTED, 's99'), null);
 });

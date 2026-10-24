@@ -1166,3 +1166,221 @@ test('a failure from Cockpit comes back as the refusal reason', async () => {
   await tower.close();
   await fake.close();
 });
+
+// --- Closing the watched terminal from the phone (ADR 2026-10-24_phone-close-tab) ---
+
+type CloseTabOpt = NonNullable<TowerServerOptions['closeTab']>;
+type Resolved = Awaited<ReturnType<CloseTabOpt['resolve']>>;
+const T7: Resolved = { ok: true, target: { tabId: 't7', title: '✳ second', ids: 's1,s2|t3,t7' } };
+
+/** A closeTab whose resolves answer from `answers` in turn (the last one repeats); records every call. */
+function fakeCloseTab(answers: Resolved[] = [T7], closeResult: Awaited<ReturnType<CloseTabOpt['close']>> = { ok: true }) {
+  const resolved: string[] = [];
+  const closed: string[] = [];
+  let release: (() => void) | undefined;
+  let hold = false;
+  const closeTab: CloseTabOpt = {
+    async resolve(_sessions, session) {
+      resolved.push(session);
+      if (hold) await new Promise<void>((r) => (release = r));
+      return answers[Math.min(resolved.length - 1, answers.length - 1)]!;
+    },
+    async close(tabId) {
+      closed.push(tabId);
+      return closeResult;
+    },
+  };
+  return { closeTab, resolved, closed, holdNext: () => (hold = true), release: () => release?.() };
+}
+
+async function closeTo(v: { ws: WebSocket; inbox: Array<Record<string, unknown>> }, msg: object = {}) {
+  const before = v.inbox.filter((m) => m.type === 'close-tab').length;
+  v.ws.send(JSON.stringify({ type: 'close-tab', ...msg }));
+  await waitFor(() => v.inbox.filter((m) => m.type === 'close-tab').length > before);
+  return last(v.inbox, 'close-tab');
+}
+
+test('close-tab outside command mode, for another login or without input is refused and nothing runs', async () => {
+  const ct = fakeCloseTab();
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab });
+  const off = await watching(port);
+  assert.deepEqual(await closeTo(off), { type: 'close-tab', ok: false, reason: 'command_off' });
+  const other = await watching(port, { headers: { 'tailscale-user-login': 'someone@else.com' } });
+  other.ws.send(JSON.stringify({ type: 'command', on: true }));
+  assert.equal((await closeTo(other, { confirm: true }))?.reason, 'command_off');
+  off.ws.close();
+  other.ws.close();
+  await tower.close();
+  await fake.close();
+  const bare = await setup({ closeTab: ct.closeTab });
+  const { ws, inbox } = viewer(bare.port);
+  await waitFor(() => inbox.some((m) => m.type === 'sessions'));
+  ws.send(JSON.stringify({ type: 'select', id: 's1' }));
+  assert.equal((await closeTo({ ws, inbox }))?.reason, 'command_off');
+  assert.deepEqual([ct.resolved, ct.closed], [[], []]);
+  ws.close();
+  await bare.tower.close();
+  await bare.fake.close();
+});
+
+test('step 1 only asks: it answers with the Cockpit title and closes nothing', async () => {
+  const ct = fakeCloseTab();
+  const { file, log } = tempLog();
+  const { fake, tower, port } = await inputSetup(log, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  assert.deepEqual(await closeTo(v, { id: 's2', tab: 't3', title: 'x' }), { type: 'close-tab', stage: 'confirm', title: '✳ second' });
+  assert.deepEqual(ct.resolved, ['s1'], 'the watched session, not the one the browser named');
+  assert.deepEqual(ct.closed, []);
+  assert.equal(readFileSync(file, 'utf8'), '', 'nothing logged before anything is done');
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('step 2 closes the confirmed tab, logged first, then turns command mode off and lets the session go', async () => {
+  const ct = fakeCloseTab();
+  const { file, log } = tempLog();
+  const { fake, tower, port } = await inputSetup(log, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  await closeTo(v);
+  const lists = v.inbox.filter((m) => m.type === 'sessions').length;
+  assert.deepEqual(await closeTo(v, { confirm: true, tab: 't3' }), { type: 'close-tab', ok: true, id: 's1' });
+  assert.deepEqual(ct.closed, ['t7']);
+  const line = JSON.parse(readFileSync(file, 'utf8').trim().split('\n').at(-1)!);
+  assert.deepEqual([line.kind, line.session, line.tab, line.title, line.login], ['close-tab', 's1', 't7', '✳ second', 'me@example.com']);
+  assert.equal(last(v.inbox, 'command')?.on, false);
+  await waitFor(() => fake.received.some((m) => m.t === 'pty.detach' && m.id === 's1'));
+  await waitFor(() => v.inbox.filter((m) => m.type === 'sessions').length > lists);
+  assert.ok(fake.received.every((m) => ALLOWED_OUTBOUND.has(m.t)));
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a confirmation with nothing prepared, or too late, is expired', async () => {
+  const ct = fakeCloseTab();
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab, closeConfirmMs: 50 });
+  const v = await commanding(port);
+  assert.equal((await closeTo(v, { confirm: true }))?.reason, 'expired');
+  await closeTo(v);
+  await new Promise((r) => setTimeout(r, 80));
+  assert.equal((await closeTo(v, { confirm: true }))?.reason, 'expired');
+  assert.deepEqual(ct.closed, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('switching session or command mode drops a prepared close', async () => {
+  const ct = fakeCloseTab();
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  await closeTo(v);
+  v.ws.send(JSON.stringify({ type: 'command', on: false }));
+  await waitFor(() => last(v.inbox, 'command')?.on === false);
+  v.ws.send(JSON.stringify({ type: 'command', on: true }));
+  await waitFor(() => last(v.inbox, 'command')?.on === true);
+  assert.equal((await closeTo(v, { confirm: true }))?.reason, 'expired');
+  await closeTo(v);
+  v.ws.send(JSON.stringify({ type: 'select', id: 's2' }));
+  await waitFor(() => last(v.inbox, 'command')?.on === false);
+  assert.equal((await closeTo(v, { confirm: true }))?.reason, 'command_off');
+  assert.deepEqual(ct.closed, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a confirmation in flight dies with a command-mode cycle', async () => {
+  const ct = fakeCloseTab();
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  await closeTo(v);
+  ct.holdNext();
+  v.ws.send(JSON.stringify({ type: 'close-tab', confirm: true }));
+  await waitFor(() => ct.resolved.length === 2);
+  v.ws.send(JSON.stringify({ type: 'command', on: false }));
+  v.ws.send(JSON.stringify({ type: 'command', on: true }));
+  await waitFor(() => v.inbox.filter((m) => m.type === 'command').length >= 3 && last(v.inbox, 'command')?.on === true);
+  ct.release();
+  await waitFor(() => last(v.inbox, 'close-tab')?.reason === 'expired');
+  assert.deepEqual(ct.closed, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('another tab, or other session or tab ids, on the second look refuses with changed', async () => {
+  for (const second of [
+    { ok: true, target: { ...(T7 as { target: object }).target, tabId: 't3' } },
+    { ok: true, target: { ...(T7 as { target: object }).target, ids: 's1,s2,s3|t3,t7,t9' } },
+  ] as Resolved[]) {
+    const ct = fakeCloseTab([T7, second]);
+    const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab });
+    const v = await commanding(port);
+    await closeTo(v);
+    assert.equal((await closeTo(v, { confirm: true }))?.reason, 'changed');
+    assert.equal((await closeTo(v, { confirm: true }))?.reason, 'expired', 'a refused confirmation is spent');
+    assert.deepEqual(ct.closed, []);
+    v.ws.close();
+    await tower.close();
+    await fake.close();
+  }
+});
+
+test('an agent that started working between the steps refuses, and nothing closes', async () => {
+  const ct = fakeCloseTab([T7, { ok: false, reason: 'working' }]);
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  await closeTo(v);
+  assert.deepEqual(await closeTo(v, { confirm: true }), { type: 'close-tab', ok: false, reason: 'working' });
+  assert.deepEqual(ct.closed, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a log that cannot be written refuses the close', async () => {
+  const ct = fakeCloseTab();
+  const failing: InputLog = { append: () => false };
+  const { fake, tower, port } = await inputSetup(failing, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  await closeTo(v);
+  assert.equal((await closeTo(v, { confirm: true }))?.reason, 'log_failed');
+  assert.deepEqual(ct.closed, []);
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a second close-tab step while one is running is refused', async () => {
+  const ct = fakeCloseTab();
+  ct.holdNext();
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab: ct.closeTab });
+  const v = await commanding(port);
+  v.ws.send(JSON.stringify({ type: 'close-tab' }));
+  await waitFor(() => ct.resolved.length === 1);
+  assert.equal((await closeTo(v))?.reason, 'closing');
+  ct.release();
+  await waitFor(() => last(v.inbox, 'close-tab')?.stage === 'confirm');
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});
+
+test('a closeTab that throws or fails comes back as failed, not a crash', async () => {
+  const closeTab: CloseTabOpt = {
+    resolve: async () => T7,
+    close: async () => {
+      throw new Error('boom');
+    },
+  };
+  const { fake, tower, port } = await inputSetup(undefined, { closeTab });
+  const v = await commanding(port);
+  await closeTo(v);
+  assert.deepEqual(await closeTo(v, { confirm: true }), { type: 'close-tab', ok: false, reason: 'failed' });
+  assert.equal(last(v.inbox, 'command')?.on, true, 'nothing closed: command mode stays on');
+  v.ws.close();
+  await tower.close();
+  await fake.close();
+});

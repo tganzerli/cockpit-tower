@@ -52,7 +52,7 @@ test('no source file outside protocol.ts names a write message type, pty.input a
   assert.deepEqual(offenders, []);
 });
 
-test('only session-info.ts (listing) and new-tab.ts run commands: no other file imports node:child_process', () => {
+test('only session-info.ts (listing), new-tab.ts and close-tab.ts run commands: no other file imports node:child_process', () => {
   const files: string[] = [];
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -63,7 +63,7 @@ test('only session-info.ts (listing) and new-tab.ts run commands: no other file 
   };
   for (const dir of ['src', 'web'].filter((d) => existsSync(d))) walk(dir);
   const runners = files.filter((f) => /['"](node:)?child_process['"]/.test(readFileSync(f, 'utf8')));
-  assert.deepEqual(runners.map((f) => f.replace(/\\/g, '/')).sort(), ['src/new-tab.ts', 'src/session-info.ts']);
+  assert.deepEqual(runners.map((f) => f.replace(/\\/g, '/')).sort(), ['src/close-tab.ts', 'src/new-tab.ts', 'src/session-info.ts']);
 });
 
 test('LineDecoder splits JSONL across chunk boundaries and skips blank lines', () => {

@@ -1,11 +1,11 @@
-// Local record of everything the phone typed, scrolled, sized or opened (ADRs 2026-10-23_phone-input-client,
-// _phone-pty-resize and 2026-10-24_phone-new-tab).
+// Local record of everything the phone typed, scrolled, sized, opened or closed (ADRs 2026-10-23_phone-input-client,
+// _phone-pty-resize, 2026-10-24_phone-new-tab and _phone-close-tab).
 import fs from 'node:fs';
 
 export interface InputLogEntry {
   login: string | null;
   session: string;
-  kind: 'text' | 'key' | 'resize' | 'restore' | 'wheel' | 'new-tab';
+  kind: 'text' | 'key' | 'resize' | 'restore' | 'wheel' | 'new-tab' | 'close-tab';
   key?: string;
   text?: string;
   /** Wheel: direction, events sent, format and, for mouse formats, the cell. */
@@ -23,6 +23,9 @@ export interface InputLogEntry {
   from?: { cols: number; rows: number };
   /** New tab: the workspace folder the terminal opens in. */
   folder?: string;
+  /** Close tab: the Cockpit tab id and the title the confirmation showed. */
+  tab?: string;
+  title?: string;
 }
 
 export interface InputLog {

@@ -75,6 +75,7 @@ O que pesa (plano [[work/plans/2026-10-24_viewer-new-tab-button]], §4.0, e test
 - **Novas restrições:**
   - Qualquer outro verbo de escrita da CLI do Cockpit exige uma ADR.
   - `node:child_process` só pode aparecer em `src/session-info.ts` (leitura) e em `src/new-tab.ts`.
+  - **Refinada por** [[decisions/2026-10-24_phone-close-tab]]: segundo verbo de escrita (`close-tab`), e `src/close-tab.ts` é o terceiro arquivo com `node:child_process`.
 
 ## Como esta decisão é policiada
 

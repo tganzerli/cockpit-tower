@@ -212,6 +212,41 @@ body.keyboard #compose { min-height: 38px; padding: 7px 10px; }
   line-height: 1;
 }
 .tab-add:disabled { opacity: 0.35; }
+/* The (x) on the watched tab, in command mode: a full-height touch target, like Cockpit's tab close. */
+.tab-close {
+  flex: none;
+  margin: -9px -8px -7px 0;
+  padding: 8px 8px 6px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+}
+.tab-close.disabled { opacity: 0.35; }
+
+/* In-page confirmation (never the browser's confirm()). */
+.sheet {
+  width: min(360px, calc(100vw - 32px));
+  padding: 18px 18px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+.sheet::backdrop { background: var(--scrim); }
+.sheet p { margin: 0 0 8px; }
+.sheet-title { font-size: 16px; font-weight: 600; }
+.sheet-detail { font-size: 14px; color: var(--text-2); overflow-wrap: anywhere; }
+.sheet-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+.sheet-actions button {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+}
+.sheet-actions .danger { border-color: var(--bad); background: var(--bad); color: #fff; }
+.sheet-actions .danger:disabled { opacity: 0.5; }
 
 /* Agent working (Cockpit reports it) or fresh output (the session's byte count grew). */
 .working {

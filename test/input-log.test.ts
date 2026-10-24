@@ -49,3 +49,10 @@ test('a new-tab entry keeps the workspace folder', () => {
   const line = JSON.parse(readFileSync(file, 'utf8'));
   assert.deepEqual({ ...line, ts: undefined }, { ts: undefined, login: 'me@example.com', session: 's1', kind: 'new-tab', folder: '/Users/me/app/w' });
 });
+
+test('a close-tab entry keeps the tab id and the title the confirmation showed', () => {
+  const file = path.join(tmp(), 'input.log');
+  openInputLog(file).append({ login: 'me@example.com', session: 's8', kind: 'close-tab', tab: 't7', title: '✳ second' });
+  const line = JSON.parse(readFileSync(file, 'utf8'));
+  assert.deepEqual({ ...line, ts: undefined }, { ts: undefined, login: 'me@example.com', session: 's8', kind: 'close-tab', tab: 't7', title: '✳ second' });
+});

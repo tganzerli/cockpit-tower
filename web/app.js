@@ -1,6 +1,7 @@
 // Viewer: it renders terminal bytes, and only in command mode sends text, named keys, its own size and the
-// agent scroll (mouse wheel or arrows) for the watched session (ADRs 2026-10-23_phone-input-client,
-// _phone-pty-resize and _phone-fullscreen-scroll).
+// agent scroll (mouse wheel or arrows) for the watched session, and asks for a terminal to be opened or closed
+// (ADRs 2026-10-23_phone-input-client, _phone-pty-resize, _phone-fullscreen-scroll, 2026-10-24_phone-new-tab
+// and _phone-close-tab).
 //
 // xterm is only the emulator: it parses the bytes at the PTY's exact size and is never opened on screen.
 // What the phone shows is an HTML view built from xterm's buffer, so lines can wrap to the phone's width
@@ -24,6 +25,9 @@
   const sendEl = document.getElementById('send');
   const noteEl = document.getElementById('compose-note');
   const modeEl = document.getElementById('mode');
+  const closeConfirmEl = document.getElementById('close-confirm');
+  const closeWhatEl = document.getElementById('close-what');
+  const closeOkEl = document.getElementById('close-ok');
 
   const term = new Terminal({ disableStdin: true, convertEol: false, scrollback: 10000 });
 
@@ -67,6 +71,8 @@
   let commandOn = false;
   // The (+) request waiting for its session to show up in a list: { ws, before, at }, or null.
   let newTab = null;
+  // The (x) request on the watched session: { id, stage: 'asking' | 'confirm' | 'closing' }, or null.
+  let closeReq = null;
   // The agent scroll in progress (a one-finger drag in command mode) and the lines not yet sent.
   let drag = null;
   let pendingWheel = 0;
@@ -463,6 +469,7 @@
         const t = document.createElement('span');
         t.textContent = label(s);
         b.append(t);
+        if (commandOn && current && current.id === s.id) b.append(closeButton(s));
         b.onclick = () => select(s);
         return b;
       }),
@@ -486,6 +493,83 @@
     };
     return add;
   }
+
+  // The (x) on the watched session's tab, in command mode only (ADR 2026-10-24_phone-close-tab). The page sends no
+  // id: the gateway finds the tab, answers with its Cockpit title for the confirmation, and closes on the second ask.
+  function closeButton(s) {
+    const x = document.createElement('span');
+    x.className = 'tab-close';
+    x.setAttribute('role', 'button');
+    x.setAttribute('aria-label', 'Close terminal');
+    x.textContent = '×';
+    // The gateway decides which tab this is; the page only spares a round trip when it already sees an agent at work.
+    const tab = s.info && s.info.tab;
+    const blocked = tab && tab.working ? 'working' : null;
+    x.classList.toggle('disabled', blocked !== null || closeReq !== null);
+    x.onclick = (event) => {
+      event.stopPropagation();
+      if (blocked) return note(CLOSE_TAB_REASONS[blocked], 'bad');
+      if (closeReq) return;
+      if (!send({ type: 'close-tab' })) return note('not sent: no connection', 'bad');
+      closeReq = { id: s.id, stage: 'asking' };
+      renderTabs();
+    };
+    return x;
+  }
+
+  function endClose() {
+    closeReq = null;
+    if (closeConfirmEl.open) closeConfirmEl.close();
+    renderTabs();
+  }
+
+  function onCloseTab(msg) {
+    if (msg.ok === true) {
+      endClose();
+      if (current && msg.id === current.id) leaveClosed(current);
+      return;
+    }
+    if (msg.stage === 'confirm') {
+      if (!closeReq || closeReq.stage !== 'asking' || !current || closeReq.id !== current.id || !commandOn) return;
+      closeReq.stage = 'confirm';
+      const w = current.info && current.info.workspace;
+      closeWhatEl.textContent = `“${msg.title || 'untitled'}” in Cockpit — ${label(current)}${w ? ` in ${w.name}` : ''}`;
+      closeOkEl.disabled = false;
+      closeConfirmEl.showModal();
+      return;
+    }
+    if (msg.reason === 'closing') return; // the step in flight still answers
+    endClose();
+    note(CLOSE_TAB_REASONS[msg.reason] || `terminal not closed: ${msg.reason}`, 'bad');
+  }
+
+  /** After a close: the next tab in the strip, else the previous one, else what a fresh page would pick. */
+  function leaveClosed(closed) {
+    const ws = groupOf(closed).ws;
+    const strip = sessions.filter((s) => groupOf(s).ws === ws && ws !== '');
+    const at = strip.findIndex((s) => s.id === closed.id);
+    sessions = sessions.filter((s) => s.id !== closed.id); // until the next list, which no longer has it
+    const next = (at >= 0 && (strip[at + 1] || strip[at - 1])) || null;
+    current = null;
+    if (next) return select(next);
+    if (sessions.length > 0) return select(preferred());
+    renderSessions();
+  }
+
+  document.getElementById('close-cancel').onclick = () => closeConfirmEl.close();
+  closeConfirmEl.addEventListener('close', () => {
+    // Cancel, Esc or a backdrop dismissal: the gateway's prepared close just expires.
+    if (closeReq && closeReq.stage === 'confirm') endClose();
+  });
+  closeOkEl.onclick = () => {
+    if (!closeReq || closeReq.stage !== 'confirm') return;
+    if (!send({ type: 'close-tab', confirm: true })) {
+      endClose();
+      return note('not sent: no connection', 'bad');
+    }
+    closeReq.stage = 'closing';
+    closeOkEl.disabled = true;
+  };
 
   /** Selects the session the (+) opened once a list has it: a new id in the same workspace. Gives up after 15 s. */
   function pickNewTab() {
@@ -740,6 +824,15 @@
     failed: 'Cockpit did not open the terminal',
     opening: 'already opening a terminal',
   };
+  const CLOSE_TAB_REASONS = {
+    ...REASONS,
+    no_tab: 'only the single terminal of a workspace closes from here; close this one on the Mac',
+    working: 'an agent is working here; stop it first (Esc or Ctrl-C)',
+    changed: 'tabs changed in Cockpit; try again',
+    expired: 'confirmation expired; try again',
+    closing: 'already closing',
+    failed: 'Cockpit did not close the terminal',
+  };
 
   function note(text, kind) {
     noteEl.textContent = text || '';
@@ -755,6 +848,8 @@
     modeEl.textContent = commandOn ? 'command' : 'read-only';
     modeEl.classList.toggle('on', commandOn);
     if (!commandOn) {
+      closeReq = null;
+      if (closeConfirmEl.open) closeConfirmEl.close();
       pendingText = null;
       restBox = null;
       drag = null;
@@ -763,7 +858,7 @@
       note('');
       composeEl.blur();
     }
-    renderTabs(); // the (+) follows command mode
+    renderTabs(); // the (+) and the (x) follow command mode
     fitViewport();
   }
 
@@ -1006,6 +1101,8 @@
         newTab = null;
         note(NEW_TAB_REASONS[msg.reason] || `terminal not opened: ${msg.reason}`, 'bad');
         renderTabs();
+      } else if (msg.type === 'close-tab') {
+        onCloseTab(msg);
       } else if (msg.type === 'wheel' && msg.ok === false) {
         note(msg.reason === 'invalid' ? 'scroll not sent' : REASONS[msg.reason] || `scroll not sent: ${msg.reason}`, 'bad');
       } else if (msg.type === 'error') {

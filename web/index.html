@@ -70,6 +70,16 @@
       </aside>
     </div>
 
+    <dialog id="close-confirm" class="sheet" aria-labelledby="close-title">
+      <p id="close-title" class="sheet-title">Close this terminal?</p>
+      <p id="close-what" class="sheet-detail"></p>
+      <p class="sheet-detail">The tab closes on the Mac, as with its × there; Cockpit tells what runs in it to stop.</p>
+      <div class="sheet-actions">
+        <button type="button" id="close-cancel">Cancel</button>
+        <button type="button" id="close-ok" class="danger">Close</button>
+      </div>
+    </dialog>
+
     <script src="vendor/xterm.js"></script>
     <script src="app.js"></script>
   </body>
