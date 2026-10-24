@@ -4,9 +4,9 @@ type: execution
 work_id: 2026-10-24_viewer-close-tab-button
 scope:
   area: [gateway, viewer]
-status: in_progress
+status: done
 updated: 2026-10-24
-summary: Em andamento — (x) na aba assistida, em modo de comando, fecha o terminal pela CLI do Cockpit em dois passos (preparar e confirmar).
+summary: Em modo de comando, um (x) na aba assistida fecha o terminal pela CLI do Cockpit em dois passos, só quando ele é o único terminal de um workspace com shells e abas equilibrados; testado em abas e workspace descartáveis.
 topic: [contract, ui]
 related:
   - work/tasks/2026-10-24_viewer-close-tab-button
@@ -20,9 +20,9 @@ related:
 - **ID:** `2026-10-24_viewer-close-tab-button`
 - **Task:** [[work/tasks/2026-10-24_viewer-close-tab-button]]
 - **Plan:** [[work/plans/2026-10-24_viewer-close-tab-button]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Start:** `2026-10-24`
-- **Finish:** `—`
+- **Finish:** `2026-10-24`
 - **Scope:**
   - Área(s) afetada(s): `[gateway, viewer]`
 - **Branch:** `feat/2026-10-24_viewer-close-tab-button__tower`, num worktree próprio a partir de `origin/dev` `91f8dc7`.
@@ -41,7 +41,7 @@ related:
 - [x] Passo 10 — `REVIEW.md`
 - [x] Passo 11 — verificação
 - [x] Passo 12 — commits e revisão do agente (deep)
-- [ ] Passo 13 — gate humano
+- [x] Passo 13 — gate humano
 
 ## Atividade (cronológica)
 
@@ -90,6 +90,11 @@ exit=1
 
 - `close-tab <id> --json` imprime `{"tabId":…}` e sai com 0. Um alvo desconhecido sai com 1. Confere com o plano §4.0 A.
 - k21 reproduzido de novo: o shell 80220 sobreviveu ao fechamento e saiu com `kill -HUP 80220`, dado à mão para limpar o teste.
+
+### `2026-10-24` — gate humano
+
+- O dono aprovou ("ok") depois do resumo, que tinha o diff, o registro e a checagem sugerida no iPhone.
+- **A checagem no iPhone não foi registrada nesta sessão:** a aprovação veio sem relato de uso no aparelho. As validações reais ficaram nos testes pelo gateway `--dev` (seção Validações).
 
 ## Commits
 

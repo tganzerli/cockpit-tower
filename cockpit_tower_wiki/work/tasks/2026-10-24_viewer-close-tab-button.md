@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-24_viewer-close-tab-button
 scope:
   area: [viewer, gateway]
-status: in_progress
+status: done
 updated: 2026-10-24
 summary: Em modo de comando, um (x) na aba da sessão assistida fecha, depois de confirmar, o terminal e a aba no Cockpit, como o (x) da aba no Mac, recusando quando um agente está trabalhando.
 topic: [ui]
@@ -37,14 +37,14 @@ O caminho técnico provável é `cockpit close-tab`, com a mesma estrutura do `n
 
 ## Critérios de aceite
 
-- [ ] Em modo de comando, a aba da sessão assistida mostra um (x), no estilo do (x) da aba do Cockpit; fora do modo de comando e nas outras abas, não há (x).
-- [ ] Tocar no (x) abre uma confirmação na página com o terminal que será fechado; só a confirmação dispara o fechamento.
-- [ ] Confirmado, o terminal e a aba fecham no Cockpit do Mac, e a faixa do viewer deixa de mostrá-la.
-- [ ] O gateway só fecha quando consegue provar, com uma listagem fresca do Cockpit, qual aba é a sessão assistida; em qualquer ambiguidade, recusa e a página explica.
-- [ ] Com um agente trabalhando na aba, o fechamento é recusado e a página explica.
-- [ ] As mesmas garantias da digitação valem (modo de comando, `Origin`, dono do Tailscale, registro local antes de agir); fora delas, recusa.
-- [ ] A capacidade nova está registrada numa ADR e em [[services/gateway]] / [[contracts/cockpit-protocol-v2]], incluindo o que acontece com o processo da aba (k21).
-- [ ] `npm test` cobre a ação nova do gateway, incluindo cada recusa.
+- [x] Em modo de comando, a aba da sessão assistida mostra um (x), no estilo do (x) da aba do Cockpit; fora do modo de comando e nas outras abas, não há (x).
+- [x] Tocar no (x) abre uma confirmação na página com o terminal que será fechado; só a confirmação dispara o fechamento.
+- [x] Confirmado, o terminal e a aba fecham no Cockpit do Mac, e a faixa do viewer deixa de mostrá-la.
+- [x] O gateway só fecha quando consegue provar, com uma listagem fresca do Cockpit, qual aba é a sessão assistida; em qualquer ambiguidade, recusa e a página explica.
+- [x] Com um agente trabalhando na aba, o fechamento é recusado e a página explica.
+- [x] As mesmas garantias da digitação valem (modo de comando, `Origin`, dono do Tailscale, registro local antes de agir); fora delas, recusa.
+- [x] A capacidade nova está registrada numa ADR e em [[services/gateway]] / [[contracts/cockpit-protocol-v2]], incluindo o que acontece com o processo da aba (k21).
+- [x] `npm test` cobre a ação nova do gateway, incluindo cada recusa.
 
 ## Escopo declarado
 
