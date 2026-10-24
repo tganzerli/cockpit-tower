@@ -13,8 +13,8 @@ updated: 2026-10-24
 
 ## In progress (open / in_progress / future / paused)
 
-- 🔧 [[work/tasks/2026-10-24_tower-off-orphan-gateway]] · `open` · `bin` [bugfix, tooling]
-  — O bin/tower passa a reconhecer o gateway do tower de qualquer checkout, para pará-lo no off e trocá-lo no on, sem apagar o pidfile de um gateway vivo nem dizer "off" com ele rodando. ↳ [plan](work/plans/2026-10-24_tower-off-orphan-gateway) · exec —
+- 🚧 [[work/tasks/2026-10-24_tower-off-orphan-gateway]] · `in_progress` · `bin` [bugfix, tooling]
+  — Em andamento — o bin/tower reconhece o gateway do tower de qualquer checkout no on, no off e no status. ↳ [plan](work/plans/2026-10-24_tower-off-orphan-gateway) · [exec](work/executions/2026-10-24_tower-off-orphan-gateway)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
   — tganzerli/cockpit-tower publicado a partir de um commit inicial sanitizado; o histórico antigo ficou em tganzerli/cockpit-tower-archive, privado. ↳ [plan](work/plans/2026-10-23_public-repo-migration) · [exec](work/executions/2026-10-23_public-repo-migration)
 
