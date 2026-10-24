@@ -18,7 +18,7 @@ code_refs:
 
 ## Product summary
 
-Visualizador web das abas de terminal do Remote Pi Cockpit rodando no Mac. Serve para acompanhar e continuar o trabalho dos agentes (Claude Code, Antigravity CLI) pelo Safari do iPhone, via Tailscale, **sob demanda** (`tower on/off`). A página **abre em leitura**; o dono do Mac pode **digitar na sessão assistida** ligando o modo de comando (texto, Enter, Esc, Ctrl-C, setas, Tab, Shift-Tab), e nesse modo a sessão assume o tamanho do celular (devolvendo o do Mac ao sair) e arrastar o dedo rola o histórico dos agentes em tela cheia 📎 [`src/server.ts:386-516`](../src/server.ts). É um cliente do protocolo do Cockpit, não um fork. Maturidade: v0.1; leitura validada em aparelho real em 2026-10-22 e digitação em 2026-10-23.
+Visualizador web das abas de terminal do Remote Pi Cockpit rodando no Mac. Serve para acompanhar e continuar o trabalho dos agentes (Claude Code, Antigravity CLI) pelo Safari do iPhone, via Tailscale, **sob demanda** (`tower on/off`). A página **abre em leitura**; o dono do Mac pode **digitar na sessão assistida** ligando o modo de comando (texto, Enter, Esc, Ctrl-C, setas, Tab, Shift-Tab), e nesse modo a sessão assume o tamanho do celular (devolvendo o do Mac ao sair) e arrastar o dedo rola o histórico dos agentes em tela cheia 📎 [`src/server.ts:397-564`](../src/server.ts). É um cliente do protocolo do Cockpit, não um fork. Maturidade: v0.1; leitura validada em aparelho real em 2026-10-22 e digitação em 2026-10-23.
 
 ## Areas
 

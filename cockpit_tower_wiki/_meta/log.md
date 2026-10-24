@@ -134,3 +134,13 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/services/gateway.md` (UPDATE) — seção "Fechar terminal pelo celular"; ordem quebra após reinício do Cockpit; citações remapeadas
 - `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — close-tab pela CLI, não pty.kill; causa do k21
 - `cockpit_tower_wiki/overview.md` (UPDATE) — (x) na linha do viewer; ADR nova na decisão central
+
+## [2026-10-24] wiki-sync | 2026-10-24_phone-made-tab-close | 7 pages touched
+
+- `cockpit_tower_wiki/decisions/2026-10-24_phone-close-tab.md` (UPDATE) — emenda k26: a aba pode vir do par de um (+)
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — o par em "Fechar terminal pelo celular"; um (+) por vez no gateway; citações remapeadas
+- `cockpit_tower_wiki/board.kanban` (UPDATE) — k26 para Done
+- `cockpit_tower_wiki/overview.md` (UPDATE) — citação remapeada
+- `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — citação remapeada
+- `cockpit_tower_wiki/decisions/2026-10-23_phone-input-client.md` (UPDATE) — citação remapeada
+- `cockpit_tower_wiki/decisions/2026-10-22_read-only-client.md` (UPDATE) — citação remapeada

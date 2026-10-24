@@ -13,6 +13,10 @@ related:
   - work/plans/2026-10-24_phone-made-tab-close
   - "[[services/gateway]]"
   - "[[decisions/2026-10-24_phone-close-tab]]"
+  - "[[overview]]"
+  - "[[contracts/cockpit-protocol-v2]]"
+  - "[[decisions/2026-10-23_phone-input-client]]"
+  - "[[decisions/2026-10-22_read-only-client]]"
 ---
 
 # Execution Log — 2026-10-24_phone-made-tab-close
@@ -147,6 +151,7 @@ Tier `high`: modo deep.
 - `decisions/2026-10-24_phone-close-tab.md` (UPDATE) — seção "Atualização 2026-10-24 (k26)": a aba pode vir do par de um (+).
 - `services/gateway.md` (UPDATE) — seção "Fechar terminal pelo celular": o par.
 - `board.kanban` (UPDATE) — k26 para Done.
+- Remapeamento mecânico das citações `src/server.ts:N` deslocadas pelo código: uma linha em cada uma destas páginas, sem mudança de texto: `overview.md`, `contracts/cockpit-protocol-v2.md`, `decisions/2026-10-23_phone-input-client.md` e `decisions/2026-10-22_read-only-client.md`. Em `services/gateway.md` foram várias.
 
 ## Notas abertas
 

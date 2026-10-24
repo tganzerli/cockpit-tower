@@ -64,7 +64,7 @@ São só estas seis, impostas por lista branca (`src/protocol.ts:10`, `src/proto
 
 Abrir um terminal pelo celular não usa `pty.open`: o gateway roda a CLI do app (`cockpit new-tab`), e o Cockpit cria a aba e a PTY como no "+" da barra de abas ([[decisions/2026-10-24_phone-new-tab]], `src/new-tab.ts:34`). Uma PTY aberta por `pty.open` não viraria aba no app.
 
-Fechar o terminal assistido pelo celular também não usa `pty.kill`: o gateway roda `cockpit close-tab <id> --json`, e o Cockpit fecha a aba como no (x) do Mac ([[decisions/2026-10-24_phone-close-tab]], `src/close-tab.ts:43`). O app traduz isso num `pty.kill` dele mesmo, que manda só SIGTERM ao grupo da PTY (`remote_pi: cockpit/plugins/cockpit_pty/src/cockpit_pty_unix.c:269-282`).
+Fechar o terminal assistido pelo celular também não usa `pty.kill`: o gateway roda `cockpit close-tab <id> --json`, e o Cockpit fecha a aba como no (x) do Mac ([[decisions/2026-10-24_phone-close-tab]], `src/close-tab.ts:54`). O app traduz isso num `pty.kill` dele mesmo, que manda só SIGTERM ao grupo da PTY (`remote_pi: cockpit/plugins/cockpit_pty/src/cockpit_pty_unix.c:269-282`).
 
 ## Mensagens que recebemos e ignoramos
 
