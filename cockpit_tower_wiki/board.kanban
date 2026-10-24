@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k22).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k23).
 
 ## Backlog
 
@@ -120,6 +120,11 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Depois do OK:** abrir o PR; fechar a execução; `/wiki-sync` (fonte externa do `CodeEditor` e página de contribuições upstream) num PR `docs/2026-10-23_cockpit-editor-soft-wrap__wiki` para a `dev` (o trio e este quadro já estão na `dev` pelo #13); mover este cartão para *Done*; apagar `~/cpt` e `~/cpb`.
 
 ## Em curso
+
+- [ ] Tela do iPhone: fonte da caixa de texto e gaveta por workspace <!-- id: k22 labels: ui, média, P, viewer -->
+      **O quê:** a caixa de texto do modo de comando usa o tamanho de fonte do terminal (e segue A−/A+); na gaveta, o botão de navegação é o nome do workspace ou worktree, como na lateral do Cockpit, e o terminal se escolhe pela faixa de abas.
+
+      **Contexto:** trio `2026-10-24_compose-font-workspace-nav`. Hoje a caixa usa 16 px fixos para o iOS não dar zoom ao focar (`web/style.css`), e a gaveta lista um botão por terminal (`renderGroups` em `web/app.js`).
 
 ## Done
 
