@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tower on|off|status [--json]|qr — expose the Cockpit viewer on the tailnet, on demand (typing only in command mode).
 #   on:     start the gateway (loopback, secret path), keep the Mac awake while it lives, publish with tailscale serve
-#   off:    unpublish, stop the gateway and caffeinate, and wait until they are gone
+#   off:    unpublish, stop the gateway (from any checkout) and caffeinate, and wait until they are gone
 #   status: show what is running (--json: machine-readable, for the Cockpit panel in panel/tower.panel)
 #   qr:     print the tailnet URL as an SVG QR code
 set -euo pipefail
@@ -25,7 +25,7 @@ need() { command -v "$1" >/dev/null 2>&1 || die "'$1' not found in PATH"; }
 # panel, children otherwise join the Cockpit app's own process group. macOS has no setsid(1).
 DETACH=(perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!\n"')
 
-# A pid file is trusted only if that pid is still OUR process (pids get reused after a crash).
+# The caffeinate pid file is trusted only if that pid is still OUR process (pids get reused after a crash).
 pid_is() {
   local pid="$1" pattern="$2" cmd
   [[ -n "$pid" ]] || return 1
@@ -33,7 +33,40 @@ pid_is() {
   cmd="$(ps -p "$pid" -o command= 2>/dev/null)" || return 1
   [[ "$cmd" == *"$pattern"* ]]
 }
-gateway_pid() { [[ -f "$PIDFILE" ]] && pid_is "$(cat "$PIDFILE")" "$MAIN" && cat "$PIDFILE"; }
+
+# Any checkout's gateway is `node <root>/src/main.ts`: the state dir is shared by every checkout (the main one
+# and worktrees under test), so the pid file may name a gateway another checkout started.
+GATEWAY_CMD='^(.*/)?node (.+)/src/main\.ts$'
+
+# Prints the checkout a tower gateway pid was started from; fails if the pid is not a tower gateway.
+gateway_root() {
+  local cmd
+  [[ "$1" =~ ^[0-9]+$ ]] || return 1
+  cmd="$(ps -p "$1" -o command= 2>/dev/null)" || return 1
+  [[ "$cmd" =~ $GATEWAY_CMD ]] || return 1
+  echo "${BASH_REMATCH[2]}"
+}
+
+# The process listening on our port (lsof is optional: without it, only the pid file is used).
+port_listener() {
+  local out
+  command -v lsof >/dev/null 2>&1 || return 1
+  out="$(lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t 2>/dev/null)" || return 1
+  [[ -n "$out" ]] && echo "${out%%$'\n'*}"
+}
+
+# The running tower gateway, from any checkout: the pid file's, else a tower gateway that lost it (on our port).
+# A pid file's pid may have been reused after a crash, by another project's `node …/src/main.ts`: it counts
+# only if its root is a tower checkout. On the port, answering cockpit-tower on /healthz is the proof.
+gateway_pid() {
+  local pid root
+  if [[ -f "$PIDFILE" ]] && pid="$(cat "$PIDFILE")" && root="$(gateway_root "$pid")" && [[ -f "$root/bin/tower" ]]; then
+    echo "$pid"
+    return 0
+  fi
+  port_is_tower && pid="$(port_listener)" && gateway_root "$pid" >/dev/null && echo "$pid"
+}
+
 caffeinate_pid() { [[ -f "$CAFFEINATE_PIDFILE" ]] && pid_is "$(cat "$CAFFEINATE_PIDFILE")" "caffeinate -is -w" && cat "$CAFFEINATE_PIDFILE"; }
 
 port_answers() { curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$PORT/" 2>/dev/null; }
@@ -63,13 +96,24 @@ check_node() {
     || die "Node >= 23.6 is required (runs TypeScript without a build); found $(node --version)"
 }
 
+# Waits for a pid to exit, SIGKILL after 5 s; fails if it is still there (ps, not kill -0: a pid we may not
+# signal is not a dead one).
 wait_gone() {
   local pid="$1"
   for _ in $(seq 1 50); do
-    kill -0 "$pid" 2>/dev/null || return 0
+    ps -p "$pid" >/dev/null 2>&1 || return 0
     sleep 0.1
   done
   kill -9 "$pid" 2>/dev/null || true
+  sleep 0.2
+  ! ps -p "$pid" >/dev/null 2>&1
+}
+
+# Who holds our port, for the "in use" message: "pid N (command)", or "another process" without lsof.
+port_owner() {
+  local pid cmd
+  pid="$(port_listener)" && cmd="$(ps -p "$pid" -o command= 2>/dev/null)" && { echo "pid $pid ($cmd)"; return; }
+  echo "another process"
 }
 
 cmd_on() {
@@ -96,17 +140,24 @@ cmd_on() {
   [[ -n "$origin" && -n "$owner" ]] || echo "tower: warning: Tailscale identity unavailable; the page stays read-only"
   config="$(printf '%s\n%s\n%s' "$token" "$origin" "$owner")"
 
-  local pid
-  if pid="$(gateway_pid)" && [[ "$(cat "$CONFIGFILE" 2>/dev/null)" != "$config" ]]; then
-    echo "tower: configuration changed; restarting the gateway"
-    cmd_off >/dev/null
+  local pid root
+  if pid="$(gateway_pid)"; then
+    root="$(gateway_root "$pid")" || root="$ROOT" # gone meanwhile: nothing to switch from
+    if [[ "$root" != "$ROOT" ]]; then
+      echo "tower: a gateway from $root is running; switching to $ROOT"
+      cmd_off >/dev/null
+    elif [[ "$(cat "$CONFIGFILE" 2>/dev/null)" != "$config" ]]; then
+      echo "tower: configuration changed; restarting the gateway"
+      cmd_off >/dev/null
+    fi
   fi
   if pid="$(gateway_pid)"; then
+    echo "$pid" >"$PIDFILE" # it may have been found through the port, its pid file lost
     echo "tower: gateway already running (pid $pid)"
   else
-    rm -f "$PIDFILE"
+    rm -f "$PIDFILE" # no tower gateway is alive: the pid file can only be stale
     if port_answers; then
-      die "port $PORT is already in use by another process; set TOWER_PORT to a free port"
+      die "port $PORT is already in use by $(port_owner); set TOWER_PORT to a free port"
     fi
     [[ -S "$SOCKET" ]] || echo "tower: warning: Cockpit socket not found at $SOCKET — open Cockpit; the page retries until it appears"
     TOWER_PORT="$PORT" TOWER_SOCKET="$SOCKET" TOWER_TOKEN="$token" TOWER_ORIGIN="$origin" TOWER_OWNER="$owner" \
@@ -159,15 +210,17 @@ cmd_off() {
   if command -v tailscale >/dev/null 2>&1; then
     tailscale serve --https="$HTTPS_PORT" off >/dev/null 2>&1 || true
   fi
-  local pid
+  local pid root
   if pid="$(gateway_pid)"; then
+    root="$(gateway_root "$pid")" || root="?"
     kill "$pid" 2>/dev/null || true
-    wait_gone "$pid"
-    echo "tower: gateway stopped"
+    # Keep the pid file of a gateway that is still alive: losing it is what orphaned one (k25).
+    wait_gone "$pid" || die "could not stop the gateway (pid $pid, started from $root); its pid file is kept"
+    if [[ "$root" == "$ROOT" ]]; then echo "tower: gateway stopped"; else echo "tower: gateway stopped (started from $root)"; fi
   fi
   if pid="$(caffeinate_pid)"; then
     kill "$pid" 2>/dev/null || true
-    wait_gone "$pid"
+    wait_gone "$pid" || echo "tower: warning: caffeinate (pid $pid) did not exit" >&2
   fi
   # gateway.token is the pre-2026-10-23 name of gateway.config.
   rm -f "$PIDFILE" "$CAFFEINATE_PIDFILE" "$CONFIGFILE" "$STATE/gateway.token"
@@ -176,8 +229,13 @@ cmd_off() {
 
 cmd_status() {
   [[ "${1:-}" == "--json" ]] && { status_json; return; }
-  local pid
-  if pid="$(gateway_pid)"; then echo "gateway:   on (pid $pid, http://127.0.0.1:$PORT)"; else echo "gateway:   off"; fi
+  local pid root
+  if pid="$(gateway_pid)"; then
+    root="$(gateway_root "$pid")" || root="$ROOT" # gone meanwhile: nothing to switch from
+    echo "gateway:   on (pid $pid, http://127.0.0.1:$PORT$([[ "$root" != "$ROOT" ]] && echo ", from $root"))"
+  else
+    echo "gateway:   off"
+  fi
   if pid="$(caffeinate_pid)"; then echo "awake:     yes (caffeinate pid $pid)"; else echo "awake:     no"; fi
   if command -v tailscale >/dev/null 2>&1 && serve_published; then
     echo "tailnet:   published on port $HTTPS_PORT (URL printed by 'tower on'; token in $TOKENFILE)"
