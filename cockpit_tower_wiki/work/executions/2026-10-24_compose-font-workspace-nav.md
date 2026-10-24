@@ -30,8 +30,8 @@ related: []
 - [x] 3 — `--term-font` em `applyFont` e no `#compose`.
 - [x] 4 — `lastByWs`, `openWorkspace()`, `renderGroups()` por workspace, sem "Working now".
 - [x] 5 — Estilos da gaveta.
-- [ ] 6 — Validações e teste no iPhone.
-- [ ] 7 — Revisão de agente (feita, rodada 1) e gate humano (pendente).
+- [x] 6 — Validações e teste no iPhone.
+- [x] 7 — Revisão de agente (rodada 1) e gate humano (dono aprovou em 2026-10-24).
 
 ## Atividade (cronológica)
 
@@ -44,11 +44,13 @@ related: []
 - `web/style.css`: `#compose` com `var(--term-font, 12px) / 1.3`; estilos `.ws-open`/`.wt-row` (destaque `.active`, desabilitado sem esmaecer); saíram `.row.nested`, `.row.flat`, `.wt-head` e o recuo de 50 px de `.row`.
 - Verificação local em Chrome headless (roteiro fora do repo, no scratchpad: página com `WebSocket` falso e 5 sessões em 2 workspaces, 1 worktree e 1 sessão sem workspace). Captura da gaveta conferida a olho: workspaces e worktree como linhas, destaque no workspace da tela, indicadores na linha, "Other terminals" no fim.
 
+### `2026-10-24` — gate humano
+- O dono testou no iPhone e aprovou os dois ajustes. O commit do nit da revisão foi incorporado ao commit do viewer antes do PR.
+
 ## Commits
 
 - `3167d7b` docs(work): open the compose-font-workspace-nav task and plan
-- `9f121dd` feat(viewer): type at the terminal's font size and navigate the drawer by workspace
-- `8080927` fix(viewer): drop the stale Working now note from the drawer
+- `78b22ad` feat(viewer): type at the terminal's font size and navigate the drawer by workspace
 
 ## Divergências do plano
 
@@ -68,7 +70,7 @@ related: []
   tower again (last seen)->zsh active=1 ; font=12px ; font+=13px view=13px ; sends=7
   ```
   Worktree abre o agente trabalhando e as abas mostram só os terminais dele; voltar ao workspace volta à última aba vista; um só workspace destacado; a caixa acompanha o A+ junto com o terminal.
-- [ ] Verificação do plano §4.4 — teste no iPhone (sem zoom ao focar, pinça, toques na gaveta) — pendente com o dono.
+- [x] Verificação do plano §4.4 — teste no iPhone feito pelo dono em 2026-10-24: os dois ajustes aprovados (caixa na fonte do terminal sem zoom ao focar; gaveta por workspace).
 
 ## Revisão de agente
 
@@ -76,13 +78,13 @@ Tier `medium`.
 
 | Rodada | Intervalo revisado | Important | Nit | Pre-existing |
 |---|---|---|---|---|
-| 1 | `3167d7b..9f121dd` (diff inteiro do trabalho) | 0 | 1 | 0 |
+| 1 | `3167d7b..9f121dd` (diff inteiro do trabalho, antes de incorporar o nit) | 0 | 1 | 0 |
 
 ### Achados e resultado
 
 | # | Rodada | Tag | `file:line` | Resultado | Promovido para |
 |---|---|---|---|---|---|
-| 1 | 1 | Nit | `web/app.js:628` — comentário `"Working now" leads` ficou sem sentido após remover a seção | fixed (`8080927`) | — |
+| 1 | 1 | Nit | `web/app.js:628` — comentário `"Working now" leads` ficou sem sentido após remover a seção | fixed (incorporado a `78b22ad`) | — |
 
 Sem `Important`: não abre rodada 2.
 
