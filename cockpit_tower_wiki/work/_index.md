@@ -22,6 +22,8 @@ updated: 2026-10-24
 
 - ✅ [[work/tasks/2026-10-24_exec-process-group-citations]] · `done` 10-24 · `wiki` [wiki]
   — As três citações de bin/tower em cross-cutting/cockpit-exec-process-group voltaram às linhas certas; o aviso stale do wiki-lint saiu. ↳ [plan](work/plans/2026-10-24_exec-process-group-citations) · [exec](work/executions/2026-10-24_exec-process-group-citations)
+- ✅ [[work/tasks/2026-10-24_compose-font-workspace-nav]] · `done` 10-24 · `viewer` [ui]
+  — A caixa de texto do modo de comando usa a fonte do terminal sem zoom do iOS, e a gaveta navega por workspace e worktree, como a lateral do Cockpit. ↳ [plan](work/plans/2026-10-24_compose-font-workspace-nav) · [exec](work/executions/2026-10-24_compose-font-workspace-nav)
 - ✅ [[work/tasks/2026-10-23_phone-terminal-input]] · `done` 10-23 · `gateway, viewer` [contract, ui]
   — O iPhone digita na sessão assistida em modo de comando — só pty.input, com Origin, dono do Tailscale e registro local; ADR nova substitui o somente leitura e o tower nunca envia pty.ack. ↳ [plan](work/plans/2026-10-23_phone-terminal-input) · [exec](work/executions/2026-10-23_phone-terminal-input)
 - ✅ [[work/tasks/2026-10-23_phone-pty-resize]] · `done` 10-23 · `gateway, viewer` [contract, ui]

@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k22).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k23).
 
 ## Backlog
 
@@ -122,6 +122,9 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 ## Em curso
 
 ## Done
+
+- [x] Tela do iPhone: fonte da caixa de texto e gaveta por workspace <!-- id: k22 labels: ui, viewer -->
+      Trio `2026-10-24_compose-font-workspace-nav`. A caixa de texto usa a fonte do terminal (sem zoom do iOS ao focar) e a gaveta navega por workspace e worktree, como a lateral do Cockpit; o terminal se escolhe pelas abas.
 
 - [x] Comandos pelo celular — fase 3: rolar o histórico dos agentes em tela cheia <!-- id: k3 labels: feature, gateway, viewer -->
       Trio `2026-10-23_phone-fullscreen-scroll`, ADR `decisions/2026-10-23_phone-fullscreen-scroll`. Em modo de comando, arrastar o dedo manda a roda do mouse (ou setas) ao agente.

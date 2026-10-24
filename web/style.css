@@ -294,7 +294,8 @@ main {
   border-radius: 8px;
   background: var(--surface);
   color: var(--text);
-  font: 16px ui-monospace, "SF Mono", Menlo, monospace; /* 16px: iOS does not zoom into the field */
+  /* The terminal's size; the viewport's maximum-scale keeps iOS from zooming into the field. */
+  font: var(--term-font, 12px) / 1.3 ui-monospace, "SF Mono", Menlo, monospace;
   resize: none;
 }
 .compose-note { color: var(--muted); font-size: 12px; }
@@ -337,7 +338,22 @@ main {
 }
 
 .ws { margin-top: 4px; }
-.ws-head { display: flex; align-items: center; gap: 10px; padding: 8px; }
+.ws-head { display: flex; align-items: center; gap: 4px; }
+/* Rail rows (workspace and worktree): a tap opens the workspace; the tab strip picks the terminal. */
+.ws-open, .wt-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+}
+.ws-open { gap: 10px; padding: 8px; }
+.ws-open .ws-text { flex: 1; }
+.ws-open:disabled, .wt-row:disabled { color: inherit; opacity: 1; }
+.ws-open.active, .wt-row.active { background: var(--row-active); }
 .ws-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 
@@ -363,14 +379,12 @@ main {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 10px 9px 50px;
+  padding: 9px 10px;
   border: 0;
   border-radius: 8px;
   background: transparent;
   text-align: left;
 }
-.row.nested { padding-left: 66px; }
-.row.flat { padding-left: 10px; }
 .row.active { background: var(--row-active); }
 .row-text { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 .row-title, .row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -395,9 +409,9 @@ main {
 .wt-toggle.expanded svg { transform: rotate(90deg); }
 @media (prefers-reduced-motion: reduce) { .wt-toggle svg { transition: none; } }
 
-.wt-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px 2px 50px; color: var(--text-2); font-size: 13px; }
-.wt-head svg { flex: none; width: 13px; height: 13px; fill: none; stroke: var(--muted); stroke-width: 2; }
-.wt-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wt-row { width: 100%; gap: 6px; min-height: 40px; padding: 6px 10px 6px 50px; color: var(--text-2); font-size: 13px; }
+.wt-row svg { flex: none; width: 13px; height: 13px; fill: none; stroke: var(--muted); stroke-width: 2; }
+.wt-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .empty { padding: 16px 8px; color: var(--muted); }
 

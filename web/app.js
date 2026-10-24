@@ -318,6 +318,7 @@
   function applyFont(size) {
     fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, size));
     viewEl.style.fontSize = `${fontSize}px`;
+    document.documentElement.style.setProperty('--term-font', `${fontSize}px`); // the compose box types at the terminal's size
     try {
       localStorage.setItem(FONT_KEY, String(fontSize));
     } catch {}
@@ -339,6 +340,7 @@
 
   const CHEVRON_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   const worktreeToggles = new Map(); // group key → expanded, set by a tap on this phone
+  const lastByWs = new Map(); // workspace path → id of the session last shown from it on this phone
 
   function avatarColor(name) {
     let h = 0;
@@ -399,10 +401,16 @@
     return null;
   }
 
-  function sessionRow(s, kind) {
+  // A workspace's indicator: an agent at work in any of its sessions, else fresh output in one.
+  function groupIndicator(list) {
+    const s = list.find((x) => x.info && x.info.tab && x.info.tab.working) || list.find((x) => x.info && x.info.active);
+    return s ? indicator(s) : null;
+  }
+
+  function sessionRow(s) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = `row ${kind || ''}${current && current.id === s.id ? ' active' : ''}`;
+    b.className = `row${current && current.id === s.id ? ' active' : ''}`;
     const text = document.createElement('span');
     text.className = 'row-text';
     const title = document.createElement('span');
@@ -459,7 +467,31 @@
     );
   }
 
-  // Like Cockpit's workspace rail: agents at work first, then workspaces with their worktrees nested.
+  // Opening a workspace lands where this phone last was in it, else on Cockpit's focused tab there, else on
+  // an agent at work, else on its first tab; the tab strip then picks the terminal.
+  function openWorkspace(path) {
+    const inWs = sessions.filter((s) => groupOf(s).ws === path);
+    const tab = (s) => (s.info && s.info.tab) || {};
+    const pick =
+      inWs.find((s) => s.id === lastByWs.get(path)) ||
+      inWs.find((s) => tab(s).focused) ||
+      inWs.find((s) => tab(s).working) ||
+      inWs[0];
+    closeDrawer();
+    if (pick) select(pick);
+  }
+
+  // A workspace or worktree of the rail; a tap opens it.
+  function workspaceButton(className, path, list) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `${className}${current && groupOf(current).ws === path ? ' active' : ''}`;
+    b.disabled = list.length === 0;
+    b.onclick = () => openWorkspace(path);
+    return b;
+  }
+
+  // Like Cockpit's workspace rail: each workspace and worktree is a row to open; its tabs pick the terminal.
   function renderGroups() {
     const nodes = [];
     if (sessions.length === 0) {
@@ -468,19 +500,6 @@
       empty.textContent = 'No terminal sessions open in Cockpit.';
       groupsEl.replaceChildren(empty);
       return;
-    }
-    const working = sessions.filter((s) => s.info && s.info.tab && s.info.tab.working);
-    if (working.length) {
-      const h = document.createElement('div');
-      h.className = 'section-label';
-      h.textContent = 'Working now';
-      nodes.push(h, ...working.map((s) => {
-        const row = sessionRow(s, 'flat');
-        const sub = row.querySelector('.row-sub');
-        const g = groupOf(s);
-        sub.textContent = [g.name, s.info.workspace && s.info.workspace.parent ? s.info.workspace.name : ''].filter(Boolean).join(' › ');
-        return row;
-      }));
     }
     const groups = new Map();
     for (const s of sessions) {
@@ -495,7 +514,7 @@
       if (w && !entry.color && w.color) entry.color = w.color;
       if (w && entry.expanded === undefined && typeof w.worktreesExpanded === 'boolean') entry.expanded = w.worktreesExpanded;
       if (w && w.parent) {
-        if (!entry.worktrees.has(w.path)) entry.worktrees.set(w.path, { name: w.name, branch: s.info.branch, rank: w.rank, sessions: [] });
+        if (!entry.worktrees.has(w.path)) entry.worktrees.set(w.path, { path: w.path, name: w.name, branch: s.info.branch, rank: w.rank, sessions: [] });
         entry.worktrees.get(w.path).sessions.push(s);
       } else {
         entry.main.push(s);
@@ -512,8 +531,11 @@
     for (const g of ordered) {
       const box = document.createElement('div');
       box.className = 'ws';
+      // The rail row and the worktree toggle are sibling buttons: a button cannot hold another.
       const head = document.createElement('div');
       head.className = 'ws-head';
+      // Without a terminal in the main repository (only in its worktrees) the row has nothing to open.
+      const open = workspaceButton('ws-open', g.main.length ? groupOf(g.main[0]).ws : null, g.main);
       const text = document.createElement('span');
       text.className = 'ws-text';
       const name = document.createElement('span');
@@ -528,8 +550,11 @@
         chip.append(branch);
         text.append(chip);
       }
-      head.append(avatar(g.name, g.color), text);
-      box.append(head, ...g.main.map((s) => sessionRow(s)));
+      open.append(avatar(g.name, g.color), text);
+      const ind = groupIndicator(g.main);
+      if (ind) open.append(ind);
+      head.append(open);
+      box.append(head);
       if (g.worktrees.size === 0) {
         nodes.push(box);
         continue;
@@ -563,13 +588,15 @@
         continue;
       }
       for (const wt of [...g.worktrees.values()].sort((a, b) => a.rank - b.rank)) {
-        const wh = document.createElement('div');
-        wh.className = 'wt-head';
+        const wh = workspaceButton('wt-row', wt.path, wt.sessions);
         wh.innerHTML = BRANCH_ICON;
         const wn = document.createElement('span');
+        wn.className = 'wt-name';
         wn.textContent = wt.branch && wt.branch !== wt.name ? `${wt.name} · ${wt.branch}` : wt.name;
         wh.append(wn);
-        box.append(wh, ...wt.sessions.map((s) => sessionRow(s, 'nested')));
+        const wi = groupIndicator(wt.sessions);
+        if (wi) wh.append(wi);
+        box.append(wh);
       }
       nodes.push(box);
     }
@@ -577,7 +604,7 @@
       const h = document.createElement('div');
       h.className = 'section-label';
       h.textContent = 'Other terminals';
-      nodes.push(h, ...others.main.map((s) => sessionRow(s, 'flat')));
+      nodes.push(h, ...others.main.map((s) => sessionRow(s)));
     }
     // Re-rendering replaces the buttons; keep keyboard and screen reader focus on the same toggle.
     const focusedKey = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.wtKey : undefined;
@@ -598,7 +625,7 @@
 
   function openDrawer() {
     drawerEl.hidden = false;
-    groupsEl.scrollTop = 0; // "Working now" leads
+    groupsEl.scrollTop = 0; // start at the top of the rail
   }
   function closeDrawer() {
     drawerEl.hidden = true;
@@ -637,6 +664,7 @@
     autoPicked = false;
     if (current && current.id === session.id) return; // already showing it; the gateway would not replay again
     current = session;
+    lastByWs.set(groupOf(session).ws, session.id);
     setCommand(false); // the gateway turns command mode off on a session switch too
     term.reset();
     resetMouseModes();

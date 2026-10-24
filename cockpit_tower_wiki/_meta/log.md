@@ -103,3 +103,8 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 ## [2026-10-24] wiki-sync | 2026-10-24_exec-process-group-citations | 1 page touched
 
 - `cockpit_tower_wiki/cross-cutting/cockpit-exec-process-group.md` (UPDATE) — citações do bin/tower
+
+## [2026-10-24] wiki-sync | 2026-10-24_compose-font-workspace-nav | 2 pages touched
+
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — gaveta por workspace e worktree; caixa de texto na fonte do terminal
+- `cockpit_tower_wiki/overview.md` (UPDATE) — área viewer: fonte da caixa de texto e navegação da gaveta
