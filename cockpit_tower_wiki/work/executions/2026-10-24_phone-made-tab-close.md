@@ -4,7 +4,7 @@ type: execution
 work_id: 2026-10-24_phone-made-tab-close
 scope:
   area: [gateway, viewer]
-status: in_progress
+status: done
 updated: 2026-10-24
 summary: O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável.
 topic: [contract, ui]
@@ -22,9 +22,9 @@ related:
 - **ID:** `2026-10-24_phone-made-tab-close`
 - **Task:** [[work/tasks/2026-10-24_phone-made-tab-close]]
 - **Plan:** [[work/plans/2026-10-24_phone-made-tab-close]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Start:** `2026-10-24`
-- **Finish:** —
+- **Finish:** `2026-10-24`
 - **Scope:**
   - Área(s) afetada(s): `[gateway, viewer]`
 - **Branch:** `feat/2026-10-24_phone-made-tab-close__tower`, num worktree próprio a partir de `origin/dev` `b6aaa8b`.
@@ -38,7 +38,7 @@ related:
 - [x] Passo 5 — `npm test`
 - [x] Passo 6 — teste real
 - [x] Passo 7 — revisão do agente (deep)
-- [ ] Passo 8 — gate humano
+- [x] Passo 8 — gate humano
 - [ ] Passo 9 — `/wiki-sync`
 
 ## Atividade (cronológica)
@@ -86,6 +86,11 @@ tabs after (x): [ 't170:terminal' ]
   - `close-workspace` do `tower-e2e` e pasta removida;
   - `kill -HUP` nos dois shells que ficaram vivos (k21): 51019 e 51699, ambos filhos do `cockpit-server` 42994.
 
+### `2026-10-24` — gate humano
+
+- O dono aprovou ("aprovo") depois do resumo com o diff, as validações, o teste real e as duas rodadas de revisão. PR #13 (`feat/2026-10-24_phone-made-tab-close__tower` → `dev`).
+- **Checagem no iPhone pendente:** o gateway de produção roda o `dev`, então ela só é possível depois do merge e de `tower off`/`tower on`.
+
 ## Commits
 
 - `8ef8004` — docs(work): record the owner's iPhone check of the close-tab button and open the made-tab close work
@@ -131,7 +136,9 @@ Tier `high`: modo deep.
 
 ## Páginas do wiki afetadas
 
-—
+- `decisions/2026-10-24_phone-close-tab.md` (UPDATE) — seção "Atualização 2026-10-24 (k26)": a aba pode vir do par de um (+).
+- `services/gateway.md` (UPDATE) — seção "Fechar terminal pelo celular": o par.
+- `board.kanban` (UPDATE) — k26 para Done.
 
 ## Notas abertas
 
