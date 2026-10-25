@@ -167,6 +167,14 @@ const within = (cwd: string, folder: string) => cwd === folder || cwd.startsWith
 const NUMERIC_ID = /^\D*\d+$/;
 const idNumber = (id: string) => Number(id.replace(/^\D+/, ''));
 
+export const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH workspace: its tabs have no local PTY
+
+/** Terminal tabs with a local PTY, and their distinct folders. */
+function localTabs(tabs: Tab[]): { local: Tab[]; folders: string[] } {
+  const local = tabs.filter((t) => !t.workspaceId.startsWith(REMOTE_PREFIX));
+  return { local, folders: [...new Set(local.map((t) => t.workspacePath).filter((p) => p !== ''))] };
+}
+
 /**
  * Ties sessions to terminal tabs by creation order, the only link Cockpit leaves: session and tab ids both grow
  * as tabs open, one PTY per tab. The order is trusted only when nothing can have shifted it:
@@ -175,15 +183,16 @@ const idNumber = (id: string) => Number(id.replace(/^\D+/, ''));
  * - each pair's cwd agrees: inside the tab's workspace or, for a tab with no folder, outside every tab's
  *   workspace. One disagreeing pair (a shell that cd'd away) is left out; more than one puts the order itself
  *   in doubt, and nothing is matched.
+ * Remote tabs (`__remote__` workspaces) have no local PTY and are left out, so they never even the counts (k28).
  * cwd alone never decides: a shell can leave its tab's folder while another one enters it.
  */
 export function matchTabs(sessions: { id: string; cwd: string | null }[], tabs: Tab[], stable: boolean): Map<string, Tab> {
   const out = new Map<string, Tab>();
-  if (!stable || sessions.length === 0 || sessions.length !== tabs.length) return out;
-  if (![...sessions, ...tabs].every((x) => NUMERIC_ID.test(x.id))) return out;
+  const { local, folders } = localTabs(tabs);
+  if (!stable || sessions.length === 0 || sessions.length !== local.length) return out;
+  if (![...sessions, ...local].every((x) => NUMERIC_ID.test(x.id))) return out;
   const s = [...sessions].sort((a, b) => idNumber(a.id) - idNumber(b.id));
-  const t = [...tabs].sort((a, b) => idNumber(a.id) - idNumber(b.id));
-  const folders = t.map((tab) => tab.workspacePath).filter((p) => p !== '');
+  const t = [...local].sort((a, b) => idNumber(a.id) - idNumber(b.id));
   const fits = (cwd: string | null, tab: Tab) =>
     cwd !== null && (tab.workspacePath === '' ? !folders.some((f) => within(cwd, f)) : within(cwd, tab.workspacePath));
   const misfits = s.filter((x, i) => !fits(x.cwd, t[i]!)).length;
@@ -221,14 +230,6 @@ export async function freshTabs(sessions: Session[], opts: { cockpitBin: string;
   const byPid = parseLsofCwd(lsof.stdout);
   const cwds = new Map(sessions.map((s) => [s.id, isPid(s.pid) ? byPid.get(s.pid) ?? null : null] as const));
   return { cwds, tabs: cockpit.tabs, ids: idsOf(sessions, cockpit.tabs) };
-}
-
-export const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH workspace: its tabs have no local PTY
-
-/** Terminal tabs with a local PTY, and their distinct folders. */
-function localTabs(tabs: Tab[]): { local: Tab[]; folders: string[] } {
-  const local = tabs.filter((t) => !t.workspaceId.startsWith(REMOTE_PREFIX));
-  return { local, folders: [...new Set(local.map((t) => t.workspacePath).filter((p) => p !== ''))] };
 }
 
 /** The most specific of `folders` holding `cwd`; undefined when cwd is unknown or outside them all. */

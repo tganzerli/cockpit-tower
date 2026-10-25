@@ -89,6 +89,15 @@ test('a folder that only shares a name prefix is not inside the workspace', () =
   assert.deepEqual(pairs(matchTabs(sessions, tabs, true)), { s2: 't2', s3: 't3' });
 });
 
+test('remote tabs never even the counts, so a tabless session never takes another session’s tab', () => {
+  // s1 is t2's shell, s2 a task with no tab, s3 is t3's shell; t1 is an SSH tab with no local PTY.
+  const tabs = [tab('t1', '/srv/app', { workspaceId: '__remote__pin' }), tab('t2', '/a'), tab('t3', '/b')];
+  const sessions = [{ id: 's1', cwd: '/a' }, { id: 's2', cwd: '/a' }, { id: 's3', cwd: '/b' }];
+  assert.deepEqual(pairs(matchTabs(sessions, tabs, true)), {});
+  // Without the task, the local tabs still pair one to one around the remote one.
+  assert.deepEqual(pairs(matchTabs([sessions[0]!, sessions[2]!], tabs, true)), { s1: 't2', s3: 't3' });
+});
+
 test('no tabs or no sessions match nothing', () => {
   assert.deepEqual(pairs(matchTabs([], [tab('t1', '')], true)), {});
   assert.deepEqual(pairs(matchTabs([{ id: 's1', cwd: H }], [], true)), {});
@@ -428,8 +437,9 @@ function births(look: { cwds: Record<number, string>; tabs: Tab[] }) {
   };
 }
 
-// Two remote tabs keep the counts apart, so creation order never answers in these looks.
-const REMOTE = [tab('t1', '/srv/app', { workspaceId: '__remote__pin' }), tab('t3', '/srv/app', { workspaceId: '__remote__pin' })];
+// Two folderless tabs no shell sits in keep the counts apart, so creation order never answers in these looks.
+// Remote tabs would not: matchTabs leaves them out (k28).
+const IDLE = [tab('t1', ''), tab('t3', '')];
 
 test('after a restart, each folder\'s sole terminal has its title on the first look', async () => {
   const look = { cwds: { 10: `${H}/app/cockpit-tower`, 20: `${H}/app/atm/lib`, 40: `${H}/app/condor`, 80: B }, tabs: RESTARTED };
@@ -438,7 +448,7 @@ test('after a restart, each folder\'s sole terminal has its title on the first l
 });
 
 test('a terminal born beside another in its folder gets its title one look later, and only it', async () => {
-  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...IDLE, tab('t75', A)] };
   const g = births(look);
   assert.deepEqual(await g.look([session('s2', 20)]), { s2: 't75' }, 'sole terminal');
   look.cwds[31] = A;
@@ -450,7 +460,7 @@ test('a terminal born beside another in its folder gets its title one look later
 });
 
 test('a second session born into the folder on the next look drops the birth', async () => {
-  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...IDLE, tab('t75', A)] };
   const g = births(look);
   await g.look([session('s2', 20)]);
   look.cwds[31] = A;
@@ -464,7 +474,7 @@ test('a second session born into the folder on the next look drops the birth', a
 });
 
 test('no birth across a gap longer than the window', async () => {
-  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...IDLE, tab('t75', A)] };
   const g = births(look);
   await g.look([session('s2', 20)]);
   look.cwds[31] = A;
@@ -476,7 +486,7 @@ test('no birth across a gap longer than the window', async () => {
 
 test('a birth ends with another pid, a closed tab or a tab moved to another folder', async () => {
   const setup = async () => {
-    const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+    const look = { cwds: { 20: A } as Record<number, string>, tabs: [...IDLE, tab('t75', A)] };
     const g = births(look);
     await g.look([session('s2', 20)]);
     look.cwds[31] = A;
@@ -493,12 +503,12 @@ test('a birth ends with another pid, a closed tab or a tab moved to another fold
   }
   {
     const { look, g } = await setup();
-    look.tabs = [...REMOTE, tab('t75', A), tab('t178', A)];
+    look.tabs = [...IDLE, tab('t75', A), tab('t178', A)];
     assert.equal((await g.look([session('s2', 20), session('s31', 31)])).s31, null, 'tab closed');
   }
   {
     const { look, g } = await setup();
-    look.tabs = [...REMOTE, tab('t75', A), tab('t177', `${A}/wt`)];
+    look.tabs = [...IDLE, tab('t75', A), tab('t177', `${A}/wt`)];
     assert.equal((await g.look([session('s2', 20), session('s31', 31)])).s31, null, 'tab in another folder');
   }
 });
