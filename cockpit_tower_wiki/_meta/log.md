@@ -151,3 +151,7 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/decisions/2026-10-24_phone-close-tab.md` (UPDATE) — nota k27: soleTab também na exibição, par do nascimento fora do (x)
 - `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — Lacuna: título restaurado é o salvo; restauração por workspace
 - `cockpit_tower_wiki/board.kanban` (UPDATE) — k27 em Done, k28 novo
+
+## [2026-10-25] wiki-sync | 2026-10-25_matchtabs-remote-tabs | 1 page touched
+
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — a ordem de criação conta só as abas locais (k28); citações de src/session-info.ts realinhadas

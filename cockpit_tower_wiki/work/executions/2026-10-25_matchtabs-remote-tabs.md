@@ -12,6 +12,7 @@ related:
   - work/tasks/2026-10-25_matchtabs-remote-tabs
   - work/plans/2026-10-25_matchtabs-remote-tabs
   - services/gateway
+  - "[[services/gateway]]"
 ---
 
 # Log de execução — 2026-10-25_matchtabs-remote-tabs

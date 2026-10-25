@@ -166,9 +166,9 @@ O pedido preparado cai com qualquer mudança do modo de comando, inclusive duran
 
 Se a conexão do celular cair durante o pareamento, não há par. Um terminal do Mac que nasça e se assente antes do nosso ainda pode ser pareado por engano; o título na confirmação continua sendo a última conferência.
 
-**Qual aba é a da sessão, sem par** (`soleTab`, `src/session-info.ts:235`). O casamento por ordem de criação não serve aqui (ver "Contexto das sessões"). A aba só é achada quando:
+**Qual aba é a da sessão, sem par** (`soleTab`, `src/session-info.ts:247`). O casamento por ordem de criação não serve aqui (ver "Contexto das sessões"). A aba só é achada quando:
 - todo shell vivo está dentro da pasta de alguma aba de terminal local (abas de workspace remoto ficam de fora);
-- cada pasta tem tantos shells quantas abas (`src/session-info.ts:248`);
+- cada pasta tem tantos shells quantas abas (`src/session-info.ts:257`);
 - a pasta da sessão assistida tem exatamente uma aba e esse shell.
 
 Sem par, com dois terminais no workspace, um shell fora de qualquer workspace ou uma pasta desconhecida, a resposta é `no_tab`. Shells que trocaram de pasta em ciclo ainda parecem equilibrados; o título na confirmação é a última conferência.
@@ -197,18 +197,18 @@ O `pty.sessions` não diz a qual aba cada sessão pertence (ver a lacuna em [[co
 | atividade | crescimento do `len` entre duas coletas |
 
 - **Comandos:** os de leitura rodam por `execFile`, sem shell, com caminhos absolutos, timeout de 2 s e pids validados como inteiros (`src/session-info.ts:66`). Nada que vem do navegador entra nos argumentos. Os verbos de escrita ficam em `src/new-tab.ts` e `src/close-tab.ts` (seções acima). Uma varredura de teste garante que só esses três arquivos importam `node:child_process` (`test/protocol.test.ts:55`).
-- **Casamento aba ↔ sessão:** três fontes, que precisam concordar (`src/session-info.ts:376-396`). A sessão só ganha a aba quando todas as fontes que respondem apontam a mesma, e uma aba atribuída a duas sessões não vai para nenhuma (`agreeTabs`, `src/session-info.ts:295`). A pasta sozinha nunca decide, porque um shell pode sair da pasta da sua aba enquanto outro entra.
-  1. **Ordem de criação** (`matchTabs`, `src/session-info.ts:180`): os ids `sN` e `tN` crescem juntos. Vale só quando:
+- **Casamento aba ↔ sessão:** três fontes, que precisam concordar (`src/session-info.ts:377-397`). A sessão só ganha a aba quando todas as fontes que respondem apontam a mesma, e uma aba atribuída a duas sessões não vai para nenhuma (`agreeTabs`, `src/session-info.ts:296`). A pasta sozinha nunca decide, porque um shell pode sair da pasta da sua aba enquanto outro entra.
+  1. **Ordem de criação** (`matchTabs`, `src/session-info.ts:189`): os ids `sN` e `tN` crescem juntos. Vale só quando:
      - os ids são numéricos;
-     - as contagens são iguais;
+     - as contagens são iguais, contando só as abas de terminal locais (`src/session-info.ts:191`). Uma aba de workspace remoto não tem PTY local; contá-la deixava uma sessão sem aba (uma tarefa) igualar as contagens e deslizar os pares seguintes (k28, [[work/executions/2026-10-25_matchtabs-remote-tabs]]);
      - os mesmos ids foram vistos na coleta anterior;
      - no máximo um par tem a pasta discordante, e esse par fica sem aba.
 
      Por isso essa fonte só responde a partir da segunda coleta, ~5 s depois de abrir a página. **Ela não sobrevive a um reinício do Cockpit.** Os ids das abas são restaurados e as sessões ganham ids novos na ordem de restauração. Em 2026-10-24, `s1` (cockpit-tower) pareava com `t16` (gtecq) ([[work/executions/2026-10-24_viewer-close-tab-button]], D1).
-  2. **Terminal único** (`soleTab`, `src/session-info.ts:246`, a mesma regra do (x)): o shell é o único da pasta mais específica, essa pasta tem um único terminal, e todas as pastas têm tantos shells quantas abas. Não depende de ordem e responde já na primeira coleta. Ela cobre o reinício quando cada workspace tem um terminal: em 2026-10-25 achou 4 de 7 abas, contra 0 da ordem ([[work/executions/2026-10-25_restart-tab-titles]]).
-  3. **Nascimento** (k27, `birthPair`, `src/session-info.ts:272`). Entre duas coletas com até 15 s de intervalo, surgiram exatamente uma sessão nova e uma aba de terminal local nova, e a pasta mais específica do shell é a da aba. O candidato só vira par na coleta seguinte, se nenhuma outra sessão nova cair na mesma pasta (`src/session-info.ts:382`). Isso evita parear uma sessão sem aba (uma tarefa) que nasceu ao lado de uma aba cuja sessão chega depois. O par vale enquanto a sessão tem o mesmo pid e a aba continua um terminal local na mesma pasta (`bornTab`, `src/session-info.ts:288`, poda em `:384`). Ele vive só na memória do gateway, e só existe para abas que nasceram com o tower ligado e um espectador conectado. É só para exibição: o (x) não o usa.
+  2. **Terminal único** (`soleTab`, `src/session-info.ts:247`, a mesma regra do (x)): o shell é o único da pasta mais específica, essa pasta tem um único terminal, e todas as pastas têm tantos shells quantas abas. Não depende de ordem e responde já na primeira coleta. Ela cobre o reinício quando cada workspace tem um terminal: em 2026-10-25 achou 4 de 7 abas, contra 0 da ordem ([[work/executions/2026-10-25_restart-tab-titles]]).
+  3. **Nascimento** (k27, `birthPair`, `src/session-info.ts:273`). Entre duas coletas com até 15 s de intervalo, surgiram exatamente uma sessão nova e uma aba de terminal local nova, e a pasta mais específica do shell é a da aba. O candidato só vira par na coleta seguinte, se nenhuma outra sessão nova cair na mesma pasta (`src/session-info.ts:383`). Isso evita parear uma sessão sem aba (uma tarefa) que nasceu ao lado de uma aba cuja sessão chega depois. O par vale enquanto a sessão tem o mesmo pid e a aba continua um terminal local na mesma pasta (`bornTab`, `src/session-info.ts:289`, poda em `:385`). Ele vive só na memória do gateway, e só existe para abas que nasceram com o tower ligado e um espectador conectado. É só para exibição: o (x) não o usa.
 
-- **Cache:** o resultado vale 3 s e é compartilhado entre os espectadores (`src/session-info.ts:307`).
+- **Cache:** o resultado vale 3 s e é compartilhado entre os espectadores (`src/session-info.ts:361`).
 - **Reenvio:** a lista é reenviada a cada 5 s por espectador (`src/server.ts:378`). Um pedido que chega durante outro é atendido logo depois. Um `pty.list` sem resposta é abandonado em 10 s (`src/cockpit-client.ts:100`).
 - **Falhas:** se a CLI `cockpit` falhar, as sessões seguem sem aba.
 - **Estado salvo do Cockpit** (`src/cockpit-state.ts:51`): lido só para leitura em `<raiz>/cockpit/state/`, onde a raiz é o conteúdo de `~/.cockpit/storage_root` ou, por padrão, `~/Documents` (a mesma regra do Cockpit, `src/cockpit-state.ts:32`). Dele saem, por workspace raiz:
