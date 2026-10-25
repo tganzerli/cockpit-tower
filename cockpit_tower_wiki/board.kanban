@@ -21,7 +21,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       - onde: `gateway` (`src/`), `viewer` (`web/`), `bin` (`bin/tower`), `cockpit-fork` (código no fork `~/app/remote_pi`);
       - quem trava: `dono`, `externo` (o mantenedor do Cockpit).
 
-      **Dependências:** `blockedBy: kN` no comentário do cartão. Hoje: nenhuma; o k11 espera a decisão do dono (o #264 foi mergeado sem resposta à oferta).
+      **Dependências:** `blockedBy: kN` no comentário do cartão. Hoje: nenhuma.
 
       **Para um agente numa sessão nova:**
       - Leia o `CLAUDE.md` e siga a skill `work-cycle` (tarefa → plano aprovado → execução → `/wiki-sync`). Nada de código sem plano `status: approved`.
@@ -36,6 +36,15 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k31).
 
 ## Backlog
+
+- [ ] Cockpit: corrigir hover e busca que desalinham 0,5 px por caractere sem quebra <!-- id: k11 labels: bug, upstream, baixa, P, cockpit-fork -->
+      **O quê:** sem soft wrap, o hover de "ir para definição" e a rolagem horizontal da busca convertem x↔coluna com um `TextPainter` no estilo de código puro. O campo desenha com o `letterSpacing: 0.5` do tema, então a coluna escorrega ~40 px na coluna 80 (uns 3 caracteres): perto de identificadores curtos o hover pega a palavra vizinha, e o match da busca pode ficar cortado na borda.
+
+      **Onde** (`upstream/main` depois do merge `8138e03`): `cockpit/lib/app/cockpit/ui/widgets/code_editor.dart`, no hover (`:598-605`, `TextSpan(text: lineText, style: codeStyle)`) e no `_revealMatch` (`:434-442`, que recria o `codeStyle` na hora).
+
+      **Correção:** usar o estilo efetivo do campo que o soft wrap já guarda, `_fieldStyle ?? _codeStyle` (`:146-149`, `:200`), com o `strutStyle` e o `textScaler` dele. Dois testes de widget com `letterSpacing`: hover na coluna 80 cai no caractere certo, e a busca rola até o x certo.
+
+      **Para começar:** trio novo; código num worktree do `~/app/remote_pi` a partir de `upstream/main`; issue e PR em inglês, só com o OK do dono, citando a nota do #264 (a oferta ficou sem resposta no merge de 2026-10-25). Teste da build pelo dono com o `cockpit-switch.sh`.
 
 - [ ] Upstream: fechar uma aba deixa o shell vivo <!-- id: k21 labels: bug, upstream, baixa, P, externo -->
       **O quê:** ao fechar uma aba no Cockpit, a sessão sai do `pty.list`, mas o shell continua vivo (`Ss+`, filho do `cockpit-server`) até receber SIGHUP.
@@ -101,19 +110,12 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Esperando
 
-- [ ] Acompanhamento upstream: hover e busca desalinham 0,5 px por caractere sem quebra <!-- id: k11 labels: bug, upstream, baixa, P, cockpit-fork, dono -->
-      **O quê:** sem soft wrap, o hover de "ir para definição" e a rolagem horizontal da busca convertem x↔coluna com um `TextPainter` no estilo de código puro. O campo desenha com o `letterSpacing: 0.5` do tema, então a coluna escorrega ~40 px na coluna 80.
-
-      **Contexto:** bug do upstream, achado durante o soft wrap e deixado fora daquele PR (seção "Notes" do texto do PR; "Notas em aberto" em `cockpit_tower_wiki/work/executions/2026-10-23_cockpit-editor-soft-wrap.md`). A correção é a mesma do soft wrap: medir com o estilo efetivo do `EditableText`.
-
-      **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). O #264 foi mergeado em 2026-10-25 sem resposta à oferta. Cabe ao dono decidir: mandar o PR separado sem convite (novo trio) ou largar.
-
 ## Em curso
 
 ## Done
 
 - [x] PRs #263 e #264 mergeados no remote_pi <!-- id: k30 labels: docs, upstream, baixa, P -->
-      Trio `2026-10-25_upstream-prs-merged`. O mantenedor mergeou o ícone (#263) e o soft wrap (#264) em 2026-10-25. A wiki, os dois trios de 2026-10-23 e os cartões k10, k20 e k11 foram atualizados. O k11 passou a esperar o dono, porque a oferta no #264 ficou sem resposta.
+      Trio `2026-10-25_upstream-prs-merged`. O mantenedor mergeou o ícone (#263) e o soft wrap (#264) em 2026-10-25. A wiki, os dois trios de 2026-10-23 e os cartões k10, k20 e k11 foram atualizados. A oferta do k11 no #264 ficou sem resposta, e o dono decidiu corrigir: o cartão foi para o Backlog.
 
 - [x] Páginas da wiki marcadas stale <!-- id: k29 labels: docs, baixa, P -->
       Trio `2026-10-25_wiki-stale-pages`. Os 5 avisos `stale` do wiki-lint foram reconferidos contra o código antes de mudar a data: o `overview.md` tinha a regra antiga do (x), as pendências upstream não citavam k21 e k5, a ADR do cliente só-leitura ganhou nota de citações históricas, e as duas ADRs de 2026-10-23 continuavam certas. Os avisos voltam quando um trio mexer em `src/` ou no quadro.

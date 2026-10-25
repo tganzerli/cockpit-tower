@@ -95,6 +95,6 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
 
 ## Pendências
 
-- Acompanhamentos do soft wrap no quadro: k11 (coluna escorrega sem quebra, oferecido no #264, que foi mergeado sem resposta; decisão do dono) e k12 (adiar a remedição ao arrastar a divisória).
+- Acompanhamentos do soft wrap no quadro: k11 (coluna escorrega sem quebra, oferecido no #264, que foi mergeado sem resposta; o dono decidiu corrigir, no Backlog) e k12 (adiar a remedição ao arrastar a divisória).
 - k21: fechar uma aba deixa o shell vivo. A causa provável está no cartão k21 do `cockpit_tower_wiki/board.kanban`; falta abrir a issue no `remote_pi`.
 - k5: pedir ao mantenedor o id da aba no `pty.sessions`, para trocar o casamento por ordem e pasta; falta abrir a issue ou o PR.

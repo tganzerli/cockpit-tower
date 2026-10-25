@@ -51,6 +51,9 @@ related:
 ### `2026-10-25` — passo 5: wiki-sync
 - O dono chamou `/wiki-sync 2026-10-25_upstream-prs-merged`. As duas páginas receberam os textos de "Páginas da wiki afetadas"; `wiki-index --all` regenerou os catálogos e `sync_bookkeeping.py` marcou o plano `executed` e escreveu no `_meta/log.md`.
 
+### `2026-10-25` — k11 vira correção no Backlog
+- Depois do wiki-sync, o dono decidiu corrigir o desalinhamento ("ajustar o card para corrigir este bug e colocá-lo no backlog, sinaliza no título que é do cockpit"). O k11 saiu de *Esperando* para o topo do *Backlog*, com o título "Cockpit: corrigir hover e busca…", sem a etiqueta `dono`, e com onde e como corrigir, conferido em `upstream/main` (`code_editor.dart:146-149`, `:200`, `:434-442`, `:598-605`). O k0 e o k30 deixaram de dizer que o k11 espera o dono, e a pendência em [[cross-cutting/upstream-contributions]] passou a "o dono decidiu corrigir, no Backlog".
+
 ## Commits
 
 - Ver `git log` do branch `docs/2026-10-25_upstream-prs-merged__wiki`.
@@ -80,4 +83,4 @@ Textos do plano §4.3, a aplicar pelo `/wiki-sync`:
 
 ## Notas em aberto
 
-- k11: decisão do dono, mandar o PR da coluna sem quebra sem convite ou largar.
+- k11: correção decidida pelo dono, no Backlog; precisa de trio próprio.
