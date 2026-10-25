@@ -21,7 +21,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       - onde: `gateway` (`src/`), `viewer` (`web/`), `bin` (`bin/tower`), `cockpit-fork` (código no fork `~/app/remote_pi`);
       - quem trava: `dono`, `externo` (o mantenedor do Cockpit).
 
-      **Dependências:** `blockedBy: kN` no comentário do cartão. Hoje: nenhuma; o k11 espera a resposta do mantenedor no PR do soft wrap (#264).
+      **Dependências:** `blockedBy: kN` no comentário do cartão. Hoje: nenhuma; o k11 espera a decisão do dono (o #264 foi mergeado sem resposta à oferta).
 
       **Para um agente numa sessão nova:**
       - Leia o `CLAUDE.md` e siga a skill `work-cycle` (tarefa → plano aprovado → execução → `/wiki-sync`). Nada de código sem plano `status: approved`.
@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k30).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k31).
 
 ## Backlog
 
@@ -101,16 +101,19 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Esperando
 
-- [ ] Acompanhamento upstream: hover e busca desalinham 0,5 px por caractere sem quebra <!-- id: k11 labels: bug, upstream, baixa, P, cockpit-fork, externo -->
+- [ ] Acompanhamento upstream: hover e busca desalinham 0,5 px por caractere sem quebra <!-- id: k11 labels: bug, upstream, baixa, P, cockpit-fork, dono -->
       **O quê:** sem soft wrap, o hover de "ir para definição" e a rolagem horizontal da busca convertem x↔coluna com um `TextPainter` no estilo de código puro. O campo desenha com o `letterSpacing: 0.5` do tema, então a coluna escorrega ~40 px na coluna 80.
 
       **Contexto:** bug do upstream, achado durante o soft wrap e deixado fora daquele PR (seção "Notes" do texto do PR; "Notas em aberto" em `cockpit_tower_wiki/work/executions/2026-10-23_cockpit-editor-soft-wrap.md`). A correção é a mesma do soft wrap: medir com o estilo efetivo do `EditableText`.
 
-      **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). Esperando a resposta do mantenedor; se ele quiser, novo trio e PR separado.
+      **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). O #264 foi mergeado em 2026-10-25 sem resposta à oferta. Cabe ao dono decidir: mandar o PR separado sem convite (novo trio) ou largar.
 
 ## Em curso
 
 ## Done
+
+- [x] PRs #263 e #264 mergeados no remote_pi <!-- id: k30 labels: docs, upstream, baixa, P -->
+      Trio `2026-10-25_upstream-prs-merged`. O mantenedor mergeou o ícone (#263) e o soft wrap (#264) em 2026-10-25. A wiki, os dois trios de 2026-10-23 e os cartões k10, k20 e k11 foram atualizados. O k11 passou a esperar o dono, porque a oferta no #264 ficou sem resposta.
 
 - [x] Páginas da wiki marcadas stale <!-- id: k29 labels: docs, baixa, P -->
       Trio `2026-10-25_wiki-stale-pages`. Os 5 avisos `stale` do wiki-lint foram reconferidos contra o código antes de mudar a data: o `overview.md` tinha a regra antiga do (x), as pendências upstream não citavam k21 e k5, a ADR do cliente só-leitura ganhou nota de citações históricas, e as duas ADRs de 2026-10-23 continuavam certas. Os avisos voltam quando um trio mexer em `src/` ou no quadro.
@@ -137,7 +140,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       Trio `2026-10-24_compose-font-workspace-nav`. A caixa de texto usa a fonte do terminal (sem zoom do iOS ao focar) e a gaveta navega por workspace e worktree, como a lateral do Cockpit; o terminal se escolhe pelas abas.
 
 - [x] Soft wrap no editor do Cockpit (issue #261, PR #264 no remote_pi) <!-- id: k10 labels: feature, upstream, ui, cockpit-fork -->
-      Trio `2026-10-23_cockpit-editor-soft-wrap`. ⌥Z, menu View e seletor em Settings → General → Editor; ligado por padrão em Markdown e texto. Esperando o merge do mantenedor.
+      Trio `2026-10-23_cockpit-editor-soft-wrap`. ⌥Z, menu View e seletor em Settings → General → Editor; ligado por padrão em Markdown e texto. Mergeado pelo mantenedor em 2026-10-25.
 
 - [x] Comandos pelo celular — fase 3: rolar o histórico dos agentes em tela cheia <!-- id: k3 labels: feature, gateway, viewer -->
       Trio `2026-10-23_phone-fullscreen-scroll`, ADR `decisions/2026-10-23_phone-fullscreen-scroll`. Em modo de comando, arrastar o dedo manda a roda do mouse (ou setas) ao agente.
@@ -152,7 +155,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       Decidido na ADR `decisions/2026-10-23_phone-input-client`: o tower nunca envia `pty.ack`. Pelo `cockpit-server` o crédito não é aplicado (o `flow` do `pty.open` não é repassado), então o risco de travar o shell não se sustenta; se um dia for ligado, acks do tower anulariam o controle de fluxo do app.
 
 - [x] Ícone do Cockpit no formato padrão do macOS (issue #262, PR #263 no remote_pi) <!-- id: k20 labels: ui, upstream, cockpit-fork -->
-      Trio `2026-10-23_cockpit-macos-icon-shape`. Esperando o merge do mantenedor.
+      Trio `2026-10-23_cockpit-macos-icon-shape`. Mergeado pelo mantenedor em 2026-10-25.
 
 - [x] Viewer somente leitura e `bin/tower` (PR #1, #2) <!-- id: k13 labels: feature, gateway, viewer, bin -->
       Trio `2026-10-22_read-only-viewer`.

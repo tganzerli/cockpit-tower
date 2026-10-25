@@ -5,8 +5,8 @@ work_id: 2026-10-23_cockpit-editor-soft-wrap
 scope:
   area: [upstream-cockpit]
 status: done
-updated: 2026-10-24
-summary: "Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono no dia a dia e proposto upstream na issue #261 e no PR #264 do remote_pi."
+updated: 2026-10-25
+summary: "Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono e mergeado no remote_pi em 2026-10-25 (issue #261, PR #264)."
 topic: [ui]
 related: ["[[sources/external/2026-10-23_cockpit-code-editor]]", "[[cross-cutting/upstream-contributions]]", "[[overview]]"]
 ---
@@ -370,6 +370,12 @@ um rebase manual, sem ganho para quem revisa; o mantenedor pode fazer squash no 
   - os testes de editor, configuração e menu deram `+67: All tests passed!`.
 - `git push origin feat/cockpit-editor-soft-wrap`, com 6 commits sobre `7d923ab`, e depois
   `gh pr create`: https://github.com/jacobaraujo7/remote_pi/pull/264 (`Closes #261`).
+
+### `2026-10-25` — PR mergeado
+- O PR #264 foi mergeado por `jacobaraujo7` às 19:02 UTC (merge `8138e03`, ponta `177aea97`), e a
+  issue #261 fechou junto (`gh pr view 264 -R jacobaraujo7/remote_pi`, `gh issue view 261`).
+- O PR não tem comentário do mantenedor: a oferta de mandar a correção da coluna sem quebra
+  em separado (cartão k11) ficou sem resposta. Registrado no trio `2026-10-25_upstream-prs-merged`.
 
 ## Validações
 
