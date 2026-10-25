@@ -90,11 +90,11 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
 
 | Issue / PR | Assunto | Estado em 2026-10-25 | Execução |
 |---|---|---|---|
-| #261 / #264 | Soft wrap no editor, ligado por padrão em Markdown | PR aberto | [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] |
-| #262 / #263 | Ícone do macOS no formato da grade da Apple | PR aberto | [[work/executions/2026-10-23_cockpit-macos-icon-shape]] |
+| #261 / #264 | Soft wrap no editor, ligado por padrão em Markdown | Mergeado em 2026-10-25 (`8138e03`) | [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] |
+| #262 / #263 | Ícone do macOS no formato da grade da Apple | Mergeado em 2026-10-25 (`6321d5d`) | [[work/executions/2026-10-23_cockpit-macos-icon-shape]] |
 
 ## Pendências
 
-- Acompanhamentos do soft wrap no quadro: k11 (coluna escorrega sem quebra, oferecido no #264; espera o mantenedor) e k12 (adiar a remedição ao arrastar a divisória).
+- Acompanhamentos do soft wrap no quadro: k11 (coluna escorrega sem quebra, oferecido no #264, que foi mergeado sem resposta; o dono decidiu corrigir, no Backlog) e k12 (adiar a remedição ao arrastar a divisória).
 - k21: fechar uma aba deixa o shell vivo. A causa provável está no cartão k21 do `cockpit_tower_wiki/board.kanban`; falta abrir a issue no `remote_pi`.
 - k5: pedir ao mantenedor o id da aba no `pty.sessions`, para trocar o casamento por ordem e pasta; falta abrir a issue ou o PR.

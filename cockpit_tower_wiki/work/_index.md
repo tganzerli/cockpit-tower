@@ -22,10 +22,16 @@ updated: 2026-10-25
 
 - ✅ [[work/tasks/2026-10-25_wiki-stale-pages]] · `done` 10-25 · `wiki` [wiki, knowledge]
   — As cinco páginas stale foram reconferidas contra o código; o overview e as pendências upstream ganham correções, a ADR substituída uma nota de citações históricas e as duas ADRs de 2026-10-23 uma linha de reverificação, aplicadas pelo wiki-sync. ↳ [plan](work/plans/2026-10-25_wiki-stale-pages) · [exec](work/executions/2026-10-25_wiki-stale-pages)
+- ✅ [[work/tasks/2026-10-25_upstream-prs-merged]] · `done` 10-25 · `wiki` [wiki, knowledge]
+  — Os PRs #263 e #264 do remote_pi foram mergeados em 2026-10-25; os dois trios de 2026-10-23, o quadro (k10, k11, k20, k30) e as páginas de contribuições upstream e do CodeEditor passam a dizer isso, e o k11 vai para o dono. ↳ [plan](work/plans/2026-10-25_upstream-prs-merged) · [exec](work/executions/2026-10-25_upstream-prs-merged)
 - ✅ [[work/tasks/2026-10-25_restart-tab-titles]] · `done` 10-25 · `gateway` [bugfix, service]
   — O collect do gateway soma ao casamento por ordem a regra do terminal único e o par visto no nascimento, e só mostra o título quando as fontes concordam. ↳ [plan](work/plans/2026-10-25_restart-tab-titles) · [exec](work/executions/2026-10-25_restart-tab-titles)
 - ✅ [[work/tasks/2026-10-25_matchtabs-remote-tabs]] · `done` 10-25 · `gateway` [bugfix, service]
   — O matchTabs passou a usar só as abas de terminal locais (localTabs), e uma aba remota mais uma tarefa sem aba deixaram de dar a uma sessão o título de outra aba. ↳ [plan](work/plans/2026-10-25_matchtabs-remote-tabs) · [exec](work/executions/2026-10-25_matchtabs-remote-tabs)
+- ✅ [[work/tasks/2026-10-23_cockpit-macos-icon-shape]] · `done` 10-25 · `upstream-cockpit`
+  — Ícone do macOS do Cockpit regerado na grade da Apple (squircle 824/1024 com sombra) por um gerador no fork; iOS/Android/Windows sem mudança; aprovado pelo dono no Dock e mergeado no remote_pi (PR #263) em 2026-10-25. ↳ [plan](work/plans/2026-10-23_cockpit-macos-icon-shape) · [exec](work/executions/2026-10-23_cockpit-macos-icon-shape)
+- ✅ [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]] · `done` 10-25 · `upstream-cockpit` [ui]
+  — Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono e mergeado no remote_pi em 2026-10-25 (issue #261, PR #264). ↳ [plan](work/plans/2026-10-23_cockpit-editor-soft-wrap) · [exec](work/executions/2026-10-23_cockpit-editor-soft-wrap)
 - ✅ [[work/tasks/2026-10-24_viewer-new-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
   — Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova. ↳ [plan](work/plans/2026-10-24_viewer-new-tab-button) · [exec](work/executions/2026-10-24_viewer-new-tab-button)
 - ✅ [[work/tasks/2026-10-24_viewer-close-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
@@ -36,8 +42,6 @@ updated: 2026-10-25
   — As três citações de bin/tower em cross-cutting/cockpit-exec-process-group voltaram às linhas certas; o aviso stale do wiki-lint saiu. ↳ [plan](work/plans/2026-10-24_exec-process-group-citations) · [exec](work/executions/2026-10-24_exec-process-group-citations)
 - ✅ [[work/tasks/2026-10-24_compose-font-workspace-nav]] · `done` 10-24 · `viewer` [ui]
   — A caixa de texto do modo de comando usa a fonte do terminal sem zoom do iOS, e a gaveta navega por workspace e worktree, como a lateral do Cockpit. ↳ [plan](work/plans/2026-10-24_compose-font-workspace-nav) · [exec](work/executions/2026-10-24_compose-font-workspace-nav)
-- ✅ [[work/tasks/2026-10-23_cockpit-editor-soft-wrap]] · `done` 10-24 · `upstream-cockpit` [ui]
-  — Soft wrap no CodeEditor do Cockpit (tabela de altura por linha lógica; ⌥Z, menu View e seletor em Settings; ligado por padrão em Markdown/texto), testado pelo dono no dia a dia e proposto upstream na issue #261 e no PR #264 do remote_pi. ↳ [plan](work/plans/2026-10-23_cockpit-editor-soft-wrap) · [exec](work/executions/2026-10-23_cockpit-editor-soft-wrap)
 - ✅ [[work/tasks/2026-10-23_phone-terminal-input]] · `done` 10-23 · `gateway, viewer` [contract, ui]
   — O iPhone digita na sessão assistida em modo de comando — só pty.input, com Origin, dono do Tailscale e registro local; ADR nova substitui o somente leitura e o tower nunca envia pty.ack. ↳ [plan](work/plans/2026-10-23_phone-terminal-input) · [exec](work/executions/2026-10-23_phone-terminal-input)
 - ✅ [[work/tasks/2026-10-23_phone-pty-resize]] · `done` 10-23 · `gateway, viewer` [contract, ui]
@@ -48,8 +52,6 @@ updated: 2026-10-25
   — Kit 9d25a9f → 5cff64d — work-cycle §3.5 com a regra de dobrar commits e portão de plano liberando experiment/<slug>, testado com payloads do Claude e do agy. ↳ [plan](work/plans/2026-10-23_methodology-upgrade-5cff64d) · [exec](work/executions/2026-10-23_methodology-upgrade-5cff64d)
 - ✅ [[work/tasks/2026-10-23_methodology-upgrade]] · `done` 10-23 · `methodology, tooling` [methodology, tooling]
   — Execução da atualização da metodologia do kit 4d137d0 para 9d25a9f. ↳ [plan](work/plans/2026-10-23_methodology-upgrade) · [exec](work/executions/2026-10-23_methodology-upgrade)
-- ✅ [[work/tasks/2026-10-23_cockpit-macos-icon-shape]] · `done` 10-23 · `upstream-cockpit`
-  — Ícone do macOS do Cockpit regerado na grade da Apple (squircle 824/1024 com sombra) por um gerador no fork; iOS/Android/Windows sem mudança; esperando o OK do dono no Dock. ↳ [plan](work/plans/2026-10-23_cockpit-macos-icon-shape) · [exec](work/executions/2026-10-23_cockpit-macos-icon-shape)
 - ✅ [[work/tasks/2026-10-22_tower-cockpit-panel]] · `done` 10-22 · `tower-cli, panel` [tooling, ui]
   — Painel panel/tower.panel com estado, botões ligar/desligar, URL e QR; tower status --json, tower qr e processos desligados do grupo do Cockpit. ↳ [plan](work/plans/2026-10-22_tower-cockpit-panel) · [exec](work/executions/2026-10-22_tower-cockpit-panel)
 - ✅ [[work/tasks/2026-10-22_terminal-text-cockpit-style]] · `done` 10-22 · `viewer` [ui]

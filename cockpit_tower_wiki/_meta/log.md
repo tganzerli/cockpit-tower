@@ -163,3 +163,8 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/decisions/2026-10-22_read-only-client.md` (UPDATE) — nota de citações históricas, ⚠ unverified
 - `cockpit_tower_wiki/decisions/2026-10-23_phone-pty-resize.md` (UPDATE) — reverificada, sem mudança
 - `cockpit_tower_wiki/decisions/2026-10-23_phone-fullscreen-scroll.md` (UPDATE) — reverificada, sem mudança
+
+## [2026-10-25] wiki-sync | 2026-10-25_upstream-prs-merged | 2 pages touched
+
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — PRs #263 and #264 merged; k11 now waits on the owner
+- `cockpit_tower_wiki/sources/external/2026-10-23_cockpit-code-editor.md` (UPDATE) — merge note under the point-in-time warning

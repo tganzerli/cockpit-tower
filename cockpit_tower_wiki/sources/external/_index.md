@@ -2,7 +2,7 @@
 title: External sources — ingested summaries
 type: index
 status: generated
-updated: 2026-10-24
+updated: 2026-10-25
 ---
 
 # External sources — ingested summaries

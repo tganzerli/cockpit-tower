@@ -5,8 +5,8 @@ work_id: 2026-10-23_cockpit-macos-icon-shape
 scope:
   area: [upstream-cockpit]
 status: done
-updated: 2026-10-23
-summary: Ícone do macOS do Cockpit regerado na grade da Apple (squircle 824/1024 com sombra) por um gerador no fork; iOS/Android/Windows sem mudança; esperando o OK do dono no Dock.
+updated: 2026-10-25
+summary: "Ícone do macOS do Cockpit regerado na grade da Apple (squircle 824/1024 com sombra) por um gerador no fork; iOS/Android/Windows sem mudança; aprovado pelo dono no Dock e mergeado no remote_pi (PR #263) em 2026-10-25."
 topic: []
 related:
   - work/tasks/2026-10-23_cockpit-macos-icon-shape
@@ -61,6 +61,10 @@ related:
 ### `2026-10-23 14:30` — OK do dono, issue e PR
 
 - O dono aprovou o ícone no Dock. Abertos no upstream: issue https://github.com/jacobaraujo7/remote_pi/issues/262 e PR https://github.com/jacobaraujo7/remote_pi/pull/263 (`tganzerli:feat/cockpit-macos-icon-shape` → `main`, `Closes #262`, sem trailer de IA). A branch está sobre o `upstream/main` atual (`7d923ab`).
+
+### `2026-10-25` — PR mergeado
+
+- O PR #263 foi mergeado por `jacobaraujo7` às 18:51 UTC (merge `6321d5d`), e a issue #262 fechou junto (`gh pr view 263 -R jacobaraujo7/remote_pi`, `gh issue view 262`). Registrado no trio `2026-10-25_upstream-prs-merged`.
 
 ## Commits
 

@@ -4,7 +4,7 @@ type: source
 scope:
   area: [upstream-cockpit]
 status: draft
-updated: 2026-10-24
+updated: 2026-10-25
 summary: "Como o CodeEditor do Cockpit mede linhas (altura fixa ou tabela por linha com quebra), onde moram os atalhos do editor, a ponte de menu, a setting editorWordWrap e o catálogo manual de atalhos. Fork 177aea97, PR #264."
 related:
   - cross-cutting/upstream-contributions
@@ -18,6 +18,8 @@ related:
 Código-fonte do app Cockpit em [github.com/jacobaraujo7/remote_pi](https://github.com/jacobaraujo7/remote_pi), no subdiretório `cockpit/` (Dart/Flutter, comentários em pt-BR). Esta página destila o editor de arquivos (`CodeEditor`) para quem trabalha no tower ou em contribuições ao upstream ([[cross-cutting/upstream-contributions]]).
 
 > **Ponto no tempo.** As citações `remote_pi:<caminho>:<linha>` valem para o commit **`177aea97`** da branch `feat/cockpit-editor-soft-wrap` do fork (base `upstream/main` `7d923ab`). Esse código **ainda não está no upstream**: o PR [#264](https://github.com/jacobaraujo7/remote_pi/pull/264) está aberto (issue [#261](https://github.com/jacobaraujo7/remote_pi/issues/261)). Em `upstream/main` o modo de quebra não existe. Se o PR mudar na revisão, as linhas mudam: anote, não reescreva.
+>
+> **Atualização 2026-10-25:** o PR #264 foi mergeado no upstream (merge `8138e03`). A ponta do PR é o `177aea97` citado aqui, então as linhas valem para o código que entrou. Mudanças no `upstream/main` depois do merge não foram reconferidas.
 
 Execução que produziu o conhecimento: [[work/executions/2026-10-23_cockpit-editor-soft-wrap]].
 
@@ -90,3 +92,4 @@ Execução que produziu o conhecimento: [[work/executions/2026-10-23_cockpit-edi
 ## History
 
 - 2026-10-24: criada no `/wiki-sync` de [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] (issue #261, PR #264 aberto).
+- 2026-10-25: PR #264 mergeado; nota no aviso de ponto no tempo ([[work/executions/2026-10-25_upstream-prs-merged]]).

@@ -5,7 +5,7 @@ work_id: 2026-10-23_cockpit-editor-soft-wrap
 scope:
   area: [upstream-cockpit]
 status: done
-updated: 2026-10-24
+updated: 2026-10-25
 summary: Propor ao remote_pi (issue + PR) um modo de quebra de linha no editor do Cockpit, ligado por padrão em .md.
 topic: [ui]
 related:
@@ -63,3 +63,7 @@ O código fica no fork `tganzerli/remote_pi`, clonado em `~/app/remote_pi` com o
 ## Sucesso
 
 Editar `.md` no Cockpit sem rolar para o lado, e o PR aceito upstream.
+
+## Desfecho
+
+2026-10-25: PR #264 mergeado por `jacobaraujo7` (merge `8138e03`, ponta `177aea97`); a issue #261 fechou junto.

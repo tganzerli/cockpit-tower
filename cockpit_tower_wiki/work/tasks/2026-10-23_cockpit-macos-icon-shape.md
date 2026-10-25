@@ -5,7 +5,7 @@ work_id: 2026-10-23_cockpit-macos-icon-shape
 scope:
   area: [upstream-cockpit]
 status: done
-updated: 2026-10-23
+updated: 2026-10-25
 summary: Trazer o ícone do Cockpit no macOS para o formato padrão da Apple (squircle com margem e sombra), sem mudar o ícone do iOS/Android, e contribuir a mudança no remote_pi.
 topic: []
 related:
@@ -43,3 +43,7 @@ Como no soft wrap ([[work/tasks/2026-10-23_cockpit-editor-soft-wrap]]), a ideia 
 
 - Código e PR upstream em inglês; publicar issue e PR só com o OK do dono no momento.
 - Não abrir o Cockpit pelo Bash do Claude; testar a build trocando com `~/app/remote_pi/.fork-tools/cockpit-switch.sh` no Terminal.app.
+
+## Desfecho
+
+2026-10-25: PR #263 mergeado por `jacobaraujo7` (merge `6321d5d`); a issue #262 fechou junto.
