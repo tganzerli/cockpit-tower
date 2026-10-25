@@ -5,7 +5,7 @@ work_id: 2026-10-23_phone-fullscreen-scroll
 scope:
   area: [gateway, viewer]
 status: accepted
-updated: 2026-10-23
+updated: 2026-10-25
 summary: A roda do mouse vira entrada nomeada (wheel), só em modo de comando; o gateway monta os bytes por três moldes (SGR, X10, setas), limita quantidade e posição e registra antes de enviar por pty.input, seguindo as regras do app do Mac.
 revisit_when: "o app do Cockpit mudar as regras da roda (flterm terminal_input.dart), um agente usar a codificação 1005/1015/1016, ou for pedida a rolagem horizontal"
 supersedes: []
@@ -102,6 +102,8 @@ O que pesa (plano [[work/plans/2026-10-23_phone-fullscreen-scroll]], §4.0):
 - se a célula calculada no Safari bate com a do toque.
 
 **O que se espera:** confirmar.
+
+**Reverificada em 2026-10-25:** depois de 2026-10-23, `src/server.ts` e `web/app.js` só ganharam o (+), o (x), a fonte da caixa de texto e a gaveta por workspace (`78b22ad`, `abb2932`, `d1462bd`, `5fd3cbc`); o caminho da roda (`handleWheel`) e `src/input.ts` não mudaram, e o gatilho não disparou ([[work/executions/2026-10-25_wiki-stale-pages]]).
 
 ## Decisões que esta abre ou fecha
 

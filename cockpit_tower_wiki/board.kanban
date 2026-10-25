@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k29).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k30).
 
 ## Backlog
 
@@ -111,6 +111,9 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 ## Em curso
 
 ## Done
+
+- [x] Páginas da wiki marcadas stale <!-- id: k29 labels: docs, baixa, P -->
+      Trio `2026-10-25_wiki-stale-pages`. Os 5 avisos `stale` do wiki-lint foram reconferidos contra o código antes de mudar a data: o `overview.md` tinha a regra antiga do (x), as pendências upstream não citavam k21 e k5, a ADR do cliente só-leitura ganhou nota de citações históricas, e as duas ADRs de 2026-10-23 continuavam certas. Os avisos voltam quando um trio mexer em `src/` ou no quadro.
 
 - [x] O `matchTabs` conta as abas remotas <!-- id: k28 labels: bug, baixa, P, gateway -->
       Trio `2026-10-25_matchtabs-remote-tabs`. O casamento por ordem de criação passou a contar só as abas de terminal locais: uma aba de workspace remoto (SSH) mais uma tarefa sem aba igualavam as contagens, e a tarefa podia ganhar o título da aba de outra sessão. Teste novo cobre o caso; achado num fixture do k27, nunca visto no Mac.

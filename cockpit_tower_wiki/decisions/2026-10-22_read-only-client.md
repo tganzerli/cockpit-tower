@@ -4,7 +4,7 @@ type: adr
 scope:
   area: [gateway]
 status: superseded
-updated: 2026-10-24
+updated: 2026-10-25
 superseded_by: decisions/2026-10-23_phone-input-client
 summary: Só hello/list/attach/detach; nunca pty.ack; uma conexão por espectador; acesso por token + header do Tailscale.
 revisit_when: o tower passar a aceitar digitação, ou o protocolo do Cockpit trouxer o id da aba nas sessões
@@ -23,6 +23,8 @@ related:
 # ADR — O tower é um cliente somente leitura do Cockpit
 
 > **Substituída em 2026-10-23** por [[decisions/2026-10-23_phone-input-client]]: o tower passa a enviar `pty.input`, só com o modo de comando ligado. O corpo abaixo fica como histórico.
+
+> **Citações de código (nota de 2026-10-25):** as linhas `src/…` e `web/…` abaixo são de 2026-10-22, de uma versão anterior ao primeiro commit deste repositório (`9d52541`, 2026-10-23), e não batem com ele nem com o código atual. Ficam como estavam, `⚠ unverified`; o estado atual está na ADR sucessora e em [[services/gateway]].
 
 ## Contexto
 

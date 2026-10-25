@@ -20,6 +20,8 @@ updated: 2026-10-25
 
 ## Closed — 2026-Q4 (current quarter)
 
+- ✅ [[work/tasks/2026-10-25_wiki-stale-pages]] · `done` 10-25 · `wiki` [wiki, knowledge]
+  — As cinco páginas stale foram reconferidas contra o código; o overview e as pendências upstream ganham correções, a ADR substituída uma nota de citações históricas e as duas ADRs de 2026-10-23 uma linha de reverificação, aplicadas pelo wiki-sync. ↳ [plan](work/plans/2026-10-25_wiki-stale-pages) · [exec](work/executions/2026-10-25_wiki-stale-pages)
 - ✅ [[work/tasks/2026-10-25_restart-tab-titles]] · `done` 10-25 · `gateway` [bugfix, service]
   — O collect do gateway soma ao casamento por ordem a regra do terminal único e o par visto no nascimento, e só mostra o título quando as fontes concordam. ↳ [plan](work/plans/2026-10-25_restart-tab-titles) · [exec](work/executions/2026-10-25_restart-tab-titles)
 - ✅ [[work/tasks/2026-10-25_matchtabs-remote-tabs]] · `done` 10-25 · `gateway` [bugfix, service]

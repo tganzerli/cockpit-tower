@@ -5,7 +5,7 @@ work_id: 2026-10-23_phone-pty-resize
 scope:
   area: [gateway, viewer]
 status: accepted
-updated: 2026-10-23
+updated: 2026-10-25
 summary: Libera pty.resize só em modo de comando, para a sessão assistida, com tamanho limitado e registrado; o tower guarda o tamanho do Mac e o devolve uma vez por ciclo, se a PTY ainda estiver no tamanho que ele pôs.
 revisit_when: "o app do Cockpit passar a ler ou anunciar o tamanho da PTY (broadcast de tamanho)"
 supersedes: []
@@ -105,6 +105,8 @@ O que pesa na decisão (plano [[work/plans/2026-10-23_phone-pty-resize]], §4.0)
 - se a medida de largura no Safari bate com o que as TUIs usam.
 
 **O que se espera:** confirmar.
+
+**Reverificada em 2026-10-25:** depois de 2026-10-23, `src/server.ts` e `web/app.js` só ganharam o (+), o (x), a fonte da caixa de texto e a gaveta por workspace (`78b22ad`, `abb2932`, `d1462bd`, `5fd3cbc`); o caminho de tamanho e devolução não mudou, e o gatilho não disparou ([[work/executions/2026-10-25_wiki-stale-pages]]).
 
 ## Decisões que esta abre ou fecha
 
