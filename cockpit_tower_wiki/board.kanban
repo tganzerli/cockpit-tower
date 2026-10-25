@@ -121,10 +121,11 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
       **Para começar:** ver se há um sinal local que case sessão e aba com segurança depois do reinício (ex.: o workspace com um único terminal, como o `soleTab` do (x)), ou se o certo é esperar o k5. Não usar heurística que possa mostrar o título de outra aba.
 
-      **Andamento (2026-10-25):** trio `2026-10-25_restart-tab-titles`, branch `fix/2026-10-25_restart-tab-titles__gateway`. Plano aprovado (tier `medium`).
+      **Andamento (2026-10-25):** trio `2026-10-25_restart-tab-titles`, branch `fix/2026-10-25_restart-tab-titles__gateway` (3 commits). Plano aprovado (tier `medium`).
       - Código e testes prontos (`src/session-info.ts`): terminal único mais par do nascimento, e um título só aparece quando as fontes concordam. `npm test` 207/207; cada guarda nova foi vista vermelha.
-      - No layout real: 4 de 7 abas voltam a ter título já na primeira olhada; as 3 do TCC continuam sem título (vários terminais no mesmo workspace).
-      - **Agora:** teste ao vivo do nascimento, com o dono abrindo um terminal no TCC.
+      - Ao vivo: 4 de 7 abas voltam a ter título já na primeira olhada; os terminais abertos às 10:09 e às 10:10 ganharam título 3 s depois.
+      - Revisão do agente: rodada 1, nenhum achado.
+      - **Agora: gate do dono** (ler o log da execução). Depois vêm `/wiki-sync`, os PRs e este cartão em *Done*.
       - Achado à parte: o `matchTabs` conta as abas remotas (proposta de cartão novo).
 
 ## Done
