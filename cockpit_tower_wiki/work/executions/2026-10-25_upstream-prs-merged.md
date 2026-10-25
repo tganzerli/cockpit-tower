@@ -33,7 +33,7 @@ related:
 - [x] (2) Trios de 2026-10-23 e `work-index`.
 - [x] (3) Quadro (k0, k10, k11, k20, k30, contador).
 - [x] (4) Log da execução; revisão `skipped — low`; lint, index e trailers.
-- [ ] (5) `/wiki-sync`.
+- [x] (5) `/wiki-sync` pelo dono.
 - [ ] (6) PR para `dev` e merge.
 
 ## Atividade
@@ -47,6 +47,9 @@ related:
   - nenhum comentário do mantenedor nos dois PRs.
 - Tarefas de 2026-10-23: seção "Desfecho". Execuções: entrada `2026-10-25 — PR mergeado` e `summary`. `work-index` regenerado.
 - Quadro: cinco trocas por string exata (`count == 1`) e o cartão k30 no topo de *Done*. `grep -n '^## '` mostra as 6 colunas; 31 cartões (eram 30 em `origin/dev`).
+
+### `2026-10-25` — passo 5: wiki-sync
+- O dono chamou `/wiki-sync 2026-10-25_upstream-prs-merged`. As duas páginas receberam os textos de "Páginas da wiki afetadas"; `wiki-index --all` regenerou os catálogos e `sync_bookkeeping.py` marcou o plano `executed` e escreveu no `_meta/log.md`.
 
 ## Commits
 

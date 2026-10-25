@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-25_upstream-prs-merged
 scope:
   area: [wiki]
-status: approved
+status: executed
 risk: low
 updated: 2026-10-25
 summary: "Marca os PRs #263 e #264 como mergeados na página de contribuições upstream, na página do CodeEditor, nos dois trios de 2026-10-23 e no quadro, e passa o k11 do mantenedor para o dono."

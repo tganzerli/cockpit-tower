@@ -13,8 +13,6 @@ updated: 2026-10-25
 
 ## In progress (open / in_progress / future / paused)
 
-- 🚧 [[work/tasks/2026-10-25_upstream-prs-merged]] · `in_progress` · `wiki` [wiki, knowledge]
-  — Os PRs #263 e #264 do remote_pi foram mergeados em 2026-10-25; os dois trios de 2026-10-23, o quadro (k10, k11, k20, k30) e as páginas de contribuições upstream e do CodeEditor passam a dizer isso, e o k11 vai para o dono. ↳ [plan](work/plans/2026-10-25_upstream-prs-merged) · [exec](work/executions/2026-10-25_upstream-prs-merged)
 - 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
   — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
@@ -24,6 +22,8 @@ updated: 2026-10-25
 
 - ✅ [[work/tasks/2026-10-25_wiki-stale-pages]] · `done` 10-25 · `wiki` [wiki, knowledge]
   — As cinco páginas stale foram reconferidas contra o código; o overview e as pendências upstream ganham correções, a ADR substituída uma nota de citações históricas e as duas ADRs de 2026-10-23 uma linha de reverificação, aplicadas pelo wiki-sync. ↳ [plan](work/plans/2026-10-25_wiki-stale-pages) · [exec](work/executions/2026-10-25_wiki-stale-pages)
+- ✅ [[work/tasks/2026-10-25_upstream-prs-merged]] · `done` 10-25 · `wiki` [wiki, knowledge]
+  — Os PRs #263 e #264 do remote_pi foram mergeados em 2026-10-25; os dois trios de 2026-10-23, o quadro (k10, k11, k20, k30) e as páginas de contribuições upstream e do CodeEditor passam a dizer isso, e o k11 vai para o dono. ↳ [plan](work/plans/2026-10-25_upstream-prs-merged) · [exec](work/executions/2026-10-25_upstream-prs-merged)
 - ✅ [[work/tasks/2026-10-25_restart-tab-titles]] · `done` 10-25 · `gateway` [bugfix, service]
   — O collect do gateway soma ao casamento por ordem a regra do terminal único e o par visto no nascimento, e só mostra o título quando as fontes concordam. ↳ [plan](work/plans/2026-10-25_restart-tab-titles) · [exec](work/executions/2026-10-25_restart-tab-titles)
 - ✅ [[work/tasks/2026-10-25_matchtabs-remote-tabs]] · `done` 10-25 · `gateway` [bugfix, service]
