@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-25_matchtabs-remote-tabs
 scope:
   area: [gateway]
-status: approved
+status: executed
 risk: medium
 updated: 2026-10-25
 summary: O matchTabs passa a usar só as abas de terminal locais (localTabs), nas contagens, na ordem e nas pastas da aba sem pasta, com um teste da aba remota mais a sessão sem aba.

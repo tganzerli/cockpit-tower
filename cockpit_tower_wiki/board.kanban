@@ -110,16 +110,10 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Em curso
 
-- [ ] O `matchTabs` conta as abas remotas <!-- id: k28 labels: bug, baixa, P, gateway -->
-      **O quê:** o casamento por ordem de criação (`matchTabs`, `src/session-info.ts`) conta as abas de workspace remoto (SSH), que não têm PTY local. Uma aba remota mais uma sessão sem aba (ex.: uma tarefa) igualam as contagens, e a ordem pode parear errado: a aba remota vira o único par discordante permitido, e os outros pares deslizam uma posição.
-
-      **Contexto:** achado num fixture de teste do k27 (`cockpit_tower_wiki/work/executions/2026-10-25_restart-tab-titles.md`, "Notas em aberto"), não visto no Mac. O `soleTab` e o par do nascimento já excluem as abas remotas (`localTabs`).
-
-      **Para começar:** excluir as abas com `workspaceId` começando em `__remote__` antes de comparar contagens e ordem no `matchTabs`, com um teste da aba remota mais a sessão sem aba.
-
-      **Progresso (2026-10-25):** trio `2026-10-25_matchtabs-remote-tabs`. O `matchTabs` agora usa só as abas locais; teste novo (aba remota + tarefa) falhava antes e passa; `npm test` 208/208, trailers e wiki-lint ok; revisão do agente sem achados. Aprovado pelo dono; execução fechada no branch `fix/2026-10-25_matchtabs-remote-tabs__gateway`. Falta: `/wiki-sync` e os PRs.
-
 ## Done
+
+- [x] O `matchTabs` conta as abas remotas <!-- id: k28 labels: bug, baixa, P, gateway -->
+      Trio `2026-10-25_matchtabs-remote-tabs`. O casamento por ordem de criação passou a contar só as abas de terminal locais: uma aba de workspace remoto (SSH) mais uma tarefa sem aba igualavam as contagens, e a tarefa podia ganhar o título da aba de outra sessão. Teste novo cobre o caso; achado num fixture do k27, nunca visto no Mac.
 
 - [x] Títulos das abas depois de um reinício do Cockpit <!-- id: k27 labels: bug, média, M, gateway, viewer -->
       Trio `2026-10-25_restart-tab-titles`. Quando a ordem de criação não vale, o título vem do terminal único da pasta (`soleTab`) ou de um par visto no nascimento da aba (uma sessão e uma aba novas na mesma olhada, confirmado na seguinte), e só aparece quando as fontes concordam. No Mac, 4 de 7 abas voltaram a ter título depois do reinício; terminais abertos com o tower ligado ganham título 3 s depois. Continuam sem título os terminais restaurados num workspace com vários; a correção de vez segue no k5.
