@@ -63,13 +63,6 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Pronta p/ plano
 
-- [ ] O `matchTabs` conta as abas remotas <!-- id: k28 labels: bug, baixa, P, gateway -->
-      **O quê:** o casamento por ordem de criação (`matchTabs`, `src/session-info.ts`) conta as abas de workspace remoto (SSH), que não têm PTY local. Uma aba remota mais uma sessão sem aba (ex.: uma tarefa) igualam as contagens, e a ordem pode parear errado: a aba remota vira o único par discordante permitido, e os outros pares deslizam uma posição.
-
-      **Contexto:** achado num fixture de teste do k27 (`cockpit_tower_wiki/work/executions/2026-10-25_restart-tab-titles.md`, "Notas em aberto"), não visto no Mac. O `soleTab` e o par do nascimento já excluem as abas remotas (`localTabs`).
-
-      **Para começar:** excluir as abas com `workspaceId` começando em `__remote__` antes de comparar contagens e ordem no `matchTabs`, com um teste da aba remota mais a sessão sem aba.
-
 - [ ] Teste automatizado da visão do terminal <!-- id: k6 labels: test, média, M, viewer -->
       **O quê:** levar para o repositório o teste de consistência da visão HTML, que hoje só existe como roteiro fora do repo.
 
@@ -116,6 +109,15 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). Esperando a resposta do mantenedor; se ele quiser, novo trio e PR separado.
 
 ## Em curso
+
+- [ ] O `matchTabs` conta as abas remotas <!-- id: k28 labels: bug, baixa, P, gateway -->
+      **O quê:** o casamento por ordem de criação (`matchTabs`, `src/session-info.ts`) conta as abas de workspace remoto (SSH), que não têm PTY local. Uma aba remota mais uma sessão sem aba (ex.: uma tarefa) igualam as contagens, e a ordem pode parear errado: a aba remota vira o único par discordante permitido, e os outros pares deslizam uma posição.
+
+      **Contexto:** achado num fixture de teste do k27 (`cockpit_tower_wiki/work/executions/2026-10-25_restart-tab-titles.md`, "Notas em aberto"), não visto no Mac. O `soleTab` e o par do nascimento já excluem as abas remotas (`localTabs`).
+
+      **Para começar:** excluir as abas com `workspaceId` começando em `__remote__` antes de comparar contagens e ordem no `matchTabs`, com um teste da aba remota mais a sessão sem aba.
+
+      **Progresso (2026-10-25):** trio `2026-10-25_matchtabs-remote-tabs`. O `matchTabs` agora usa só as abas locais; teste novo (aba remota + tarefa) falhava antes e passa; `npm test` 208/208, trailers e wiki-lint ok; revisão do agente sem achados. Aprovado pelo dono; execução fechada no branch `fix/2026-10-25_matchtabs-remote-tabs__gateway`. Falta: `/wiki-sync` e os PRs.
 
 ## Done
 

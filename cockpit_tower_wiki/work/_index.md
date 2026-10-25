@@ -22,6 +22,8 @@ updated: 2026-10-25
 
 - ✅ [[work/tasks/2026-10-25_restart-tab-titles]] · `done` 10-25 · `gateway` [bugfix, service]
   — O collect do gateway soma ao casamento por ordem a regra do terminal único e o par visto no nascimento, e só mostra o título quando as fontes concordam. ↳ [plan](work/plans/2026-10-25_restart-tab-titles) · [exec](work/executions/2026-10-25_restart-tab-titles)
+- ✅ [[work/tasks/2026-10-25_matchtabs-remote-tabs]] · `done` 10-25 · `gateway` [bugfix, service]
+  — O matchTabs passou a usar só as abas de terminal locais (localTabs), e uma aba remota mais uma tarefa sem aba deixaram de dar a uma sessão o título de outra aba. ↳ [plan](work/plans/2026-10-25_matchtabs-remote-tabs) · [exec](work/executions/2026-10-25_matchtabs-remote-tabs)
 - ✅ [[work/tasks/2026-10-24_viewer-new-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
   — Botão (+) fixo à direita da faixa de abas do viewer que, em modo de comando, abre um terminal no workspace assistido pela CLI do Cockpit (new-tab ancorado), com registro antes e seleção da sessão nova. ↳ [plan](work/plans/2026-10-24_viewer-new-tab-button) · [exec](work/executions/2026-10-24_viewer-new-tab-button)
 - ✅ [[work/tasks/2026-10-24_viewer-close-tab-button]] · `done` 10-24 · `viewer, gateway` [ui]
