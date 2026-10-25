@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-25_matchtabs-remote-tabs
 scope:
   area: [gateway]
-status: in_progress
+status: done
 updated: 2026-10-25
 summary: O casamento por ordem de criação (matchTabs) passa a ignorar as abas de workspace remoto (SSH), que não têm PTY local, para que elas não igualem as contagens nem deslizem os pares.
 topic: [bugfix, service]
@@ -23,9 +23,9 @@ Achado num fixture de teste do k27 ([[work/executions/2026-10-25_restart-tab-tit
 
 ## Critérios de aceite
 
-- [ ] O `matchTabs` ignora as abas com `workspaceId` começando em `__remote__`, tanto nas contagens e na ordem quanto nas pastas usadas para a aba sem pasta.
-- [ ] Um teste cobre a aba remota mais a sessão sem aba: antes da correção, a ordem dá a aba de outra sessão; depois, nada é pareado.
-- [ ] `npm test` verde.
+- [x] O `matchTabs` ignora as abas com `workspaceId` começando em `__remote__`, tanto nas contagens e na ordem quanto nas pastas usadas para a aba sem pasta.
+- [x] Um teste cobre a aba remota mais a sessão sem aba: antes da correção, a ordem dá a aba de outra sessão; depois, nada é pareado.
+- [x] `npm test` verde.
 
 ## Fontes
 

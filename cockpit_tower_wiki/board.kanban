@@ -117,7 +117,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
       **Para começar:** excluir as abas com `workspaceId` começando em `__remote__` antes de comparar contagens e ordem no `matchTabs`, com um teste da aba remota mais a sessão sem aba.
 
-      **Progresso (2026-10-25):** trio `2026-10-25_matchtabs-remote-tabs`, plano aprovado. O `matchTabs` agora usa só as abas locais; teste novo (aba remota + tarefa) falhava antes e passa; `npm test` 208/208. Falta: commits, revisão do agente e portão do dono.
+      **Progresso (2026-10-25):** trio `2026-10-25_matchtabs-remote-tabs`. O `matchTabs` agora usa só as abas locais; teste novo (aba remota + tarefa) falhava antes e passa; `npm test` 208/208, trailers e wiki-lint ok; revisão do agente sem achados. Aprovado pelo dono; execução fechada no branch `fix/2026-10-25_matchtabs-remote-tabs__gateway`. Falta: `/wiki-sync` e os PRs.
 
 ## Done
 

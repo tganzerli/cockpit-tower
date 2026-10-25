@@ -4,7 +4,7 @@ type: execution
 work_id: 2026-10-25_matchtabs-remote-tabs
 scope:
   area: [gateway]
-status: in_progress
+status: done
 updated: 2026-10-25
 summary: O matchTabs passou a usar só as abas de terminal locais (localTabs), e uma aba remota mais uma tarefa sem aba deixaram de dar a uma sessão o título de outra aba.
 topic: [bugfix, service]
@@ -21,9 +21,9 @@ related:
 - **ID:** `2026-10-25_matchtabs-remote-tabs`
 - **Tarefa:** [[work/tasks/2026-10-25_matchtabs-remote-tabs]]
 - **Plano:** [[work/plans/2026-10-25_matchtabs-remote-tabs]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-25 10:40`
-- **Fim:** `—`
+- **Fim:** `2026-10-25 11:10`
 - **Escopo:** área `[gateway]`
 - **Branch:** `fix/2026-10-25_matchtabs-remote-tabs__gateway`, a partir de `origin/dev` `44eeed1`, num worktree próprio.
 
@@ -35,7 +35,7 @@ related:
 - [x] (4) Fixture `REMOTE` → `IDLE` nos testes de `pairTabs`.
 - [x] (5) `npm test`, probe e mutações.
 - [x] (6) Commit; revisão do `reviewer`; achados tratados.
-- [ ] (7) Trailers, wiki-lint e `npm test` à mão; portão humano.
+- [x] (7) Trailers, wiki-lint e `npm test` à mão; portão humano.
 
 ## Atividade
 
@@ -54,10 +54,14 @@ related:
 - Commits `cd7373c` (tarefa, plano e quadro) e `ed711fe` (fix). Revisor em contexto limpo sobre `cd7373c..ed711fe`: nenhum achado.
 - O wiki-lint acusou `catalog-drift` pelo trio novo fora do índice; `generate.py --root .` regenerou `work/_index.md` (`trios=22 active=22`), e o lint voltou a `exit 0`.
 
+### `2026-10-25 11:10` — passo 7: portão humano
+- O dono leu o log e o resultado da revisão (tier `medium`) e aprovou. Execução fechada; `/wiki-sync` fica para o dono chamar.
+
 ## Commits
 
 - `cd7373c` docs(work): open the matchtabs-remote-tabs task and plan, move k28 to in progress
 - `ed711fe` fix(gateway): leave remote tabs out of the creation-order match
+- `93a6720` docs(work): log the matchtabs-remote-tabs execution and regenerate the work index
 
 ## Divergências do plano
 
