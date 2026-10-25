@@ -144,3 +144,10 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 - `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — citação remapeada
 - `cockpit_tower_wiki/decisions/2026-10-23_phone-input-client.md` (UPDATE) — citação remapeada
 - `cockpit_tower_wiki/decisions/2026-10-22_read-only-client.md` (UPDATE) — citação remapeada
+
+## [2026-10-25] wiki-sync | 2026-10-25_restart-tab-titles | 4 pages touched
+
+- `cockpit_tower_wiki/services/gateway.md` (UPDATE) — casamento aba-sessão com três fontes que concordam; limitações depois do reinício
+- `cockpit_tower_wiki/decisions/2026-10-24_phone-close-tab.md` (UPDATE) — nota k27: soleTab também na exibição, par do nascimento fora do (x)
+- `cockpit_tower_wiki/contracts/cockpit-protocol-v2.md` (UPDATE) — Lacuna: título restaurado é o salvo; restauração por workspace
+- `cockpit_tower_wiki/board.kanban` (UPDATE) — k27 em Done, k28 novo

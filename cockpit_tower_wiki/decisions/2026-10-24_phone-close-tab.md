@@ -5,7 +5,7 @@ work_id: 2026-10-24_viewer-close-tab-button
 scope:
   area: [gateway, viewer]
 status: accepted
-updated: 2026-10-24
+updated: 2026-10-25
 summary: O gateway pode rodar close-tab, segundo verbo de escrita da CLI do Cockpit: só a sessão assistida, em modo de comando, em dois passos, se é o terminal único do workspace ou foi aberta pelo (+) (k26).
 revisit_when: "o Cockpit expor o id da aba no pty.sessions (k5) ou o pid no list-tabs, ou corrigir o shell que sobrevive ao fechamento (k21)"
 supersedes: []
@@ -157,6 +157,10 @@ O verbo, as cercas, os dois passos, a assinatura e o registro não mudam. Por is
   - um viewer que sai libera o próximo (+);
   - o par cai quando a sessão sai da lista e depois do fechamento;
 - a linha "Fechar terminal" do `REVIEW.md`.
+
+## Nota 2026-10-25 (k27): o `soleTab` também serve à exibição
+
+O viewer passou a usar o `soleTab` para mostrar o título da aba quando a ordem de criação não vale, junto com um par visto no nascimento da aba ([[services/gateway]], "Casamento aba ↔ sessão"; plano [[work/plans/2026-10-25_restart-tab-titles]]). **Esta decisão não muda.** O (x) continua achando a aba só pelo par do (+) e pelo `soleTab` (`src/close-tab.ts:47`). O par do nascimento não entra no fechamento: o `REVIEW.md` trata o uso dele no (x) como falha.
 
 ## Referências
 

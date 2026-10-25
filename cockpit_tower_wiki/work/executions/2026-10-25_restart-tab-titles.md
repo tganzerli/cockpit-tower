@@ -4,13 +4,16 @@ type: execution
 work_id: 2026-10-25_restart-tab-titles
 scope:
   area: [gateway]
-status: in_progress
+status: done
 updated: 2026-10-25
 summary: O collect do gateway soma ao casamento por ordem a regra do terminal único e o par visto no nascimento, e só mostra o título quando as fontes concordam.
 topic: [bugfix, service]
 related:
   - work/tasks/2026-10-25_restart-tab-titles
   - work/plans/2026-10-25_restart-tab-titles
+  - "[[services/gateway]]"
+  - "[[decisions/2026-10-24_phone-close-tab]]"
+  - "[[contracts/cockpit-protocol-v2]]"
 ---
 
 # Execução — 2026-10-25_restart-tab-titles
@@ -22,9 +25,9 @@ related:
 - **ID:** `2026-10-25_restart-tab-titles`
 - **Tarefa:** [[work/tasks/2026-10-25_restart-tab-titles]]
 - **Plano:** [[work/plans/2026-10-25_restart-tab-titles]] (aprovado pelo dono em 2026-10-25, tier `medium`)
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-10-25 09:58`
-- **Fim:** `—`
+- **Fim:** `2026-10-25 10:24`
 - **Escopo:** área `[gateway]`
 - **Branch:** `fix/2026-10-25_restart-tab-titles__gateway`, de `origin/dev` `071da1e`, num worktree próprio.
 
@@ -37,8 +40,8 @@ related:
 - [x] Passo 5 — linha do `REVIEW.md`
 - [x] Passo 6 — verificação (`npm test`, probe no layout real, nascimento ao vivo com o dono)
 - [x] Passo 7 — commits e revisão do agente
-- [ ] Passo 8 — gate humano
-- [ ] Passo 9 — `/wiki-sync`, cartão em *Done*, PRs
+- [x] Passo 8 — gate humano
+- [x] Passo 9 — `/wiki-sync`, cartão em *Done*, PRs
 
 ## Atividade (cronológica)
 
@@ -76,10 +79,17 @@ related:
 ### `2026-10-25 10:10` — passo 6 (parte 2): nascimento ao vivo
 - Probe em laço (`k27-collect.ts <worktree> 200 3000`) enquanto o dono abria dois terminais no Mac. Ver Validações.
 
-### `2026-10-25 10:20` — passo 7: commits e revisão
+### `2026-10-25 10:15` — passo 7: commits e revisão
 - Três commits (abaixo). `python3 .claude/skills/work-index/generate.py --root .` → `trios=21 active=21`.
 - `wiki-lint` apontou `summary-too-long` no plano (256 > 250). Encurtado; nova rodada com exit 0.
 - Revisor de contexto limpo, rodada 1, sobre `origin/dev..b0cf8d8 -- src test REVIEW.md`: **Nothing to fix.** Ele rodou o `npm test` (207/207) e seguiu `collect` → `pairTabs` → `agreeTabs`. O (x) não muda e não usa o par do nascimento.
+
+### `2026-10-25 10:22` — passo 8: gate humano
+- O dono leu o log e aprovou ("pode continuar"). Push de `fix/2026-10-25_restart-tab-titles__gateway`.
+
+### `2026-10-25 10:24` — passo 9: `/wiki-sync`
+- Branch `docs/2026-10-25_restart-tab-titles__wiki`, a partir da branch de código. Páginas abaixo; as citações do `remote_pi` foram conferidas por amostragem (o título restaurado está em `cockpit_viewmodel.dart:6424`, não em `:6425-6428` como o plano dizia).
+- Cartão k27 em *Done*; cartão k28 criado para o achado das abas remotas no `matchTabs`.
 
 ## Commits
 

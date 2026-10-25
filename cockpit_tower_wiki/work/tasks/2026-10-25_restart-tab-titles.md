@@ -4,7 +4,7 @@ type: task
 work_id: 2026-10-25_restart-tab-titles
 scope:
   area: [gateway]
-status: in_progress
+status: done
 updated: 2026-10-25
 summary: Quando a ordem de criação não vale (depois de um reinício do Cockpit), o viewer volta a mostrar o título da aba pela regra do terminal único e pelo par visto no nascimento de uma aba, sem nunca arriscar o título de outra aba.
 topic: [bugfix, service]
@@ -34,14 +34,14 @@ O conserto de vez continua sendo o k5.
 
 ## Critérios de aceite
 
-- [ ] Depois de um reinício do Cockpit, cada sessão que é o único shell do único terminal de um workspace mostra o título da aba, já na primeira coleta.
-- [ ] Um terminal aberto no Mac com o tower ligado mostra o título mesmo num workspace com vários terminais. Isso vale quando ele foi a única sessão nova e a única aba nova entre duas olhadas próximas, e o shell está na pasta da aba.
-- [ ] Nenhuma fonte mostra título com dúvida:
+- [x] Depois de um reinício do Cockpit, cada sessão que é o único shell do único terminal de um workspace mostra o título da aba, já na primeira coleta.
+- [x] Um terminal aberto no Mac com o tower ligado mostra o título mesmo num workspace com vários terminais. Isso vale quando ele foi a única sessão nova e a única aba nova entre duas olhadas próximas, e o shell está na pasta da aba.
+- [x] Nenhuma fonte mostra título com dúvida:
   - fontes que discordam sobre uma sessão deixam essa sessão sem título;
   - uma aba atribuída a duas sessões não vai para nenhuma;
   - o par do nascimento cai quando o pid muda ou a aba some ou muda de pasta.
-- [ ] O fechamento pelo (x) não muda: continua usando só o par do (+) e o `soleTab`.
-- [ ] `npm test` verde, com testes dos ramos que recusam.
+- [x] O fechamento pelo (x) não muda: continua usando só o par do (+) e o `soleTab`.
+- [x] `npm test` verde, com testes dos ramos que recusam.
 
 ## Escopo declarado
 

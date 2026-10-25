@@ -2,7 +2,7 @@
 title: Decisions — Architecture Decision Records
 type: index
 status: generated
-updated: 2026-10-24
+updated: 2026-10-25
 ---
 
 # Decisions — Architecture Decision Records

@@ -4,7 +4,7 @@ type: contract
 scope:
   area: [gateway]
 status: stable
-updated: 2026-10-24
+updated: 2026-10-25
 summary: O que o tower envia e recebe no socket do cockpit-server (protocolo v2), o que nunca envia (toda escrita menos pty.input e pty.resize) e os riscos de ser um segundo cliente.
 sources:
   - https://github.com/jacobaraujo7/remote_pi (commit 7d923ab)
@@ -91,6 +91,11 @@ O `pty.sessions` não traz o id da aba. O app passa `COCKPIT_TAB_ID` no ambiente
 **Contorno (2026-10-22):** o gateway liga sessões e abas pela ordem de criação, conferida pela pasta do shell, e lê títulos e workspaces pela CLI `cockpit` ([[services/gateway]], seção "Contexto das sessões"):
 - A CLI responde aos verbos de listagem de fora de uma aba e com uma página do tower conectada. Verificado com `env -i HOME=$HOME PATH=$PATH cockpit list-tabs --json` enquanto um espectador estava anexado. O erro "more than one Cockpit is attached" não apareceu para listagens.
 - Se o Cockpit passar a listar o id da aba no `pty.sessions`, o contorno pode sair.
+
+**Reinício do Cockpit (lido em 2026-10-25, `remote_pi` working tree em `feat/cockpit-editor-soft-wrap`):**
+- O título de uma aba de terminal vem só do OSC 0/2 da PTY (`cockpit/lib/app/cockpit/ui/session/terminal_session.dart:157-158`). Ele é salvo e restaurado com o layout (`cockpit_viewmodel.dart:6424`). Por isso, depois de um reinício, a aba mostra o título salvo antes de a PTY nova emitir qualquer coisa.
+- A restauração abre as PTYs workspace por workspace, quando cada um é ativado (`cockpit_viewmodel.dart:6180-6226`), e cada `pty.open` recebe o próximo `sN` (`packages/cockpit_engine/lib/src/pty/native_terminal_service.dart:86-90`). A ordem entre workspaces não pode ser reconstruída.
+- O contorno do tower depois do reinício está em [[services/gateway]] ("Casamento aba ↔ sessão").
 
 ## Estado salvo do Cockpit (fonte local, somente leitura)
 

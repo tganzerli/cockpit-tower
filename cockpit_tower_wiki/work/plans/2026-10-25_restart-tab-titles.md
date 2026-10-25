@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-10-25_restart-tab-titles
 scope:
   area: [gateway]
-status: approved
+status: executed
 risk: medium
 updated: 2026-10-25
 summary: O collect soma à ordem de criação o terminal único e o par do nascimento (uma sessão e uma aba novas na mesma olhada, confirmado na seguinte), e só mostra o título quando as fontes concordam e a aba não vai para duas sessões.
