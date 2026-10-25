@@ -2,8 +2,9 @@
 //
 // Everything here only reads: `lsof` and `ps` for the shell's cwd and foreground process, the repository's
 // HEAD file for the branch, and the Cockpit CLI's listing verbs for tabs and workspaces. The protocol's
-// `pty.sessions` carries no tab id, so tabs are matched to sessions by creation order and cwd, and a match
-// that is not certain is left out rather than risk showing another tab's name.
+// `pty.sessions` carries no tab id, so tabs are matched to sessions by creation order, by a birth seen here or
+// by being a folder's sole terminal, and a match that is not certain is left out rather than risk showing
+// another tab's name.
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -224,6 +225,16 @@ export async function freshTabs(sessions: Session[], opts: { cockpitBin: string;
 
 export const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH workspace: its tabs have no local PTY
 
+/** Terminal tabs with a local PTY, and their distinct folders. */
+function localTabs(tabs: Tab[]): { local: Tab[]; folders: string[] } {
+  const local = tabs.filter((t) => !t.workspaceId.startsWith(REMOTE_PREFIX));
+  return { local, folders: [...new Set(local.map((t) => t.workspacePath).filter((p) => p !== ''))] };
+}
+
+/** The most specific of `folders` holding `cwd`; undefined when cwd is unknown or outside them all. */
+const folderOf = (cwd: string | null, folders: string[]) =>
+  cwd === null ? undefined : folders.filter((f) => within(cwd, f)).sort((a, b) => b.length - a.length)[0];
+
 /**
  * The session's tab when nothing else can be it, without trusting creation order (which a Cockpit restart breaks:
  * tab ids are restored, session ids are new). Each shell's cwd picks the most specific folder of a local terminal
@@ -233,13 +244,10 @@ export const REMOTE_PREFIX = '__remote__'; // Cockpit's id prefix for an SSH wor
  * still look balanced; the title in the confirmation is the last check for that.
  */
 export function soleTab(cwds: Map<string, string | null>, tabs: Tab[], session: string): Tab | null {
-  const local = tabs.filter((t) => !t.workspaceId.startsWith(REMOTE_PREFIX));
-  const folders = [...new Set(local.map((t) => t.workspacePath).filter((p) => p !== ''))];
-  const folderOf = (cwd: string | null) =>
-    cwd === null ? undefined : folders.filter((f) => within(cwd, f)).sort((a, b) => b.length - a.length)[0];
+  const { local, folders } = localTabs(tabs);
   const shells = new Map<string, string>();
   for (const [id, cwd] of cwds) {
-    const folder = folderOf(cwd);
+    const folder = folderOf(cwd, folders);
     if (folder === undefined) return null;
     shells.set(id, folder);
   }
@@ -251,6 +259,49 @@ export function soleTab(cwds: Map<string, string | null>, tabs: Tab[], session: 
   if (folder === undefined) return null;
   const inFolder = local.filter((t) => t.workspacePath === folder);
   return inFolder.length === 1 && count([...shells.values()], folder, (f) => f) === 1 ? inFolder[0]! : null;
+}
+
+export type Birth = { session: string; pid: number; tabId: string; folder: string };
+
+/**
+ * A tab and a session born together (k27): since the previous look, exactly one session and exactly one local
+ * terminal tab appeared, and the shell sits in that tab's folder (the most specific one). Null otherwise. The
+ * caller trusts it only after one more look, since a tabless session (a task) can be born beside a tab whose own
+ * session has not appeared yet.
+ */
+export function birthPair(
+  before: { sessions: Set<string>; tabs: Set<string> },
+  sessions: { id: string; pid: number; cwd: string | null }[],
+  tabs: Tab[],
+): Birth | null {
+  const { local, folders } = localTabs(tabs);
+  const newSessions = sessions.filter((s) => !before.sessions.has(s.id));
+  const newTabs = local.filter((t) => !before.tabs.has(t.id));
+  if (newSessions.length !== 1 || newTabs.length !== 1) return null;
+  const s = newSessions[0]!;
+  const t = newTabs[0]!;
+  if (!isPid(s.pid) || t.workspacePath === '' || folderOf(s.cwd, folders) !== t.workspacePath) return null;
+  return { session: s.id, pid: s.pid, tabId: t.id, folder: t.workspacePath };
+}
+
+/** The birth's tab while its session keeps the pid and the tab is still a local terminal in the same folder. */
+function bornTab(birth: Birth, pids: Map<string, number>, tabs: Tab[]): Tab | null {
+  if (pids.get(birth.session) !== birth.pid) return null;
+  const tab = tabs.find((t) => t.id === birth.tabId);
+  return tab && !tab.workspaceId.startsWith(REMOTE_PREFIX) && tab.workspacePath === birth.folder ? tab : null;
+}
+
+/** A session keeps a tab only when every source that names one names the same, and no other session got it. */
+export function agreeTabs(ids: string[], sources: Map<string, Tab>[]): Map<string, Tab> {
+  const out = new Map<string, Tab>();
+  for (const id of ids) {
+    const found = sources.map((m) => m.get(id)).filter((t): t is Tab => t !== undefined);
+    if (found.length > 0 && found.every((t) => t.id === found[0]!.id)) out.set(id, found[0]!);
+  }
+  const owners = new Map<string, number>();
+  for (const t of out.values()) owners.set(t.id, (owners.get(t.id) ?? 0) + 1);
+  for (const [id, t] of out) if (owners.get(t.id)! > 1) out.delete(id);
+  return out;
 }
 
 /** The workspace for a session: its tab's workspace when matched, else the most specific folder holding its cwd. */
@@ -289,6 +340,8 @@ export interface SessionInfoOptions {
   now?: () => number;
   /** Cockpit's saved workspace order, colors and theme; defaults to reading its state files. */
   readState?: () => Promise<CockpitState>;
+  /** A session and a tab are born together only between two looks at most this far apart (default 15 s). */
+  birthWindowMs?: number;
 }
 
 export interface SessionInfoResult {
@@ -310,6 +363,38 @@ export function createSessionInfo(opts: SessionInfoOptions): SessionInfoSource {
   let lastIds: string | null = null; // session and tab ids seen by the previous collection
   const readState = opts.readState ?? (() => readCockpitState(home));
   let cached: { at: number; key: string; value: Promise<SessionInfoResult> } | null = null;
+  const birthWindowMs = opts.birthWindowMs ?? 15_000;
+  let seen: { sessions: Set<string>; tabs: Set<string>; at: number } | null = null; // the previous look, for births
+  let candidate: Birth | null = null; // a birth waits one more look before it is trusted
+  const born = new Map<string, Birth>();
+
+  /**
+   * Three sources tie a session to its tab (k27): creation order (`matchTabs`, broken by a Cockpit restart), a
+   * birth seen by this gateway, and the sole terminal of a folder (`soleTab`). They must agree. A birth is kept
+   * once confirmed by the next look, when no other session was born into its folder.
+   */
+  const pairTabs = (sessions: Session[], all: Tab[], cwdOf: (s: Session) => string | null, stable: boolean) => {
+    const live = sessions.filter((s) => s.exit === undefined).map((s) => ({ id: s.id, pid: s.pid, cwd: cwdOf(s) }));
+    const pids = new Map(live.map((s) => [s.id, s.pid]));
+    const { folders } = localTabs(all);
+    const fresh = seen ? live.filter((s) => !seen!.sessions.has(s.id)) : [];
+    const c = candidate;
+    if (c && !fresh.some((s) => s.id !== c.session && folderOf(s.cwd, folders) === c.folder)) born.set(c.session, c);
+    candidate = seen && now() - seen.at <= birthWindowMs ? birthPair(seen, live, all) : null;
+    for (const [id, b] of born) if (!bornTab(b, pids, all)) born.delete(id); // also drops a candidate that died
+    seen = { sessions: new Set(live.map((s) => s.id)), tabs: new Set(all.map((t) => t.id)), at: now() };
+
+    const order = matchTabs(sessions.map((s) => ({ id: s.id, cwd: cwdOf(s) })), all, stable);
+    const births = new Map<string, Tab>();
+    for (const [id, b] of born) births.set(id, bornTab(b, pids, all)!);
+    const cwds = new Map(live.map((s) => [s.id, s.cwd]));
+    const sole = new Map<string, Tab>();
+    for (const s of live) {
+      const tab = soleTab(cwds, all, s.id);
+      if (tab) sole.set(s.id, tab);
+    }
+    return agreeTabs(sessions.map((s) => s.id), [order, births, sole]);
+  };
 
   const collect = async (sessions: Session[]): Promise<SessionInfoResult> => {
     const pids = sessions.map((s) => s.pid).filter(isPid);
@@ -325,7 +410,7 @@ export function createSessionInfo(opts: SessionInfoOptions): SessionInfoSource {
     const ids = cockpit ? idsOf(sessions, cockpit.tabs) : null;
     const stable = ids !== null && ids === lastIds;
     lastIds = ids;
-    const tabs = cockpit ? matchTabs(sessions.map((s) => ({ id: s.id, cwd: cwdOf(s) })), cockpit.tabs, stable) : new Map<string, Tab>();
+    const tabs = cockpit ? pairTabs(sessions, cockpit.tabs, cwdOf, stable) : new Map<string, Tab>();
     const branches = new Map<string, Promise<string | null>>();
     const out: Record<string, SessionInfo> = {};
     for (const s of sessions) {

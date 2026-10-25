@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { branchOf, cockpitList, createSessionInfo, freshTabs, matchTabs, soleTab, parseForeground, parseLsofCwd } from '../src/session-info.ts';
+import { agreeTabs, birthPair, branchOf, cockpitList, createSessionInfo, freshTabs, matchTabs, soleTab, parseForeground, parseLsofCwd } from '../src/session-info.ts';
 import type { Runner, Tab } from '../src/session-info.ts';
 import type { CockpitState } from '../src/cockpit-state.ts';
 import type { Session } from '../src/protocol.ts';
@@ -162,16 +162,18 @@ test('a failing or garbled Cockpit CLI yields no tabs instead of an error', asyn
   assert.equal(await cockpitList('/bin/cockpit', cliRunner({ not: 'a list' }, [])), null);
 });
 
-function fakeMac(opts: { cockpitOk?: boolean } = {}) {
+/** `sameFolder` puts both tabs and shells in project-b: only creation order can tell them apart. */
+function fakeMac(opts: { cockpitOk?: boolean; sameFolder?: boolean } = {}) {
   const calls: string[] = [];
+  const t9 = opts.sameFolder ? { workspaceId: 'project-b', workspacePath: `${H}/app/project-b` } : { workspaceId: 'project-c::wt', workspacePath: `${H}/app/project-c/wt-2e-be` };
   const run: Runner = async (file, args) => {
     calls.push(file);
-    if (file === '/usr/sbin/lsof') return { ok: true, stdout: `p11\nfcwd\nn${H}/app/project-b\np22\nfcwd\nn${H}/app/project-c/wt-2e-be/lib\n` };
+    if (file === '/usr/sbin/lsof') return { ok: true, stdout: `p11\nfcwd\nn${H}/app/project-b\np22\nfcwd\nn${t9.workspacePath}/lib\n` };
     if (file === '/bin/ps') return { ok: true, stdout: '11 1 ttys001 Ss /bin/zsh\n12 11 ttys001 S+ claude\n22 1 ttys002 Ss+ -zsh\n' };
     return cliRunner(
       [
         { id: 't5', kind: 'terminal', title: '✳ Fix overflow', working: true, focused: true, workspaceId: 'project-b', workspacePath: `${H}/app/project-b` },
-        { id: 't9', kind: 'terminal', title: 'wt', working: false, focused: false, workspaceId: 'project-c::wt', workspacePath: `${H}/app/project-c/wt-2e-be` },
+        { id: 't9', kind: 'terminal', title: 'wt', working: false, focused: false, ...t9 },
       ],
       [
         { id: 'project-b', name: 'project-b', path: `${H}/app/project-b` },
@@ -202,8 +204,8 @@ test('collected info ties each session to its project, tab, process and branch',
   let clock = 0;
   const info = createSessionInfo({ cockpitBin: '/bin/cockpit', run: mac.run, readFile: mac.read, readState: mac.readState, home: H, now: () => clock });
   const first = (await info([session('s1', 11), session('s2', 22)])).info;
-  assert.equal(first.s1?.tab, null, 'tabs wait for a second look with the same ids');
-  assert.equal(first.s1?.workspace?.name, 'project-b', 'the workspace comes from the cwd meanwhile');
+  assert.equal(first.s1?.tab?.title, '✳ Fix overflow', 'the sole terminal of its folder needs no second look');
+  assert.equal(first.s1?.workspace?.name, 'project-b');
   clock = 3000;
   const result = await info([session('s1', 11), session('s2', 22)]);
   assert.equal(result.theme, 'dark');
@@ -295,7 +297,7 @@ test('a fresh look reads each session\'s cwd and the tabs, and fingerprints both
 });
 
 test('a fresh look leaves the viewers\' stable history alone', async () => {
-  const mac = fakeMac();
+  const mac = fakeMac({ sameFolder: true });
   const opts = { cockpitBin: '/bin/cockpit', run: mac.run, readFile: mac.read, readState: mac.readState, home: H, ttlMs: 0 };
   const info = createSessionInfo(opts);
   const sessions = [session('s1', 11), session('s2', 22)];
@@ -356,4 +358,147 @@ test('an unknown cwd anywhere, a cwd outside every folder, or a folderless tab g
   assert.equal(soleTab(cwdMap([['s1', '/tmp']]), RESTARTED, 's1'), null);
   assert.equal(soleTab(cwdMap([['s1', H]]), [tab('t10', '')], 's1'), null);
   assert.equal(soleTab(RESTARTED_CWDS, RESTARTED, 's99'), null);
+});
+
+const A = `${H}/app/tcc`;
+const B = `${H}/app/gtecq`;
+const ids = (...xs: string[]) => new Set(xs);
+const shell = (id: string, pid: number, cwd: string | null) => ({ id, pid, cwd });
+
+test('one new session and one new local terminal in its folder are born together', () => {
+  const before = { sessions: ids('s2'), tabs: ids('t75') };
+  const tabs = [tab('t75', A), tab('t177', A)];
+  assert.deepEqual(birthPair(before, [shell('s2', 20, A), shell('s31', 31, `${A}/src`)], tabs), { session: 's31', pid: 31, tabId: 't177', folder: A });
+});
+
+test('two new sessions, two new tabs, or none of either are no birth', () => {
+  const before = { sessions: ids('s2'), tabs: ids('t75') };
+  const one = [shell('s2', 20, A), shell('s31', 31, A)];
+  assert.equal(birthPair(before, [...one, shell('s32', 32, A)], [tab('t75', A), tab('t177', A)]), null);
+  assert.equal(birthPair(before, one, [tab('t75', A), tab('t177', A), tab('t178', A)]), null);
+  assert.equal(birthPair(before, one, [tab('t75', A)]), null, 'a session with no new tab (a task)');
+  assert.equal(birthPair(before, [shell('s2', 20, A)], [tab('t75', A), tab('t177', A)]), null, 'a tab whose session is not here yet');
+});
+
+test('a birth needs a local tab with a folder, a real pid and the shell in that very folder', () => {
+  const before = { sessions: ids(), tabs: ids() };
+  assert.equal(birthPair(before, [shell('s1', 10, '/srv/app')], [tab('t1', '/srv/app', { workspaceId: '__remote__pin' })]), null, 'remote');
+  assert.equal(birthPair(before, [shell('s1', 10, H)], [tab('t1', '')]), null, 'folderless');
+  assert.equal(birthPair(before, [shell('s1', 0, A)], [tab('t1', A)]), null, 'pid');
+  assert.equal(birthPair(before, [shell('s1', 10, null)], [tab('t1', A)]), null, 'unknown cwd');
+  assert.equal(birthPair(before, [shell('s1', 10, B)], [tab('t1', A)]), null, 'another folder');
+  // The shell sits in a nested workspace that already has its own tab: the most specific folder is not the new tab's.
+  const nested = { sessions: ids(), tabs: ids('t5') };
+  assert.equal(birthPair(nested, [shell('s1', 10, `${A}/wt/lib`)], [tab('t5', `${A}/wt`), tab('t6', A)]), null, 'nested');
+});
+
+test('sources must agree, and a tab given to two sessions goes to neither', () => {
+  const [t1, t2] = [tab('t1', A), tab('t2', A)];
+  const out = agreeTabs(['s1', 's2', 's3', 's4'], [
+    new Map([['s1', t1], ['s2', t2]]),
+    new Map([['s1', t1], ['s2', t1], ['s3', t2]]),
+    new Map([['s4', tab('t3', B)]]),
+  ]);
+  assert.deepEqual(pairs(out), { s1: 't1', s3: 't2', s4: 't3' }, 's2 is disputed; s3 got t2, which nobody else holds');
+  const shared = agreeTabs(['s1', 's2'], [new Map([['s1', t1]]), new Map([['s2', t1]])]);
+  assert.equal(shared.size, 0);
+});
+
+/** A Mac whose shells and tabs each test changes between looks. */
+function liveMac(look: { cwds: Record<number, string>; tabs: Tab[] }): Runner {
+  return async (file, args) => {
+    if (file === '/usr/sbin/lsof') return { ok: true, stdout: Object.entries(look.cwds).map(([p, c]) => `p${p}\nfcwd\nn${c}\n`).join('') };
+    if (file === '/bin/ps') return { ok: true, stdout: '' };
+    return cliRunner(look.tabs.map((t) => ({ ...t, kind: 'terminal' })), [], true)(file, args);
+  };
+}
+
+function births(look: { cwds: Record<number, string>; tabs: Tab[] }) {
+  let clock = 0;
+  const info = createSessionInfo({
+    cockpitBin: '/bin/cockpit', run: liveMac(look), readFile: async () => { throw new Error('ENOENT'); },
+    readState: async () => ({ projects: new Map(), theme: 'system' }), home: H, ttlMs: 0, now: () => clock,
+  });
+  return {
+    look: async (sessions: Session[], advance = 5000) => {
+      clock += advance;
+      const out = (await info(sessions)).info;
+      return Object.fromEntries(sessions.map((s) => [s.id, out[s.id]?.tab?.title ?? null]));
+    },
+  };
+}
+
+// Two remote tabs keep the counts apart, so creation order never answers in these looks.
+const REMOTE = [tab('t1', '/srv/app', { workspaceId: '__remote__pin' }), tab('t3', '/srv/app', { workspaceId: '__remote__pin' })];
+
+test('after a restart, each folder\'s sole terminal has its title on the first look', async () => {
+  const look = { cwds: { 10: `${H}/app/cockpit-tower`, 20: `${H}/app/atm/lib`, 40: `${H}/app/condor`, 80: B }, tabs: RESTARTED };
+  const out = await births(look).look([session('s1', 10), session('s2', 20), session('s4', 40), session('s8', 80)]);
+  assert.deepEqual(out, { s1: 't133', s2: 't38', s4: 't29', s8: 't16' });
+});
+
+test('a terminal born beside another in its folder gets its title one look later, and only it', async () => {
+  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+  const g = births(look);
+  assert.deepEqual(await g.look([session('s2', 20)]), { s2: 't75' }, 'sole terminal');
+  look.cwds[31] = A;
+  look.tabs = [...look.tabs, tab('t177', A)];
+  const both = [session('s2', 20), session('s31', 31)];
+  assert.deepEqual(await g.look(both), { s2: null, s31: null }, 'a birth waits one look');
+  assert.deepEqual(await g.look(both), { s2: null, s31: 't177' });
+  assert.deepEqual(await g.look(both), { s2: null, s31: 't177' }, 'the pair lasts');
+});
+
+test('a second session born into the folder on the next look drops the birth', async () => {
+  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+  const g = births(look);
+  await g.look([session('s2', 20)]);
+  look.cwds[31] = A;
+  look.tabs = [...look.tabs, tab('t177', A)];
+  await g.look([session('s2', 20), session('s31', 31)]);
+  // s31 (a task, say) appeared beside t177 and t177's own session only now: s31 may not be t177's.
+  look.cwds[32] = A;
+  const three = [session('s2', 20), session('s31', 31), session('s32', 32)];
+  assert.deepEqual(await g.look(three), { s2: null, s31: null, s32: null });
+  assert.deepEqual(await g.look(three), { s2: null, s31: null, s32: null });
+});
+
+test('no birth across a gap longer than the window', async () => {
+  const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+  const g = births(look);
+  await g.look([session('s2', 20)]);
+  look.cwds[31] = A;
+  look.tabs = [...look.tabs, tab('t177', A)];
+  const both = [session('s2', 20), session('s31', 31)];
+  await g.look(both, 15_001);
+  assert.deepEqual(await g.look(both), { s2: null, s31: null });
+});
+
+test('a birth ends with another pid, a closed tab or a tab moved to another folder', async () => {
+  const setup = async () => {
+    const look = { cwds: { 20: A } as Record<number, string>, tabs: [...REMOTE, tab('t75', A)] };
+    const g = births(look);
+    await g.look([session('s2', 20)]);
+    look.cwds[31] = A;
+    look.tabs = [...look.tabs, tab('t177', A)];
+    await g.look([session('s2', 20), session('s31', 31)]);
+    assert.equal((await g.look([session('s2', 20), session('s31', 31)])).s31, 't177');
+    return { look, g };
+  };
+  {
+    const { look, g } = await setup();
+    look.cwds[33] = A;
+    assert.equal((await g.look([session('s2', 20), session('s31', 33)])).s31, null, 'new pid');
+    assert.equal((await g.look([session('s2', 20), session('s31', 31)])).s31, null, 'and it does not come back');
+  }
+  {
+    const { look, g } = await setup();
+    look.tabs = [...REMOTE, tab('t75', A), tab('t178', A)];
+    assert.equal((await g.look([session('s2', 20), session('s31', 31)])).s31, null, 'tab closed');
+  }
+  {
+    const { look, g } = await setup();
+    look.tabs = [...REMOTE, tab('t75', A), tab('t177', `${A}/wt`)];
+    assert.equal((await g.look([session('s2', 20), session('s31', 31)])).s31, null, 'tab in another folder');
+  }
 });

@@ -2,7 +2,7 @@
 title: Work Index
 type: index
 status: generated
-updated: 2026-10-24
+updated: 2026-10-25
 ---
 
 # Work Index
@@ -13,6 +13,8 @@ updated: 2026-10-24
 
 ## In progress (open / in_progress / future / paused)
 
+- 🚧 [[work/tasks/2026-10-25_restart-tab-titles]] · `in_progress` · `gateway` [bugfix, service]
+  — O collect do gateway soma ao casamento por ordem a regra do terminal único e o par visto no nascimento, e só mostra o título quando as fontes concordam. ↳ [plan](work/plans/2026-10-25_restart-tab-titles) · [exec](work/executions/2026-10-25_restart-tab-titles)
 - 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
   — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
