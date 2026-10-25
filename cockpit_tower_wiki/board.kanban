@@ -63,17 +63,6 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 
 ## Pronta p/ plano
 
-- [ ] Títulos das abas somem depois de um reinício do Cockpit <!-- id: k27 labels: bug, média, M, gateway, viewer -->
-      **O quê:** depois que o Cockpit reinicia, o viewer mostra todas as sessões sem o nome da aba, só com projeto, processo e pasta. Fica assim até as abas serem recriadas.
-
-      **Contexto:**
-      - O `matchTabs` (`src/session-info.ts`) casa sessão e aba pela ordem de criação. Ao reiniciar, o Cockpit restaura os ids das abas, mas as sessões ganham ids novos na ordem em que o app as recria, e a ordem deixa de valer.
-      - Visto em 2026-10-24 com 5 sessões e 5 abas: `s1` (cockpit-tower) pareava com `t16` (gtecq). O `matchTabs` não casou nada, como deve: errar o título é pior que não mostrar. Evidência em `cockpit_tower_wiki/work/executions/2026-10-24_viewer-close-tab-button.md` (D1) e em `cockpit_tower_wiki/services/gateway.md` (seção do casamento e "Limites").
-      - O par do (+) (k26) não ajuda: vale só para abas que o gateway abriu e some com o reinício.
-      - A correção de vez é o k5 (id da aba no `pty.sessions`, depende do mantenedor).
-
-      **Para começar:** ver se há um sinal local que case sessão e aba com segurança depois do reinício (ex.: o workspace com um único terminal, como o `soleTab` do (x)), ou se o certo é esperar o k5. Não usar heurística que possa mostrar o título de outra aba.
-
 - [ ] Teste automatizado da visão do terminal <!-- id: k6 labels: test, média, M, viewer -->
       **O quê:** levar para o repositório o teste de consistência da visão HTML, que hoje só existe como roteiro fora do repo.
 
@@ -120,6 +109,23 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Estado:** oferecido nas "Notes" do PR #264 ("happy to send it separately"). Esperando a resposta do mantenedor; se ele quiser, novo trio e PR separado.
 
 ## Em curso
+
+- [ ] Títulos das abas somem depois de um reinício do Cockpit <!-- id: k27 labels: bug, média, M, gateway, viewer -->
+      **O quê:** depois que o Cockpit reinicia, o viewer mostra todas as sessões sem o nome da aba, só com projeto, processo e pasta. Fica assim até as abas serem recriadas.
+
+      **Contexto:**
+      - O `matchTabs` (`src/session-info.ts`) casa sessão e aba pela ordem de criação. Ao reiniciar, o Cockpit restaura os ids das abas, mas as sessões ganham ids novos na ordem em que o app as recria, e a ordem deixa de valer.
+      - Visto em 2026-10-24 com 5 sessões e 5 abas: `s1` (cockpit-tower) pareava com `t16` (gtecq). O `matchTabs` não casou nada, como deve: errar o título é pior que não mostrar. Evidência em `cockpit_tower_wiki/work/executions/2026-10-24_viewer-close-tab-button.md` (D1) e em `cockpit_tower_wiki/services/gateway.md` (seção do casamento e "Limites").
+      - O par do (+) (k26) não ajuda: vale só para abas que o gateway abriu e some com o reinício.
+      - A correção de vez é o k5 (id da aba no `pty.sessions`, depende do mantenedor).
+
+      **Para começar:** ver se há um sinal local que case sessão e aba com segurança depois do reinício (ex.: o workspace com um único terminal, como o `soleTab` do (x)), ou se o certo é esperar o k5. Não usar heurística que possa mostrar o título de outra aba.
+
+      **Andamento (2026-10-25):** trio `2026-10-25_restart-tab-titles`, branch `fix/2026-10-25_restart-tab-titles__gateway`. Plano aprovado (tier `medium`).
+      - Código e testes prontos (`src/session-info.ts`): terminal único mais par do nascimento, e um título só aparece quando as fontes concordam. `npm test` 207/207; cada guarda nova foi vista vermelha.
+      - No layout real: 4 de 7 abas voltam a ter título já na primeira olhada; as 3 do TCC continuam sem título (vários terminais no mesmo workspace).
+      - **Agora:** teste ao vivo do nascimento, com o dono abrindo um terminal no TCC.
+      - Achado à parte: o `matchTabs` conta as abas remotas (proposta de cartão novo).
 
 ## Done
 
