@@ -4,7 +4,7 @@ type: page
 scope:
   area: [upstream-cockpit]
 status: draft
-updated: 2026-10-24
+updated: 2026-10-25
 summary: Fluxo, toolchain, build ad-hoc e uso diário do fork tganzerli/remote_pi (clone ~/app/remote_pi) para mandar issues e PRs ao jacobaraujo7/remote_pi, mais as contribuições já abertas.
 sources: []
 code_refs:
@@ -88,11 +88,13 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
 
 ## Contribuições até agora
 
-| Issue / PR | Assunto | Estado em 2026-10-24 | Execução |
+| Issue / PR | Assunto | Estado em 2026-10-25 | Execução |
 |---|---|---|---|
 | #261 / #264 | Soft wrap no editor, ligado por padrão em Markdown | PR aberto | [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] |
 | #262 / #263 | Ícone do macOS no formato da grade da Apple | PR aberto | [[work/executions/2026-10-23_cockpit-macos-icon-shape]] |
 
 ## Pendências
 
-- Acompanhamentos do soft wrap no quadro: k11 (coluna escorrega sem quebra, oferecido no #264) e k12 (adiar a remedição ao arrastar a divisória).
+- Acompanhamentos do soft wrap no quadro: k11 (coluna escorrega sem quebra, oferecido no #264; espera o mantenedor) e k12 (adiar a remedição ao arrastar a divisória).
+- k21: fechar uma aba deixa o shell vivo. A causa provável está no cartão k21 do `cockpit_tower_wiki/board.kanban`; falta abrir a issue no `remote_pi`.
+- k5: pedir ao mantenedor o id da aba no `pty.sessions`, para trocar o casamento por ordem e pasta; falta abrir a issue ou o PR.

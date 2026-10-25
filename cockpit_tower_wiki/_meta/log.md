@@ -155,3 +155,11 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 ## [2026-10-25] wiki-sync | 2026-10-25_matchtabs-remote-tabs | 1 page touched
 
 - `cockpit_tower_wiki/services/gateway.md` (UPDATE) — a ordem de criação conta só as abas locais (k28); citações de src/session-info.ts realinhadas
+
+## [2026-10-25] wiki-sync | 2026-10-25_wiki-stale-pages | 5 pages touched
+
+- `cockpit_tower_wiki/overview.md` (UPDATE) — regra do (x): terminal do (+) ou o único da pasta
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — estado em 2026-10-25; pendências k21 e k5
+- `cockpit_tower_wiki/decisions/2026-10-22_read-only-client.md` (UPDATE) — nota de citações históricas, ⚠ unverified
+- `cockpit_tower_wiki/decisions/2026-10-23_phone-pty-resize.md` (UPDATE) — reverificada, sem mudança
+- `cockpit_tower_wiki/decisions/2026-10-23_phone-fullscreen-scroll.md` (UPDATE) — reverificada, sem mudança

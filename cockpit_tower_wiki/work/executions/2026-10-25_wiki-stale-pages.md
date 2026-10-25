@@ -67,6 +67,13 @@ As conferências estão no plano (§4.0) e foram refeitas no fio principal antes
 ## Validações
 
 - [x] Antes: `python3 .claude/skills/wiki-lint/lint.py --root .` → `exit 0`, com `⚠ stale: 5`. A verificação do plano (zerar o `stale`) só fecha depois do `/wiki-sync`, que muda as páginas; registrar lá.
+- [x] Depois do `/wiki-sync`: `python3 .claude/skills/wiki-lint/lint.py --root .` → `exit 0`, nenhuma linha `✗` ou `⚠`:
+  ```
+  ✔ stale: 0
+  ```
+  No caminho, o lint acusou `catalog-drift` em `cross-cutting/_index.md`, só pela data. `python3 .claude/skills/wiki-index/generate.py cross-cutting --root .` regenerou, e `--all --check` deu `in sync` nos três catálogos.
+- [x] `python3 .claude/skills/work-index/generate.py --check --root .` → `in sync`.
+- [x] `python3 scripts/ci/check_commit_trailers.py origin/dev` → `ok — 2 new commit(s) in origin/dev..HEAD, no LLM attribution`.
 
 ## Revisão do agente
 
