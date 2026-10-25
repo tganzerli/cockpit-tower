@@ -13,6 +13,8 @@ updated: 2026-10-25
 
 ## In progress (open / in_progress / future / paused)
 
+- 🚧 [[work/tasks/2026-10-25_matchtabs-remote-tabs]] · `in_progress` · `gateway` [bugfix, service]
+  — O matchTabs passou a usar só as abas de terminal locais (localTabs), e uma aba remota mais uma tarefa sem aba deixaram de dar a uma sessão o título de outra aba. ↳ [plan](work/plans/2026-10-25_matchtabs-remote-tabs) · [exec](work/executions/2026-10-25_matchtabs-remote-tabs)
 - 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
   — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
