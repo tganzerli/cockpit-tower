@@ -105,3 +105,6 @@ related: ["[[cross-cutting/upstream-contributions]]"]
     `mpv/mpv core` do chime continua existindo, ocioso.
   - `top -l 6 -s 2 -pid <coreaudiod>`: `coreaudiod` a 0,0% nas 5 leituras.
   - `pmset -g assertions`: nenhuma assertion de áudio.
+- Teste manual do humano (2026-11-10): o volume funciona na build corrigida. O som customizado
+  **não foi testado** (o humano não tem um arquivo de som para isso). Ele passa pelo mesmo
+  `open()` e pelo mesmo `stop()` no `completed` que o som padrão.
