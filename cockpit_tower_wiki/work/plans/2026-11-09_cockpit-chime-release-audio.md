@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-11-09_cockpit-chime-release-audio
 scope:
   area: [upstream-cockpit]
-status: approved
+status: executed
 risk: low
 updated: 2026-11-09
 summary: Parar o Player do chime (e do preview das Configurações) quando o som termina, para o mpv sair do arquivo carregado pelo keep-open e fechar o AO CoreAudio; medir antes e depois, issue e PR upstream.

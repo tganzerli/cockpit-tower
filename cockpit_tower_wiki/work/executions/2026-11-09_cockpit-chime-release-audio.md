@@ -4,7 +4,7 @@ type: execution
 work_id: 2026-11-09_cockpit-chime-release-audio
 scope:
   area: [upstream-cockpit]
-status: in_progress
+status: done
 updated: 2026-11-10
 summary: Parar o Player do chime e do preview no fim do som para o mpv fechar o AO CoreAudio que o keep-open mantinha aberto; medido no app (thread de IO some, coreaudiod 12% → 0%), issue e PR upstream.
 topic: [performance, bugfix]
@@ -20,8 +20,9 @@ related: ["[[cross-cutting/upstream-contributions]]"]
 - **ID:** `2026-11-09_cockpit-chime-release-audio`
 - **Task:** [[work/tasks/2026-11-09_cockpit-chime-release-audio]]
 - **Plano:** [[work/plans/2026-11-09_cockpit-chime-release-audio]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Início:** `2026-11-09`
+- **Fim:** `2026-11-10`
 - **Escopo:**
   - Área(s) afetada(s): `[upstream-cockpit]`
 - **Repositório do código:** fork `tganzerli/remote_pi`, worktree `~/app/wt/rp-chime`,
@@ -39,7 +40,7 @@ related: ["[[cross-cutting/upstream-contributions]]"]
 - [x] 7 — Build ad-hoc, troca do app, medição depois e teste manual
 - [x] 8 — Commit + revisão `reviewer`
 - [x] 9 — Gate humano; push + PR com aprovação → [#315](https://github.com/jacobaraujo7/remote_pi/pull/315)
-- [ ] 10 — Fechar, propor `/wiki-sync`, avisar a sessão da bateria
+- [x] 10 — Fechar e `/wiki-sync` (pedido pelo humano em 2026-11-10); o aviso à sessão da bateria ficou com o humano
 
 ## Atividade (cronológica)
 
@@ -128,3 +129,37 @@ related: ["[[cross-cutting/upstream-contributions]]"]
   (`eaa4f7da`) e PR aberto para `jacobaraujo7/remote_pi:main`:
   https://github.com/jacobaraujo7/remote_pi/pull/315 (`Fixes #314`, seção Testing com a
   medição, nota sobre a corrida e sobre o som customizado não testado).
+
+## Commits
+
+- `remote_pi` (fork, branch `fix/cockpit-chime-release-audio`): `eaa4f7da`
+  `fix(cockpit): release the audio output after the notification chime`. PR
+  [#315](https://github.com/jacobaraujo7/remote_pi/pull/315).
+- Tower (branch `docs/2026-11-09_cockpit-chime-release-audio__wiki`): `e6e60ae` (task e plano),
+  `d580c36`, `ce6c18e`, `2c9df5a` e `18905f9` (log), mais o commit do `/wiki-sync`.
+
+## Validações
+
+- Medição no app, antes e depois: thread `IOThread.client` com `render_cb_lpcm` → ausente;
+  `coreaudiod` ~12% → 0,0%; contexto de áudio no `pmset` → nenhum.
+- `fvm flutter analyze lib test`: 37 `info` antes e depois.
+- `fvm flutter test`: `+2024 ~10 -31` com e sem a correção; testes de som e notificação `+13`.
+- Manual: chime, dois seguidos, volume e preview. O som customizado não foi testado.
+
+## Revisão do agente
+
+- `reviewer` com contexto limpo, 1 rodada: 0 Important, 2 Nit (corrida estreita do `stop()`
+  atrasado, registrada no PR; falta de teste automatizado, coberta pela medição).
+
+## Páginas da wiki afetadas
+
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE): linha #314 / #315 na
+  tabela de contribuições, nota sobre o `keep-open` do media_kit, e como confirmar qual build
+  está aberta antes de medir.
+
+## Notas abertas
+
+- O player de mídia do viewer (`media_view.dart`) tem o mesmo comportamento do `keep-open`
+  enquanto a aba de mídia está aberta, mesmo pausado no fim. Ficou fora do escopo: a mídia é
+  aberta pelo usuário e o player é descartado ao fechar a aba.
+- Quando o #315 for mergeado: registrar o desfecho na task e passá-la a `done`.

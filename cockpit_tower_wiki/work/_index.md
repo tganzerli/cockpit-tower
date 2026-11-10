@@ -2,7 +2,7 @@
 title: Work Index
 type: index
 status: generated
-updated: 2026-10-25
+updated: 2026-11-10
 ---
 
 # Work Index
@@ -13,6 +13,8 @@ updated: 2026-10-25
 
 ## In progress (open / in_progress / future / paused)
 
+- 🚧 [[work/tasks/2026-11-09_cockpit-chime-release-audio]] · `in_progress` · `upstream-cockpit` [performance]
+  — Parar o Player do chime e do preview no fim do som para o mpv fechar o AO CoreAudio que o keep-open mantinha aberto; medido no app (thread de IO some, coreaudiod 12% → 0%), issue e PR upstream. ↳ [plan](work/plans/2026-11-09_cockpit-chime-release-audio) · [exec](work/executions/2026-11-09_cockpit-chime-release-audio)
 - 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
   — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
