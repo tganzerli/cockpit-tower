@@ -108,3 +108,14 @@ related: ["[[cross-cutting/upstream-contributions]]"]
 - Teste manual do humano (2026-11-10): o volume funciona na build corrigida. O som customizado
   **não foi testado** (o humano não tem um arquivo de som para isso). Ele passa pelo mesmo
   `open()` e pelo mesmo `stop()` no `completed` que o som padrão.
+
+### `2026-11-10` — passo 6 (suíte)
+- Cópias recriadas: `~/cpt` (worktree com a correção) e `~/cpb` (`upstream/main` por
+  `git archive`), as duas com o libghostty em `source: prebuilt`.
+- `fvm flutter test` inteiro nas duas: **`+2024 ~10 -31` nas duas**, mesmo placar. As falhas
+  listadas são as conhecidas da dylib `prebuilt` (terminal Ghostty, `terminal_controller_test`,
+  `terminal_attachments_test`, …). O log intercalado não permite atribuir cada falha a um teste
+  com segurança. Por isso a comparação é pelo placar, mais a rodada à parte abaixo.
+- Testes que tocam som e notificações (`test/ui/session_notifications_controller_test.dart`,
+  `test/domain/app_settings_sound_events_test.dart`): `+13: All tests passed!` nas duas cópias.
+  Nenhum teste instancia a `SettingsPage` nem o `LocalNotifier`.
