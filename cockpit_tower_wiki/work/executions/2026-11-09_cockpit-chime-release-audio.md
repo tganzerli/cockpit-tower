@@ -33,12 +33,12 @@ related: ["[[cross-cutting/upstream-contributions]]"]
 - [x] 1 — Branch do tower, este log, leitura do `plan/00-decisions.md` do `remote_pi`
 - [x] 2 — Medição antes
 - [x] 3 — Branch do fork a partir de `upstream/main`
-- [ ] 4 — Texto da issue mostrado ao humano; publicar com aprovação
+- [x] 4 — Texto da issue mostrado ao humano; publicar com aprovação → [#314](https://github.com/jacobaraujo7/remote_pi/issues/314)
 - [x] 5 — Mudanças 1 e 2 + `dart format`
-- [ ] 6 — Analyze (feito) e suíte
-- [x] 7 — Build ad-hoc, troca do app, medição depois (teste manual de chimes seguidos pendente)
+- [x] 6 — Analyze e suíte
+- [x] 7 — Build ad-hoc, troca do app, medição depois e teste manual
 - [x] 8 — Commit + revisão `reviewer`
-- [ ] 9 — Gate humano; push + PR com aprovação
+- [x] 9 — Gate humano; push + PR com aprovação → [#315](https://github.com/jacobaraujo7/remote_pi/pull/315)
 - [ ] 10 — Fechar, propor `/wiki-sync`, avisar a sessão da bateria
 
 ## Atividade (cronológica)
@@ -119,3 +119,12 @@ related: ["[[cross-cutting/upstream-contributions]]"]
 - Testes que tocam som e notificações (`test/ui/session_notifications_controller_test.dart`,
   `test/domain/app_settings_sound_events_test.dart`): `+13: All tests passed!` nas duas cópias.
   Nenhum teste instancia a `SettingsPage` nem o `LocalNotifier`.
+
+### `2026-11-10` — passos 4 e 9
+- O humano confirmou que dois chimes seguidos tocam na build corrigida.
+- Com aprovação do humano no momento, a issue foi publicada:
+  https://github.com/jacobaraujo7/remote_pi/issues/314
+- Com aprovação do humano no momento: push de `fix/cockpit-chime-release-audio` para o fork
+  (`eaa4f7da`) e PR aberto para `jacobaraujo7/remote_pi:main`:
+  https://github.com/jacobaraujo7/remote_pi/pull/315 (`Fixes #314`, seção Testing com a
+  medição, nota sobre a corrida e sobre o som customizado não testado).

@@ -48,13 +48,13 @@ O fork `tganzerli/remote_pi` (`~/app/remote_pi`) foi sincronizado com o upstream
       saída de áudio aberta (evidência na execução).
 - [x] Depois da correção: quando o chime termina, a saída de áudio é liberada e o Cockpit
       ocioso não mantém contexto de áudio (mesma medição, evidência na execução).
-- [ ] Chimes seguidos continuam tocando, e o override de som customizado e o volume seguem
-      funcionando.
-- [ ] O preview das Configurações também libera o áudio ao terminar.
-- [ ] `fvm flutter analyze` sem issues novas em relação à baseline e testes existentes passando,
+- [x] Chimes seguidos continuam tocando, e o override de som customizado e o volume seguem
+      funcionando. (Custom não testado à mão; mesmo caminho de código.)
+- [x] O preview das Configurações também libera o áudio ao terminar.
+- [x] `fvm flutter analyze` sem issues novas em relação à baseline e testes existentes passando,
       com a saída na execução.
-- [ ] Issue aberta no `jacobaraujo7/remote_pi` com o problema, a causa e a medição.
-- [ ] PR aberto do fork para `jacobaraujo7/remote_pi:main`, em inglês, citando a issue.
+- [x] Issue aberta no `jacobaraujo7/remote_pi` com o problema, a causa e a medição.
+- [x] PR aberto do fork para `jacobaraujo7/remote_pi:main`, em inglês, citando a issue.
 
 ## Escopo declarado
 
