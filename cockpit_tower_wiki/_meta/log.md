@@ -168,3 +168,7 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 
 - `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — PRs #263 and #264 merged; k11 now waits on the owner
 - `cockpit_tower_wiki/sources/external/2026-10-23_cockpit-code-editor.md` (UPDATE) — merge note under the point-in-time warning
+
+## [2026-11-10] wiki-sync | 2026-11-09_cockpit-chime-release-audio | 1 page touched
+
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — contribuição #314/#315, keep-open do media_kit, conferir a build antes de medir

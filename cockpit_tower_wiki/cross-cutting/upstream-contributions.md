@@ -4,7 +4,7 @@ type: page
 scope:
   area: [upstream-cockpit]
 status: draft
-updated: 2026-10-25
+updated: 2026-11-10
 summary: Fluxo, toolchain, build ad-hoc e uso diário do fork tganzerli/remote_pi (clone ~/app/remote_pi) para mandar issues e PRs ao jacobaraujo7/remote_pi, mais as contribuições já abertas.
 sources: []
 code_refs:
@@ -13,6 +13,7 @@ related:
   - sources/external/2026-10-23_cockpit-code-editor
   - work/executions/2026-10-23_cockpit-editor-soft-wrap
   - work/executions/2026-10-23_cockpit-macos-icon-shape
+  - work/executions/2026-11-09_cockpit-chime-release-audio
 ---
 
 # Como contribuir com o remote_pi (o Cockpit) a partir do tower
@@ -84,14 +85,20 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
   - Abre com `open`, que dá o ambiente limpo do LaunchServices (`cockpit-switch.sh:38-40`).
   - Recusa rodar de dentro de um terminal do Cockpit (`COCKPIT_TAB_ID`) e com algum Cockpit aberto (`cockpit-switch.sh:30-35`, `:42-47`).
   - `atualizar` copia `build/macos-next` por cima da build do fork (`cockpit-switch.sh:48-49`).
+  - O ícone da Dock aponta para a build do fork (`build/macos/…/Cockpit.app`), e o `atualizar` grava nesse mesmo caminho: o dono abre só pela Dock, então toda build nova tem de chegar ali.
 - **Atualizar o fork:** compilar em `cockpit/build/macos-next` com o app aberto (a build em uso fica intacta). Depois: ⌘Q (encerra os terminais e as sessões de agente dele), no Terminal.app `cockpit-switch.sh atualizar && cockpit-switch.sh fork`, e `claude --resume` nas sessões que quiser continuar.
+- **Confirmar a build antes de medir:** compare o `shasum` de `Contents/Frameworks/App.framework/Versions/A/App` da build aberta com o do `macos-next`. Em 2026-11-10 o app reaberto ainda era o antigo, porque o `atualizar` não tinha rodado (`…chime-release-audio.md:99-103`).
+- **Worktrees fora do `/private/tmp`:** um reboot limpa o scratchpad da sessão. Trabalhe em `~/app/wt/` e commite o trio assim que o plano for aprovado (`…chime-release-audio.md:96-98`).
 
 ## Contribuições até agora
 
-| Issue / PR | Assunto | Estado em 2026-10-25 | Execução |
+| Issue / PR | Assunto | Estado | Execução |
 |---|---|---|---|
 | #261 / #264 | Soft wrap no editor, ligado por padrão em Markdown | Mergeado em 2026-10-25 (`8138e03`) | [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] |
 | #262 / #263 | Ícone do macOS no formato da grade da Apple | Mergeado em 2026-10-25 (`6321d5d`) | [[work/executions/2026-10-23_cockpit-macos-icon-shape]] |
+| #314 / #315 | Largar a saída de áudio depois do chime (o `coreaudiod` trabalhava com o Cockpit ocioso) | PR aberto em 2026-11-10 | [[work/executions/2026-11-09_cockpit-chime-release-audio]] |
+
+**Áudio no Cockpit:** todo som passa pelo media_kit (libmpv), que sobe o mpv com `keep-open=yes` (`media_kit:lib/src/player/native/player/real.dart:2398-2401`, ref `44ba261`). Um `Player` que terminou de tocar mantém a saída CoreAudio aberta, renderizando silêncio, até receber `stop()` ou `dispose()`. Para atribuir isso a um processo, use `sample <pid> 2` e procure o thread `com.apple.audio.IOThread.client` com `render_cb_lpcm (in Mpv)`; os logs do `coreaudiod` vêm vazios (`…chime-release-audio.md:55-63`).
 
 ## Pendências
 
