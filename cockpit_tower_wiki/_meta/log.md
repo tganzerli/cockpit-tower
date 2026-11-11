@@ -176,3 +176,7 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 ## [2026-11-11] wiki-sync | 2026-11-09_cockpit-chime-release-audio | 1 page touched
 
 - `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — PR #315 merged (`0cfd32b`)
+
+## [2026-11-11] wiki-sync | 2026-11-11_cockpit-pty-utf8-locale | 1 page touched
+
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — contribuição #320/#321, nota sobre locale nos terminais, pod install sem LANG
