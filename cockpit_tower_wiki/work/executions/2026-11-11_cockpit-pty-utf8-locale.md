@@ -4,9 +4,9 @@ type: execution
 work_id: 2026-11-11_cockpit-pty-utf8-locale
 scope:
   area: [upstream-cockpit]
-status: in_progress
+status: done
 updated: 2026-11-11
-summary: Em andamento — helper withUtf8Locale no fork remote_pi, aplicado aos terminais e tasks.
+summary: Helper withUtf8Locale no fork remote_pi (LANG UTF-8 nos terminais e tasks do macOS sem locale herdado), validado pelo Dock; issue #320 e PR #321 abertos upstream.
 topic: [bugfix]
 related:
   - cross-cutting/upstream-contributions
@@ -21,9 +21,9 @@ related:
 - **ID:** `2026-11-11_cockpit-pty-utf8-locale`
 - **Task:** [[work/tasks/2026-11-11_cockpit-pty-utf8-locale]]
 - **Plan:** [[work/plans/2026-11-11_cockpit-pty-utf8-locale]]
-- **Status:** `in_progress`
+- **Status:** `done`
 - **Start:** `2026-11-11`
-- **Finish:** `—`
+- **Finish:** `2026-11-11`
 - **Scope:**
   - Area(s) affected: `[upstream-cockpit]`
 
@@ -34,10 +34,10 @@ related:
 - [x] Passo 3 — helper e testes
 - [x] Passo 4 — helper aplicado nos três pontos; `dart format`
 - [x] Passo 5 — analyze e suíte
-- [x] Passo 6 — build `macos-next` e verificação no app (falta a cópia pelo Claude Code)
-- [ ] Passo 7 — commit e revisão `reviewer`
-- [ ] Passo 8 — gate humano; issue e PR (com aprovação)
-- [ ] Passo 9 — fechar e propor `/wiki-sync`
+- [x] Passo 6 — build `macos-next` e verificação no app
+- [x] Passo 7 — commit e revisão `reviewer`
+- [x] Passo 8 — gate humano; issue e PR (com aprovação)
+- [x] Passo 9 — fechar e propor `/wiki-sync`
 
 ## Activity (chronological)
 
@@ -104,6 +104,14 @@ related:
   depois: `00:00 +11: All tests passed!`; analyze dos arquivos tocados: `No issues found!`.
 - Pelas regras, sem Important corrigido não há round 2.
 
+### `2026-11-11` — passos 8 e 9
+- O humano aprovou a correção e o texto da issue e do PR.
+- Issue publicada: https://github.com/jacobaraujo7/remote_pi/issues/320
+- Push de `fix/cockpit-pty-utf8-locale` (`64265c7f`) para o fork e PR aberto para
+  `jacobaraujo7/remote_pi:main`: https://github.com/jacobaraujo7/remote_pi/pull/321
+  (`Fixes #320`, seção Testing com os bytes do clipboard e a nota sobre CLIs traduzidas).
+- Pendente: merge upstream. A task fica `open` até lá.
+
 ## Divergences from the plan
 
 - **None.**
@@ -134,7 +142,7 @@ related:
   task json:lang-check (printenv LANG) → pt_BR.UTF-8
   ```
   Antes, na build antiga (`5d496a7d`), o mesmo `pbcopy` deu `7365 e288 9ac3 9fe2 889a c2a3 6f0a`.
-- [ ] Cópia pelo Claude Code colando `seção` — teste do humano, pendente.
+- [ ] Cópia pelo Claude Code colando `seção` — ⚠ unverified: o humano aprovou o trabalho sem confirmar esse teste de forma explícita. O `pbcopy` que o Claude Code usa foi verificado por bytes.
 
 ## Agent review
 
