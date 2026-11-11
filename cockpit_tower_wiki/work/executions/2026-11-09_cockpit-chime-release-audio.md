@@ -5,8 +5,8 @@ work_id: 2026-11-09_cockpit-chime-release-audio
 scope:
   area: [upstream-cockpit]
 status: done
-updated: 2026-11-10
-summary: Parar o Player do chime e do preview no fim do som para o mpv fechar o AO CoreAudio que o keep-open mantinha aberto; medido no app (thread de IO some, coreaudiod 12% → 0%), issue e PR upstream.
+updated: 2026-11-11
+summary: "Parar o Player do chime e do preview no fim do som para o mpv fechar o AO CoreAudio que o keep-open mantinha aberto; medido no app (thread de IO some, coreaudiod 12% → 0%), issue #314 e PR #315 upstream, mergeado em 2026-11-11."
 topic: [performance, bugfix]
 related: ["[[cross-cutting/upstream-contributions]]"]
 ---
@@ -130,6 +130,14 @@ related: ["[[cross-cutting/upstream-contributions]]"]
   https://github.com/jacobaraujo7/remote_pi/pull/315 (`Fixes #314`, seção Testing com a
   medição, nota sobre a corrida e sobre o som customizado não testado).
 
+### `2026-11-11` — PR mergeado
+
+- O PR #315 foi mergeado por `jacobaraujo7` às 12:31 UTC (merge `0cfd32b`), e a issue #314
+  fechou junto (`gh pr view 315 -R jacobaraujo7/remote_pi`, `gh issue view 314`).
+- A falha de CI no PR não era do diff: um teste do `main` ainda passava `onEditSource`, removido
+  em `5633432`. O mantenedor consertou no #317 e mergeou por cima. Na revisão, aceitou a corrida
+  estreita do `stop()` atrasado para um chime de melhor esforço.
+
 ## Commits
 
 - `remote_pi` (fork, branch `fix/cockpit-chime-release-audio`): `eaa4f7da`
@@ -162,4 +170,5 @@ related: ["[[cross-cutting/upstream-contributions]]"]
 - O player de mídia do viewer (`media_view.dart`) tem o mesmo comportamento do `keep-open`
   enquanto a aba de mídia está aberta, mesmo pausado no fim. Ficou fora do escopo: a mídia é
   aberta pelo usuário e o player é descartado ao fechar a aba.
-- Quando o #315 for mergeado: registrar o desfecho na task e passá-la a `done`.
+- ~~Quando o #315 for mergeado: registrar o desfecho na task e passá-la a `done`.~~ Feito em
+  2026-11-11.

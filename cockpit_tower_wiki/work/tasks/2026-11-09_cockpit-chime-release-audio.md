@@ -4,8 +4,8 @@ type: task
 work_id: 2026-11-09_cockpit-chime-release-audio
 scope:
   area: [upstream-cockpit]
-status: in_progress
-updated: 2026-11-10
+status: done
+updated: 2026-11-11
 summary: Fazer o Cockpit fechar a saída CoreAudio quando o chime termina, em vez de mantê-la aberta até sair do app; corrigir no fork e propor upstream (issue + PR).
 topic: [performance]
 related:
@@ -72,3 +72,7 @@ O fork `tganzerli/remote_pi` (`~/app/remote_pi`) foi sincronizado com o upstream
 ## Sucesso
 
 Rodar a bateria com o Cockpit aberto, e o PR aceito upstream.
+
+## Desfecho
+
+2026-11-11: PR #315 mergeado por `jacobaraujo7` às 12:31 UTC (merge `0cfd32b`); a issue #314 fechou junto. A falha de CI no PR vinha de um teste do `main` (`onEditSource`), consertado pelo mantenedor no #317. A corrida estreita do `stop()` foi aceita para um chime de melhor esforço.

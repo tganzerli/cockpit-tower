@@ -4,7 +4,7 @@ type: page
 scope:
   area: [upstream-cockpit]
 status: draft
-updated: 2026-11-10
+updated: 2026-11-11
 summary: Fluxo, toolchain, build ad-hoc e uso diário do fork tganzerli/remote_pi (clone ~/app/remote_pi) para mandar issues e PRs ao jacobaraujo7/remote_pi, mais as contribuições já abertas.
 sources: []
 code_refs:
@@ -96,7 +96,7 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
 |---|---|---|---|
 | #261 / #264 | Soft wrap no editor, ligado por padrão em Markdown | Mergeado em 2026-10-25 (`8138e03`) | [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] |
 | #262 / #263 | Ícone do macOS no formato da grade da Apple | Mergeado em 2026-10-25 (`6321d5d`) | [[work/executions/2026-10-23_cockpit-macos-icon-shape]] |
-| #314 / #315 | Largar a saída de áudio depois do chime (o `coreaudiod` trabalhava com o Cockpit ocioso) | PR aberto em 2026-11-10 | [[work/executions/2026-11-09_cockpit-chime-release-audio]] |
+| #314 / #315 | Largar a saída de áudio depois do chime (o `coreaudiod` trabalhava com o Cockpit ocioso) | Mergeado em 2026-11-11 (`0cfd32b`) | [[work/executions/2026-11-09_cockpit-chime-release-audio]] |
 
 **Áudio no Cockpit:** todo som passa pelo media_kit (libmpv), que sobe o mpv com `keep-open=yes` (`media_kit:lib/src/player/native/player/real.dart:2398-2401`, ref `44ba261`). Um `Player` que terminou de tocar mantém a saída CoreAudio aberta, renderizando silêncio, até receber `stop()` ou `dispose()`. Para atribuir isso a um processo, use `sample <pid> 2` e procure o thread `com.apple.audio.IOThread.client` com `render_cb_lpcm (in Mpv)`; os logs do `coreaudiod` vêm vazios (`…chime-release-audio.md:55-63`).
 

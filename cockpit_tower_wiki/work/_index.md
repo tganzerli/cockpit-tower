@@ -2,7 +2,7 @@
 title: Work Index
 type: index
 status: generated
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Work Index
@@ -13,8 +13,6 @@ updated: 2026-11-10
 
 ## In progress (open / in_progress / future / paused)
 
-- 🚧 [[work/tasks/2026-11-09_cockpit-chime-release-audio]] · `in_progress` · `upstream-cockpit` [performance]
-  — Parar o Player do chime e do preview no fim do som para o mpv fechar o AO CoreAudio que o keep-open mantinha aberto; medido no app (thread de IO some, coreaudiod 12% → 0%), issue e PR upstream. ↳ [plan](work/plans/2026-11-09_cockpit-chime-release-audio) · [exec](work/executions/2026-11-09_cockpit-chime-release-audio)
 - 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
   — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]
@@ -22,6 +20,8 @@ updated: 2026-11-10
 
 ## Closed — 2026-Q4 (current quarter)
 
+- ✅ [[work/tasks/2026-11-09_cockpit-chime-release-audio]] · `done` 11-11 · `upstream-cockpit` [performance]
+  — Parar o Player do chime e do preview no fim do som para o mpv fechar o AO CoreAudio que o keep-open mantinha aberto; medido no app (thread de IO some, coreaudiod 12% → 0%), issue #314 e PR #315 upstream, mergeado em 2026-11-11. ↳ [plan](work/plans/2026-11-09_cockpit-chime-release-audio) · [exec](work/executions/2026-11-09_cockpit-chime-release-audio)
 - ✅ [[work/tasks/2026-10-25_wiki-stale-pages]] · `done` 10-25 · `wiki` [wiki, knowledge]
   — As cinco páginas stale foram reconferidas contra o código; o overview e as pendências upstream ganham correções, a ADR substituída uma nota de citações históricas e as duas ADRs de 2026-10-23 uma linha de reverificação, aplicadas pelo wiki-sync. ↳ [plan](work/plans/2026-10-25_wiki-stale-pages) · [exec](work/executions/2026-10-25_wiki-stale-pages)
 - ✅ [[work/tasks/2026-10-25_upstream-prs-merged]] · `done` 10-25 · `wiki` [wiki, knowledge]
