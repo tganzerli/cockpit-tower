@@ -6,10 +6,11 @@ scope:
   area: [upstream-cockpit]
 status: done
 updated: 2026-11-11
-summary: Helper withUtf8Locale no fork remote_pi (LANG UTF-8 nos terminais e tasks do macOS sem locale herdado), validado pelo Dock; issue #320 e PR #321 abertos upstream.
+summary: "Helper withUtf8Locale no fork remote_pi (LANG UTF-8 nos terminais e tasks do macOS sem locale herdado), validado pelo Dock; issue #320 e PR #321 abertos upstream."
 topic: [bugfix]
 related:
   - cross-cutting/upstream-contributions
+  - "[[cross-cutting/upstream-contributions]]"
 ---
 
 # Execution Log — 2026-11-11_cockpit-pty-utf8-locale

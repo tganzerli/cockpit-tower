@@ -14,6 +14,7 @@ related:
   - work/executions/2026-10-23_cockpit-editor-soft-wrap
   - work/executions/2026-10-23_cockpit-macos-icon-shape
   - work/executions/2026-11-09_cockpit-chime-release-audio
+  - work/executions/2026-11-11_cockpit-pty-utf8-locale
 ---
 
 # Como contribuir com o remote_pi (o Cockpit) a partir do tower
@@ -68,7 +69,7 @@ Regras de texto:
     DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build
   ```
 
-  Antes, para Release: `fvm flutter build macos --release --config-only` e `pod install`. Depois, reverter o `cockpit/macos/Podfile.lock` com `git checkout` (`…soft-wrap.md:196-203`).
+  Antes, para Release: `fvm flutter build macos --release --config-only` e `pod install`. Depois, reverter o `cockpit/macos/Podfile.lock` com `git checkout` (`…soft-wrap.md:196-203`). Num terminal do Cockpit sem `LANG` (builds anteriores ao PR #321), o `pod install` falha com `CocoaPods requires your terminal to be using UTF-8 encoding`: rode com `LANG=en_US.UTF-8` no comando (`…utf8-locale.md:68-73`).
 - **Debug isola, release não:**
   - Debug usa o bundle `work.jacobmoura.cockpit.debug` (`remote_pi:cockpit/macos/Runner/Configs/AppInfo.xcconfig:10-13`), a pasta de estado `cockpit-debug` (`remote_pi:cockpit/lib/app/core/data/setup/storage_location.dart:12`) e sockets com `-debug` (`remote_pi:cockpit/lib/app/cockpit/data/hooks/terminal_status_server_impl.dart:38`).
   - Release usa o bundle de produção e os **mesmos dados** do app oficial. O Sparkle só fica ativo em release (`remote_pi:cockpit/lib/app/cockpit/cockpit_module.dart:367`): uma release oficial nova pode substituir o fork.
@@ -87,7 +88,7 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
   - `atualizar` copia `build/macos-next` por cima da build do fork (`cockpit-switch.sh:48-49`).
   - O ícone da Dock aponta para a build do fork (`build/macos/…/Cockpit.app`), e o `atualizar` grava nesse mesmo caminho: o dono abre só pela Dock, então toda build nova tem de chegar ali.
 - **Atualizar o fork:** compilar em `cockpit/build/macos-next` com o app aberto (a build em uso fica intacta). Depois: ⌘Q (encerra os terminais e as sessões de agente dele), no Terminal.app `cockpit-switch.sh atualizar && cockpit-switch.sh fork`, e `claude --resume` nas sessões que quiser continuar.
-- **Confirmar a build antes de medir:** compare o `shasum` de `Contents/Frameworks/App.framework/Versions/A/App` da build aberta com o do `macos-next`. Em 2026-11-10 o app reaberto ainda era o antigo, porque o `atualizar` não tinha rodado (`…chime-release-audio.md:99-103`).
+- **Confirmar a build antes de medir:** compare o `shasum` de `Contents/Frameworks/App.framework/Versions/A/App` da build aberta com o do `macos-next`. Em 2026-11-10 o app reaberto ainda era o antigo, porque o `atualizar` não tinha rodado (`…chime-release-audio.md:99-103`). Em 2026-11-11 aconteceu de novo, mesmo com o humano rodando `atualizar && fork`; a segunda tentativa funcionou. ⚠ Causa não confirmada (`…utf8-locale.md:78-83`).
 - **Worktrees fora do `/private/tmp`:** um reboot limpa o scratchpad da sessão. Trabalhe em `~/app/wt/` e commite o trio assim que o plano for aprovado (`…chime-release-audio.md:96-98`).
 
 ## Contribuições até agora
@@ -97,8 +98,11 @@ Regras aprendidas num incidente (`…soft-wrap.md:441-451`):
 | #261 / #264 | Soft wrap no editor, ligado por padrão em Markdown | Mergeado em 2026-10-25 (`8138e03`) | [[work/executions/2026-10-23_cockpit-editor-soft-wrap]] |
 | #262 / #263 | Ícone do macOS no formato da grade da Apple | Mergeado em 2026-10-25 (`6321d5d`) | [[work/executions/2026-10-23_cockpit-macos-icon-shape]] |
 | #314 / #315 | Largar a saída de áudio depois do chime (o `coreaudiod` trabalhava com o Cockpit ocioso) | Mergeado em 2026-11-11 (`0cfd32b`) | [[work/executions/2026-11-09_cockpit-chime-release-audio]] |
+| #320 / #321 | `LANG` UTF-8 nos terminais e tasks do macOS (acentos copiados via `pbcopy` saíam como `se√ß√£o`) | Aberto em 2026-11-11 | [[work/executions/2026-11-11_cockpit-pty-utf8-locale]] |
 
 **Áudio no Cockpit:** todo som passa pelo media_kit (libmpv), que sobe o mpv com `keep-open=yes` (`media_kit:lib/src/player/native/player/real.dart:2398-2401`, ref `44ba261`). Um `Player` que terminou de tocar mantém a saída CoreAudio aberta, renderizando silêncio, até receber `stop()` ou `dispose()`. Para atribuir isso a um processo, use `sample <pid> 2` e procure o thread `com.apple.audio.IOThread.client` com `render_cb_lpcm (in Mpv)`; os logs do `coreaudiod` vêm vazios (`…chime-release-audio.md:55-63`).
+
+**Locale nos terminais:** um Cockpit aberto pelo Dock não herda `LANG`/`LC_*`, e até o PR #321 só definia `TERM` e `COLORTERM` no ambiente dos terminais. Sem locale, o `pbcopy` lê o stdin como Mac Roman: `printf 'seção' | pbcopy` grava `73 65 e2889a c39f e2889a c2a3 6f` em vez de `73 65 c3a7 c3a3 6f` (`…utf8-locale.md:140-144`). A correção (`remote_pi:cockpit/lib/app/cockpit/data/terminal/terminal_locale_env.dart`, branch `fix/cockpit-pty-utf8-locale`) preenche `LANG` com o idioma do usuário em UTF-8 só no macOS e só quando nenhum locale veio herdado. Efeito visível: CLIs traduzidas (git, `ps`) passam a falar português no Cockpit, como no Terminal.app (`…utf8-locale.md:87-88`). O terminal local nasce do `cockpit-server` (sidecar), não do app (`…utf8-locale.md:160`).
 
 ## Pendências
 

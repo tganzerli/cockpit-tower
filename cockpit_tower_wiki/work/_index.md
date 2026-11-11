@@ -13,6 +13,8 @@ updated: 2026-11-11
 
 ## In progress (open / in_progress / future / paused)
 
+- 🔧 [[work/tasks/2026-11-11_cockpit-pty-utf8-locale]] · `open` · `upstream-cockpit` [bugfix]
+  — Helper withUtf8Locale no fork remote_pi (LANG UTF-8 nos terminais e tasks do macOS sem locale herdado), validado pelo Dock; issue #320 e PR #321 abertos upstream. ↳ [plan](work/plans/2026-11-11_cockpit-pty-utf8-locale) · [exec](work/executions/2026-11-11_cockpit-pty-utf8-locale)
 - 🔧 [[work/tasks/2026-10-24_phone-made-tab-close]] · `open` · `gateway, viewer` [ui]
   — O gateway pareia cada (+) com a única sessão nova que aparece depois do new-tab, e o (x) fecha por esse par mesmo num workspace com outros terminais; testado num workspace descartável. ↳ [plan](work/plans/2026-10-24_phone-made-tab-close) · [exec](work/executions/2026-10-24_phone-made-tab-close)
 - 🚧 [[work/tasks/2026-10-23_public-repo-migration]] · `in_progress` · `repo` [tooling]

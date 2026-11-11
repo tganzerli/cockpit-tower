@@ -4,7 +4,7 @@ type: plan
 work_id: 2026-11-11_cockpit-pty-utf8-locale
 scope:
   area: [upstream-cockpit]
-status: approved
+status: executed
 risk: medium
 updated: 2026-11-11
 summary: Helper puro que preenche LANG=<locale>.UTF-8 (fallback en_US.UTF-8) no macOS quando LANG/LC_ALL/LC_CTYPE faltam, aplicado nos terminais (PTY e sidecar) e nas tasks; validar no fork pelo Dock, depois issue e PR upstream.
