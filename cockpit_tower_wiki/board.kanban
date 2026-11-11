@@ -33,7 +33,7 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
       **Como o quadro se mantém:**
       - O quadro mora em `cockpit_tower_wiki/board.kanban` e sobe no PR de wiki (`docs/<work_id>__wiki`) que o trio já tem. Não existe PR só para o quadro.
       - Quem abre, conclui ou descobre uma tarefa move o cartão no mesmo PR. Ao mover para *Done*, marque `[x]` junto.
-      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k31).
+      - Preserve os ids e nunca reformate o arquivo inteiro. Cartão novo recebe o próximo `kN` livre (hoje: k32).
 
 ## Backlog
 
@@ -113,6 +113,9 @@ labels: {feature: blue, bug: red, ui: purple, test: green, upstream: orange, dec
 ## Em curso
 
 ## Done
+
+- [x] Cockpit larga a saída de áudio depois do chime (issue #314, PR #315 no remote_pi) <!-- id: k31 labels: bug, upstream, cockpit-fork -->
+      Trio `2026-11-09_cockpit-chime-release-audio`. O chime e o preview param o `Player` no fim do som, e o mpv fecha a saída CoreAudio (`coreaudiod` ~12% → 0% com o Cockpit ocioso). Mergeado pelo mantenedor em 2026-11-11.
 
 - [x] PRs #263 e #264 mergeados no remote_pi <!-- id: k30 labels: docs, upstream, baixa, P -->
       Trio `2026-10-25_upstream-prs-merged`. O mantenedor mergeou o ícone (#263) e o soft wrap (#264) em 2026-10-25. A wiki, os dois trios de 2026-10-23 e os cartões k10, k20 e k11 foram atualizados. A oferta do k11 no #264 ficou sem resposta, e o dono decidiu corrigir: o cartão foi para o Backlog.

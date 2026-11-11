@@ -172,3 +172,7 @@ Instalação do kit agent-dev-methodology (core apenas) em um repositório vazio
 ## [2026-11-10] wiki-sync | 2026-11-09_cockpit-chime-release-audio | 1 page touched
 
 - `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — contribuição #314/#315, keep-open do media_kit, conferir a build antes de medir
+
+## [2026-11-11] wiki-sync | 2026-11-09_cockpit-chime-release-audio | 1 page touched
+
+- `cockpit_tower_wiki/cross-cutting/upstream-contributions.md` (UPDATE) — PR #315 merged (`0cfd32b`)
